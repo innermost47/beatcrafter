@@ -31,7 +31,7 @@ juce_add_plugin(BeatCrafter
     PLUGIN_CODE BCr1
     
     # Formats
-    FORMATS VST3
+    FORMATS VST3 Standalone
     
     # Plugin characteristics
     IS_SYNTH FALSE

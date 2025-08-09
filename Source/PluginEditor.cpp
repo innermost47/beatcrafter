@@ -6,9 +6,8 @@ namespace BeatCrafter {
 		: AudioProcessorEditor(&p), processor(p) {
 
 		setLookAndFeel(&modernLookAndFeel);
-		setSize(900, 600);
-
 		setupComponents();
+		setSize(900, 600);
 		startTimerHz(30);
 	}
 
@@ -106,6 +105,8 @@ namespace BeatCrafter {
 		intensityLabel.setBounds(bottomArea.removeFromLeft(80).reduced(20, 0));
 		intensitySlider.setBounds(bottomArea.reduced(20, 15));
 
+		jassert(slotManager != nullptr);
+		jassert(patternGrid != nullptr);
 		// Slot manager
 		auto slotArea = bounds.removeFromTop(60);
 		slotManager->setBounds(slotArea.reduced(20, 10));
