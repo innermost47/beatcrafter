@@ -1,0 +1,74 @@
+#pragma once
+#include <juce_core/juce_core.h>  
+#include <juce_audio_basics/juce_audio_basics.h>  
+#include "Pattern.h"
+#include <array>
+#include <memory>
+
+namespace BeatCrafter {
+
+	class PatternEngine {
+	public:
+		PatternEngine();
+		~PatternEngine() = default;
+
+		// Pattern management
+		Pattern& getCurrentPattern() { return *slots[activeSlot]; }
+		const Pattern& getCurrentPattern() const { return *slots[activeSlot]; }
+
+		Pattern* getSlot(int index) {
+			if (index >= 0 && index < 8 && slots[index])
+				return slots[index].get();
+			return nullptr;
+		}
+
+		void loadPatternToSlot(std::unique_ptr<Pattern> pattern, int slot);
+		void switchToSlot(int slot, bool immediate = false);
+		int getActiveSlot() const { return activeSlot; }
+
+		// MIDI generation
+		void processBlock(juce::MidiBuffer& midiMessages,
+			int numSamples,
+			double sampleRate,
+			const juce::AudioPlayHead::PositionInfo& posInfo);
+
+		// Intensity control
+		void setIntensity(float intensity) {
+			currentIntensity = juce::jlimit(0.0f, 1.0f, intensity);
+		}
+		float getIntensity() const { return currentIntensity; }
+
+		// Transport
+		void start() { isPlaying = true; }
+		void stop() {
+			isPlaying = false;
+			for (auto& slot : slots) {
+				if (slot) slot->setCurrentStep(0);
+			}
+		}
+		bool getIsPlaying() const { return isPlaying; }
+
+		// Generation
+		void generateNewPattern(StyleType style, float complexity = 0.5f);
+
+	private:
+		std::array<std::unique_ptr<Pattern>, 8> slots;
+		int activeSlot = 0;
+		int queuedSlot = -1;
+
+		float currentIntensity = 0.5f;
+		bool isPlaying = false;
+
+		double lastPpqPosition = 0.0;
+		int samplesPerStep = 0;
+		int sampleCounter = 0;
+
+		void generateMidiForStep(juce::MidiBuffer& midiMessages,
+			int samplePosition,
+			const Pattern& pattern,
+			int stepIndex);
+
+		Pattern applyIntensity(const Pattern& basePattern, float intensity);
+	};
+
+} // namespace BeatCrafter

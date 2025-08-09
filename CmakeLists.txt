@@ -1,0 +1,103 @@
+cmake_minimum_required(VERSION 3.22)
+
+# Version et nom du projet
+project(BeatCrafter VERSION 0.1.0)
+
+# C++ 17 minimum pour JUCE moderne
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Options de build
+option(BUILD_STANDALONE "Build standalone application" ON)
+option(BUILD_VST3 "Build VST3 plugin" ON)
+option(BUILD_AU "Build AU plugin" OFF)
+
+# Clone JUCE si nécessaire
+include(FetchContent)
+FetchContent_Declare(
+    JUCE
+    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+    GIT_TAG        7.0.9
+    GIT_SHALLOW    TRUE
+    GIT_PROGRESS   TRUE
+)
+FetchContent_MakeAvailable(JUCE)
+
+# Plugin/App configuration
+juce_add_plugin(BeatCrafter
+    # Metadata
+    COMPANY_NAME "BeatCrafter"
+    PLUGIN_MANUFACTURER_CODE BCrf
+    PLUGIN_CODE BCr1
+    
+    # Formats
+    FORMATS VST3
+    
+    # Plugin characteristics
+    IS_SYNTH FALSE
+    IS_MIDI_EFFECT TRUE
+    NEEDS_MIDI_INPUT TRUE
+    NEEDS_MIDI_OUTPUT TRUE
+    PRODUCES_MIDI_OUTPUT TRUE
+    
+    # Names
+    PRODUCT_NAME "BeatCrafter"
+    BUNDLE_ID "com.beatcrafter.beatcrafter"
+    
+    # Copy plugin after build
+    COPY_PLUGIN_AFTER_BUILD TRUE
+    
+    # Icon
+    # ICON_BIG Assets/icon.png
+)
+
+# Source files
+target_sources(BeatCrafter
+    PRIVATE
+        Source/PluginProcessor.cpp
+        Source/PluginEditor.cpp
+        Source/Core/Pattern.cpp
+        Source/Core/PatternEngine.cpp
+        Source/Core/IntensityMapper.cpp
+        Source/GUI/PatternGrid.cpp
+        Source/GUI/LookAndFeel.cpp
+        Source/GUI/SlotManager.cpp
+)
+
+# Compile definitions
+target_compile_definitions(BeatCrafter
+    PUBLIC
+        JUCE_WEB_BROWSER=0
+        JUCE_USE_CURL=0
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_DISPLAY_SPLASH_SCREEN=0
+        JUCE_REPORT_APP_USAGE=0
+)
+
+# Link libraries
+target_link_libraries(BeatCrafter
+    PRIVATE
+        juce::juce_audio_basics
+        juce::juce_audio_devices
+        juce::juce_audio_formats
+        juce::juce_audio_plugin_client
+        juce::juce_audio_processors
+        juce::juce_audio_utils
+        juce::juce_core
+        juce::juce_data_structures
+        juce::juce_events
+        juce::juce_graphics
+        juce::juce_gui_basics
+        juce::juce_gui_extra
+    PUBLIC
+        juce::juce_recommended_config_flags
+        juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags
+)
+
+# Platform specific settings
+if(MSVC)
+    target_compile_options(BeatCrafter PRIVATE /W4)
+else()
+    target_compile_options(BeatCrafter PRIVATE -Wall -Wextra -Wpedantic)
+endif()

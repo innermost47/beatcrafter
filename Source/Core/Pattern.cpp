@@ -1,0 +1,335 @@
+#include "Pattern.h"
+
+namespace BeatCrafter {
+
+	//============================================================================
+	// Step Implementation
+	//============================================================================
+
+	Step::Step()
+		: active(false),
+		velocity(0.8f),
+		microTiming(0.0f),
+		probability(1.0f) {
+	}
+
+	bool Step::isActive() const {
+		return active;
+	}
+
+	void Step::setActive(bool shouldBeActive) {
+		active = shouldBeActive;
+	}
+
+	float Step::getVelocity() const {
+		return velocity;
+	}
+
+	void Step::setVelocity(float v) {
+		velocity = juce::jlimit(0.0f, 1.0f, v);
+	}
+
+	float Step::getMicroTiming() const {
+		return microTiming;
+	}
+
+	void Step::setMicroTiming(float mt) {
+		microTiming = juce::jlimit(-0.5f, 0.5f, mt);
+	}
+
+	float Step::getProbability() const {
+		return probability;
+	}
+
+	void Step::setProbability(float p) {
+		probability = juce::jlimit(0.0f, 1.0f, p);
+	}
+
+	//============================================================================
+	// Track Implementation
+	//============================================================================
+
+	Track::Track(const juce::String& name, int midiNote)
+		: trackName(name),
+		midiNoteNumber(midiNote) {
+		steps.resize(16);
+	}
+
+	Step& Track::getStep(int index) {
+		jassert(index >= 0 && index < steps.size());
+		return steps[index];
+	}
+
+	const Step& Track::getStep(int index) const {
+		jassert(index >= 0 && index < steps.size());
+		return steps[index];
+	}
+
+	void Track::setLength(int numSteps) {
+		steps.resize(numSteps);
+	}
+
+	int Track::getLength() const {
+		return static_cast<int>(steps.size());
+	}
+
+	juce::String Track::getName() const {
+		return trackName;
+	}
+
+	void Track::setName(const juce::String& name) {
+		trackName = name;
+	}
+
+	int Track::getMidiNote() const {
+		return midiNoteNumber;
+	}
+
+	void Track::setMidiNote(int note) {
+		midiNoteNumber = note;
+	}
+
+	void Track::clear() {
+		for (auto& step : steps) {
+			step.setActive(false);
+			step.setVelocity(0.8f);
+			step.setMicroTiming(0.0f);
+			step.setProbability(1.0f);
+		}
+	}
+
+	//============================================================================
+	// Pattern Implementation
+	//============================================================================
+
+	Pattern::Pattern(const juce::String& name)
+		: patternName(name),
+		swing(0.0f),
+		currentStep(0) {
+
+		// Initialize default drum kit tracks with General MIDI mapping
+		tracks.emplace_back("Kick", GMDrum::KICK_1);
+		tracks.emplace_back("Snare", GMDrum::SNARE);
+		tracks.emplace_back("Hi-Hat", GMDrum::HIHAT_CLOSED);
+		tracks.emplace_back("Open HH", GMDrum::HIHAT_OPEN);
+		tracks.emplace_back("Crash", GMDrum::CRASH_1);
+		tracks.emplace_back("Ride", GMDrum::RIDE);
+		tracks.emplace_back("Tom Hi", GMDrum::TOM_HIGH);
+		tracks.emplace_back("Tom Low", GMDrum::TOM_LOW);
+
+		signature = { 4, 4 };
+	}
+
+	Track& Pattern::getTrack(int index) {
+		jassert(index >= 0 && index < tracks.size());
+		return tracks[index];
+	}
+
+	const Track& Pattern::getTrack(int index) const {
+		jassert(index >= 0 && index < tracks.size());
+		return tracks[index];
+	}
+
+	int Pattern::getNumTracks() const {
+		return static_cast<int>(tracks.size());
+	}
+
+	juce::String Pattern::getName() const {
+		return patternName;
+	}
+
+	void Pattern::setName(const juce::String& name) {
+		patternName = name;
+	}
+
+	float Pattern::getSwing() const {
+		return swing;
+	}
+
+	void Pattern::setSwing(float s) {
+		swing = juce::jlimit(0.0f, 0.75f, s);
+	}
+
+	int Pattern::getCurrentStep() const {
+		return currentStep;
+	}
+
+	void Pattern::setCurrentStep(int step) {
+		currentStep = step;
+	}
+
+	void Pattern::advanceStep() {
+		currentStep = (currentStep + 1) % getLength();
+	}
+
+	int Pattern::getLength() const {
+		return tracks.empty() ? 16 : tracks[0].getLength();
+	}
+
+	void Pattern::setLength(int numSteps) {
+		for (auto& track : tracks) {
+			track.setLength(numSteps);
+		}
+	}
+
+	TimeSignature Pattern::getTimeSignature() const {
+		return signature;
+	}
+
+	void Pattern::setTimeSignature(TimeSignature ts) {
+		signature = ts;
+		setLength(ts.getStepsPerBar());
+	}
+
+	void Pattern::clear() {
+		for (auto& track : tracks) {
+			track.clear();
+		}
+		currentStep = 0;
+	}
+
+	void Pattern::generateBasicRockPattern() {
+		clear();
+
+		// Classic rock beat
+		// Kick on 1 and 3 (beats 0 and 8 in 16th notes)
+		getTrack(0).getStep(0).setActive(true);
+		getTrack(0).getStep(0).setVelocity(0.9f);
+		getTrack(0).getStep(8).setActive(true);
+		getTrack(0).getStep(8).setVelocity(0.85f);
+
+		// Snare on 2 and 4 (beats 4 and 12)
+		getTrack(1).getStep(4).setActive(true);
+		getTrack(1).getStep(4).setVelocity(0.85f);
+		getTrack(1).getStep(12).setActive(true);
+		getTrack(1).getStep(12).setVelocity(0.9f);
+
+		// Hi-hat pattern - 8th notes with accent on downbeats
+		for (int i = 0; i < 16; i += 2) {
+			getTrack(2).getStep(i).setActive(true);
+			// Stronger velocity on quarter notes
+			if (i % 4 == 0) {
+				getTrack(2).getStep(i).setVelocity(0.7f);
+			}
+			else {
+				getTrack(2).getStep(i).setVelocity(0.5f);
+			}
+		}
+
+		// Optional: Add a crash on the first beat
+		getTrack(4).getStep(0).setActive(true);
+		getTrack(4).getStep(0).setVelocity(0.6f);
+		getTrack(4).getStep(0).setProbability(0.3f); // Only plays 30% of the time
+	}
+
+	void Pattern::generateBasicMetalPattern() {
+		clear();
+
+		// Double kick pattern
+		getTrack(0).getStep(0).setActive(true);
+		getTrack(0).getStep(0).setVelocity(0.95f);
+		getTrack(0).getStep(2).setActive(true);
+		getTrack(0).getStep(2).setVelocity(0.85f);
+		getTrack(0).getStep(8).setActive(true);
+		getTrack(0).getStep(8).setVelocity(0.9f);
+		getTrack(0).getStep(10).setActive(true);
+		getTrack(0).getStep(10).setVelocity(0.85f);
+
+		// Snare on 2 and 4
+		getTrack(1).getStep(4).setActive(true);
+		getTrack(1).getStep(4).setVelocity(0.95f);
+		getTrack(1).getStep(12).setActive(true);
+		getTrack(1).getStep(12).setVelocity(0.95f);
+
+		// Fast hi-hat or ride pattern
+		for (int i = 0; i < 16; ++i) {
+			getTrack(2).getStep(i).setActive(true);
+			getTrack(2).getStep(i).setVelocity(0.4f + (i % 2) * 0.2f);
+		}
+
+		// Crash accents
+		getTrack(4).getStep(0).setActive(true);
+		getTrack(4).getStep(0).setVelocity(0.8f);
+	}
+
+	void Pattern::generateBasicJazzPattern() {
+		clear();
+
+		// Set swing feel
+		setSwing(0.67f);
+
+		// Light kick pattern
+		getTrack(0).getStep(0).setActive(true);
+		getTrack(0).getStep(0).setVelocity(0.5f);
+		getTrack(0).getStep(10).setActive(true);
+		getTrack(0).getStep(10).setVelocity(0.4f);
+		getTrack(0).getStep(10).setProbability(0.6f);
+
+		// Snare ghost notes and accents
+		getTrack(1).getStep(3).setActive(true);
+		getTrack(1).getStep(3).setVelocity(0.3f); // Ghost note
+		getTrack(1).getStep(4).setActive(true);
+		getTrack(1).getStep(4).setVelocity(0.6f);
+		getTrack(1).getStep(7).setActive(true);
+		getTrack(1).getStep(7).setVelocity(0.25f); // Ghost note
+		getTrack(1).getStep(11).setActive(true);
+		getTrack(1).getStep(11).setVelocity(0.35f); // Ghost note
+		getTrack(1).getStep(12).setActive(true);
+		getTrack(1).getStep(12).setVelocity(0.55f);
+
+		// Ride cymbal pattern
+		for (int i = 0; i < 16; i += 2) {
+			getTrack(5).getStep(i).setActive(true);
+			getTrack(5).getStep(i).setVelocity(0.4f + (i % 4 == 0 ? 0.1f : 0.0f));
+		}
+
+		// Occasional hi-hat pedal
+		getTrack(2).getStep(2).setActive(true);
+		getTrack(2).getStep(2).setVelocity(0.3f);
+		getTrack(2).getStep(10).setActive(true);
+		getTrack(2).getStep(10).setVelocity(0.3f);
+	}
+
+	void Pattern::generateBasicFunkPattern() {
+		clear();
+
+		// Syncopated kick
+		getTrack(0).getStep(0).setActive(true);
+		getTrack(0).getStep(0).setVelocity(0.95f);
+		getTrack(0).getStep(3).setActive(true);
+		getTrack(0).getStep(3).setVelocity(0.7f);
+		getTrack(0).getStep(8).setActive(true);
+		getTrack(0).getStep(8).setVelocity(0.85f);
+		getTrack(0).getStep(10).setActive(true);
+		getTrack(0).getStep(10).setVelocity(0.9f);
+
+		// Snare with ghost notes
+		getTrack(1).getStep(2).setActive(true);
+		getTrack(1).getStep(2).setVelocity(0.3f); // Ghost
+		getTrack(1).getStep(4).setActive(true);
+		getTrack(1).getStep(4).setVelocity(0.9f);
+		getTrack(1).getStep(6).setActive(true);
+		getTrack(1).getStep(6).setVelocity(0.25f); // Ghost
+		getTrack(1).getStep(7).setActive(true);
+		getTrack(1).getStep(7).setVelocity(0.35f); // Ghost
+		getTrack(1).getStep(12).setActive(true);
+		getTrack(1).getStep(12).setVelocity(0.85f);
+		getTrack(1).getStep(15).setActive(true);
+		getTrack(1).getStep(15).setVelocity(0.4f); // Ghost
+
+		// Hi-hat pattern with opens
+		for (int i = 0; i < 16; ++i) {
+			if (i == 6 || i == 14) {
+				// Open hi-hat
+				getTrack(3).getStep(i).setActive(true);
+				getTrack(3).getStep(i).setVelocity(0.6f);
+			}
+			else {
+				// Closed hi-hat
+				getTrack(2).getStep(i).setActive(true);
+				getTrack(2).getStep(i).setVelocity(0.5f + (i % 2) * 0.2f);
+			}
+		}
+	}
+
+} // namespace BeatCrafter
