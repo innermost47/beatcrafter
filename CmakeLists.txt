@@ -44,9 +44,6 @@ juce_add_plugin(BeatCrafter
     PRODUCT_NAME "BeatCrafter"
     BUNDLE_ID "com.beatcrafter.beatcrafter"
     
-    # Copy plugin after build
-    COPY_PLUGIN_AFTER_BUILD TRUE
-    
     # Icon
     # ICON_BIG Assets/icon.png
 )
