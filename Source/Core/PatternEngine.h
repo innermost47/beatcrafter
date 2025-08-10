@@ -13,8 +13,11 @@ namespace BeatCrafter {
 		~PatternEngine() = default;
 
 		// Pattern management
-		Pattern& getCurrentPattern() { return *slots[activeSlot]; }
 		const Pattern& getCurrentPattern() const { return *slots[activeSlot]; }
+
+		Pattern* getCurrentBasePattern() {
+			return slots[activeSlot].get();
+		}
 
 		Pattern* getSlot(int index) {
 			if (index >= 0 && index < 8 && slots[index])
@@ -34,7 +37,8 @@ namespace BeatCrafter {
 
 		// Intensity control
 		void setIntensity(float intensity) {
-			currentIntensity = juce::jlimit(0.0f, 1.0f, intensity);
+			currentIntensity = intensity;
+			intensityCacheValid = false;  // Invalider le cache
 		}
 		float getIntensity() const { return currentIntensity; }
 
@@ -51,17 +55,28 @@ namespace BeatCrafter {
 		// Generation
 		void generateNewPattern(StyleType style, float complexity = 0.5f);
 
-		Pattern getDisplayPattern() const {
-			if (!slots[activeSlot]) return Pattern("Empty");
-			return applyIntensity(*slots[activeSlot], currentIntensity);
+		const Pattern* getDisplayPattern() const {
+			if (!intensityCacheValid && slots[activeSlot]) {
+				intensifiedPatternCache = applyIntensity(*slots[activeSlot], currentIntensity);
+				intensityCacheValid = true;
+			}
+			return &intensifiedPatternCache;
 		}
 
 		Pattern applyIntensity(const Pattern& basePattern, float intensity) const;
+
+		Pattern& getCurrentPattern() {
+			return slots[activeSlot] ? *slots[activeSlot] : dummyPattern;
+		}
 
 	private:
 		std::array<std::unique_ptr<Pattern>, 8> slots;
 		int activeSlot = 0;
 		int queuedSlot = -1;
+
+		mutable Pattern intensifiedPatternCache;
+		mutable bool intensityCacheValid = false;
+		Pattern dummyPattern{ "Empty" };
 
 		float currentIntensity = 0.5f;
 		bool isPlaying = false;

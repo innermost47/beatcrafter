@@ -20,6 +20,7 @@ namespace BeatCrafter {
 		// Pattern Grid
 		patternGrid = std::make_unique<PatternGrid>();
 		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
+		patternGrid->setPatternEngine(&processor.getPatternEngine());
 		addAndMakeVisible(patternGrid.get());
 
 		// Slot Manager
@@ -62,18 +63,9 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterEditor::updatePatternDisplay() {
-		auto& engine = processor.getPatternEngine();
-		float currentIntensity = processor.intensityParam->get();
-		engine.setIntensity(currentIntensity);
-
-		// Obtenir le pattern avec l'intensité appliquée
-		Pattern displayPattern = engine.getDisplayPattern();
-
-		// IMPORTANT : Conserver la position du playhead du pattern original
-		displayPattern.setCurrentStep(engine.getCurrentPattern().getCurrentStep());
-
-		// Mettre à jour l'affichage avec le pattern modifié
-		patternGrid->updateWithIntensity(displayPattern);
+		processor.getPatternEngine().setIntensity(processor.intensityParam->get());
+		patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
+		patternGrid->repaint();
 	}
 
 	void BeatCrafterEditor::paint(juce::Graphics& g) {
@@ -123,17 +115,7 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterEditor::timerCallback() {
-		auto& engine = processor.getPatternEngine();
-		auto& currentPattern = engine.getCurrentPattern();
-
-		// Mettre à jour la position du playhead
-		int newPlayhead = currentPattern.getCurrentStep();
-		if (newPlayhead != lastPlayheadPosition) {
-			lastPlayheadPosition = newPlayhead;
-			patternGrid->repaint();
-		}
-
-		// Update slot states
+		patternGrid->repaint();
 		slotManager->updateSlotStates();
 	}
 

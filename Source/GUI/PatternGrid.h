@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_core/juce_core.h>  
 #include "../Core/Pattern.h"
+#include "../Core/PatternEngine.h"
 #include "LookAndFeel.h"
 
 namespace BeatCrafter {
@@ -11,8 +12,11 @@ namespace BeatCrafter {
 		PatternGrid();
 		~PatternGrid() override;
 
-		void setPattern(Pattern* pattern);
-		Pattern* getPattern() const { return currentPattern; }
+		void setPattern(const Pattern* pattern);
+		void setPatternEngine(PatternEngine* engine);
+		const Pattern* getPattern() const {
+			return currentPattern;
+		}
 
 		void paint(juce::Graphics& g) override;
 		void resized() override;
@@ -28,8 +32,9 @@ namespace BeatCrafter {
 		std::function<void(int track, int step, bool active)> onStepChanged;
 
 	private:
-		Pattern* currentPattern = nullptr;
+		const Pattern* currentPattern = nullptr;
 		ModernLookAndFeel* lookAndFeel = nullptr;
+		PatternEngine* patternEngine = nullptr;
 
 		int hoveredTrack = -1;
 		int hoveredStep = -1;

@@ -11,9 +11,13 @@ namespace BeatCrafter {
 		stopTimer();
 	}
 
-	void PatternGrid::setPattern(Pattern* pattern) {
+	void PatternGrid::setPattern(const Pattern* pattern) {
 		currentPattern = pattern;
 		repaint();
+	}
+
+	void PatternGrid::setPatternEngine(PatternEngine* engine) {
+		patternEngine = engine;
 	}
 
 	void PatternGrid::updateWithIntensity(const Pattern& intensifiedPattern) {
@@ -56,16 +60,22 @@ namespace BeatCrafter {
 		if (!currentPattern) return;
 
 		auto [track, step] = getStepFromPosition(event.getPosition());
-
 		if (track >= 0 && step >= 0) {
-			auto& stepObj = currentPattern->getTrack(track).getStep(step);
-			bool newState = !stepObj.isActive();
-			stepObj.setActive(newState);
+			// Obtenir le pattern éditable depuis PatternEngine
+			if (patternEngine) {
+				Pattern* editablePattern = patternEngine->getCurrentBasePattern();
+				if (editablePattern) {
+					auto& stepObj = editablePattern->getTrack(track).getStep(step);
+					bool newState = !stepObj.isActive();
+					stepObj.setActive(newState);
+					if (onStepChanged)
+						onStepChanged(track, step, newState);
 
-			if (onStepChanged)
-				onStepChanged(track, step, newState);
-
-			repaint();
+					// Mettre à jour l'affichage avec l'intensité
+					currentPattern = patternEngine->getDisplayPattern();
+					repaint();
+				}
+			}
 		}
 	}
 
@@ -160,6 +170,11 @@ namespace BeatCrafter {
 	void PatternGrid::drawSteps(juce::Graphics& g) {
 		if (!currentPattern) return;
 
+		Pattern displayPattern = *currentPattern;
+		if (patternEngine) {
+			displayPattern = patternEngine->applyIntensity(*currentPattern, patternEngine->getIntensity());
+		}
+
 		for (int track = 0; track < currentPattern->getNumTracks(); ++track) {
 			for (int step = 0; step < currentPattern->getLength(); ++step) {
 				auto bounds = getStepBounds(track, step).reduced(2.0f);
@@ -173,12 +188,10 @@ namespace BeatCrafter {
 
 				// Step state
 				if (stepObj.isActive()) {
-					// Velocity affects opacity
 					float alpha = 0.5f + stepObj.getVelocity() * 0.5f;
 					g.setColour(lookAndFeel->stepActive.withAlpha(alpha));
 					g.fillRoundedRectangle(bounds.reduced(1.0f), 3.0f);
 
-					// Velocity indicator (small bar at bottom)
 					float velocityHeight = bounds.getHeight() * stepObj.getVelocity() * 0.3f;
 					g.setColour(lookAndFeel->accent);
 					g.fillRect(bounds.getX(),
@@ -195,9 +208,13 @@ namespace BeatCrafter {
 	}
 
 	void PatternGrid::drawPlayhead(juce::Graphics& g) {
-		if (!currentPattern || playheadPosition < 0) return;
+		if (!currentPattern) return;
 
-		float x = headerWidth + playheadPosition * cellWidth;
+		int playheadPos = currentPattern->getCurrentStep();
+
+		if (playheadPos < 0) return;
+
+		float x = headerWidth + playheadPos * cellWidth;
 
 		// Glow effect
 		g.setColour(lookAndFeel->accent.withAlpha(0.3f));
