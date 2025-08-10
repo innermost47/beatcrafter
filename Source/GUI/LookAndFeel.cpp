@@ -265,9 +265,17 @@ namespace BeatCrafter {
 			return;
 		}
 
-		auto textColourToUse = textColour != nullptr ? *textColour
-			: isHighlighted ? backgroundDark
-			: *textColour;
+		// CORRECTION ICI - gestion sécurisée du pointeur textColour
+		juce::Colour textColourToUse;
+		if (textColour != nullptr) {
+			textColourToUse = *textColour;
+		}
+		else if (isHighlighted) {
+			textColourToUse = backgroundDark;
+		}
+		else {
+			textColourToUse = this->textColour; // Utiliser la couleur de la classe
+		}
 
 		auto r = area.reduced(1);
 

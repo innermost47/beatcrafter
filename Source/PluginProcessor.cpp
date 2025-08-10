@@ -16,8 +16,6 @@ namespace BeatCrafter {
 			juce::StringArray{ "Rock", "Metal", "Jazz", "Funk", "Electronic", "HipHop", "Latin", "Punk" },
 			0));
 
-		addParameter(playParam = new juce::AudioParameterBool(
-			"play", "Play", false));
 	}
 
 	BeatCrafterProcessor::~BeatCrafterProcessor() {
@@ -52,28 +50,28 @@ namespace BeatCrafter {
 		// Update parameters
 		patternEngine.setIntensity(intensityParam->get());
 
-		// Check if we should be playing
-		bool shouldPlay = playParam->get() || posInfo->getIsPlaying();
-		if (shouldPlay && !patternEngine.getIsPlaying()) {
-			patternEngine.start();
-		}
-		else if (!shouldPlay && patternEngine.getIsPlaying()) {
-			patternEngine.stop();
-		}
+		// SIMPLIFIER : se baser uniquement sur l'état du DAW
+		bool hostIsPlaying = posInfo->getIsPlaying();
 
-		// Process MIDI
-		if (shouldPlay) {
+		if (hostIsPlaying) {
+			if (!patternEngine.getIsPlaying()) {
+				patternEngine.start();
+			}
 			patternEngine.processBlock(midiMessages, buffer.getNumSamples(),
 				currentSampleRate, *posInfo);
+		}
+		else {
+			if (patternEngine.getIsPlaying()) {
+				patternEngine.stop();
+			}
 		}
 	}
 
 	juce::AudioProcessorEditor* BeatCrafterProcessor::createEditor() {
 		return new BeatCrafterEditor(*this);
 	}
-
 	void BeatCrafterProcessor::getStateInformation(juce::MemoryBlock& destData) {
-		// Store parameters
+		// Store parameters - SUPPRIMER playParam
 		auto state = juce::ValueTree("BeatCrafterState");
 		state.setProperty("intensity", intensityParam->get(), nullptr);
 		state.setProperty("style", styleParam->getIndex(), nullptr);
@@ -83,7 +81,7 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterProcessor::setStateInformation(const void* data, int sizeInBytes) {
-		// Restore parameters
+		// Restore parameters - SUPPRIMER playParam
 		auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
 		if (tree.isValid()) {
 			intensityParam->setValueNotifyingHost(tree.getProperty("intensity", 0.5f));

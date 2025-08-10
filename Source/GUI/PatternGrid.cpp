@@ -16,6 +16,14 @@ namespace BeatCrafter {
 		repaint();
 	}
 
+	void PatternGrid::updateWithIntensity(const Pattern& intensifiedPattern) {
+		// Stocker une copie temporaire du pattern intensifié
+		static Pattern tempPattern("Display");
+		tempPattern = intensifiedPattern;
+		currentPattern = &tempPattern;
+		repaint();
+	}
+
 	void PatternGrid::paint(juce::Graphics& g) {
 		if (!lookAndFeel) {
 			lookAndFeel = dynamic_cast<ModernLookAndFeel*>(&getLookAndFeel());

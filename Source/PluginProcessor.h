@@ -42,7 +42,6 @@ namespace BeatCrafter {
 		// Parameters
 		juce::AudioParameterFloat* intensityParam;
 		juce::AudioParameterChoice* styleParam;
-		juce::AudioParameterBool* playParam;
 
 	private:
 		PatternEngine patternEngine;

@@ -51,6 +51,13 @@ namespace BeatCrafter {
 		// Generation
 		void generateNewPattern(StyleType style, float complexity = 0.5f);
 
+		Pattern getDisplayPattern() const {
+			if (!slots[activeSlot]) return Pattern("Empty");
+			return applyIntensity(*slots[activeSlot], currentIntensity);
+		}
+
+		Pattern applyIntensity(const Pattern& basePattern, float intensity) const;
+
 	private:
 		std::array<std::unique_ptr<Pattern>, 8> slots;
 		int activeSlot = 0;
@@ -68,7 +75,6 @@ namespace BeatCrafter {
 			const Pattern& pattern,
 			int stepIndex);
 
-		Pattern applyIntensity(const Pattern& basePattern, float intensity);
 	};
 
 } // namespace BeatCrafter

@@ -117,7 +117,7 @@ namespace BeatCrafter {
 		}
 	}
 
-	Pattern PatternEngine::applyIntensity(const Pattern& basePattern, float intensity) {
+	Pattern PatternEngine::applyIntensity(const Pattern& basePattern, float intensity) const {
 		Pattern result = basePattern;
 
 		// 0-25%: Base pattern only
@@ -182,7 +182,14 @@ namespace BeatCrafter {
 	}
 
 	void PatternEngine::generateNewPattern(StyleType style, float complexity) {
-		auto newPattern = std::make_unique<Pattern>("Generated");
+		// Garder le slot actuel et créer un nouveau pattern dedans
+		if (!slots[activeSlot]) {
+			slots[activeSlot] = std::make_unique<Pattern>("Generated");
+		}
+
+		auto& pattern = *slots[activeSlot];
+		pattern.clear();
+		pattern.setName("Generated " + juce::String((int)style));
 
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -191,50 +198,150 @@ namespace BeatCrafter {
 		// Style-specific generation
 		switch (style) {
 		case StyleType::Rock:
-			// Basic rock pattern
-			newPattern->getTrack(0).getStep(0).setActive(true);  // Kick
-			newPattern->getTrack(0).getStep(8).setActive(true);
-			newPattern->getTrack(1).getStep(4).setActive(true);  // Snare
-			newPattern->getTrack(1).getStep(12).setActive(true);
-
-			// Hi-hats based on complexity
-			for (int i = 0; i < 16; i += (complexity > 0.5f ? 1 : 2)) {
-				newPattern->getTrack(2).getStep(i).setActive(true);
-				newPattern->getTrack(2).getStep(i).setVelocity(0.5f + complexity * 0.3f);
+			pattern.generateBasicRockPattern();
+			if (complexity > 0.5f) {
+				pattern.getTrack(0).getStep(2).setActive(true);
+				pattern.getTrack(0).getStep(2).setVelocity(0.7f);
+				pattern.getTrack(0).getStep(10).setActive(true);
+				pattern.getTrack(0).getStep(10).setVelocity(0.7f);
 			}
 			break;
 
 		case StyleType::Metal:
-			// Double kicks
-			for (int i = 0; i < 16; i += 2) {
-				if (dis(gen) < 0.6f + complexity * 0.3f) {
-					newPattern->getTrack(0).getStep(i).setActive(true);
-				}
-			}
-			// Snare on 2 and 4
-			newPattern->getTrack(1).getStep(4).setActive(true);
-			newPattern->getTrack(1).getStep(12).setActive(true);
+			pattern.generateBasicMetalPattern();
 			break;
 
 		case StyleType::Jazz:
-			// Swing pattern
-			newPattern->setSwing(0.67f);
-			// Ride pattern
-			for (int i = 0; i < 16; i += 2) {
-				newPattern->getTrack(5).getStep(i).setActive(true);
-				newPattern->getTrack(5).getStep(i).setVelocity(0.4f);
+			pattern.generateBasicJazzPattern();
+			break;
+
+		case StyleType::Funk:
+			// Créer pattern funk directement ici
+			pattern.clear();
+			// Kick syncopé
+			pattern.getTrack(0).getStep(0).setActive(true);
+			pattern.getTrack(0).getStep(0).setVelocity(0.9f);
+			pattern.getTrack(0).getStep(3).setActive(true);
+			pattern.getTrack(0).getStep(3).setVelocity(0.7f);
+			pattern.getTrack(0).getStep(10).setActive(true);
+			pattern.getTrack(0).getStep(10).setVelocity(0.8f);
+
+			// Snare avec ghost notes
+			pattern.getTrack(1).getStep(4).setActive(true);
+			pattern.getTrack(1).getStep(4).setVelocity(0.9f);
+			pattern.getTrack(1).getStep(6).setActive(true);
+			pattern.getTrack(1).getStep(6).setVelocity(0.3f); // Ghost
+			pattern.getTrack(1).getStep(12).setActive(true);
+			pattern.getTrack(1).getStep(12).setVelocity(0.85f);
+
+			// Hi-hat dense
+			for (int i = 0; i < 16; ++i) {
+				pattern.getTrack(2).getStep(i).setActive(true);
+				pattern.getTrack(2).getStep(i).setVelocity(0.4f + (i % 2) * 0.2f);
 			}
-			// Subtle kick
-			newPattern->getTrack(0).getStep(0).setActive(true);
-			newPattern->getTrack(0).getStep(0).setVelocity(0.5f);
+			break;
+
+		case StyleType::Electronic:
+			// Pattern électro
+			pattern.clear();
+			// Kick sur tous les temps
+			for (int i = 0; i < 16; i += 4) {
+				pattern.getTrack(0).getStep(i).setActive(true);
+				pattern.getTrack(0).getStep(i).setVelocity(0.9f);
+			}
+			// Snare sur 2 et 4
+			pattern.getTrack(1).getStep(4).setActive(true);
+			pattern.getTrack(1).getStep(4).setVelocity(0.8f);
+			pattern.getTrack(1).getStep(12).setActive(true);
+			pattern.getTrack(1).getStep(12).setVelocity(0.8f);
+			// Hi-hat 16èmes
+			for (int i = 0; i < 16; ++i) {
+				pattern.getTrack(2).getStep(i).setActive(true);
+				pattern.getTrack(2).getStep(i).setVelocity(0.3f + (i % 4 == 0 ? 0.2f : 0.0f));
+			}
+			break;
+
+		case StyleType::HipHop:
+			// Pattern hip-hop
+			pattern.clear();
+			// Kick lourd
+			pattern.getTrack(0).getStep(0).setActive(true);
+			pattern.getTrack(0).getStep(0).setVelocity(1.0f);
+			pattern.getTrack(0).getStep(6).setActive(true);
+			pattern.getTrack(0).getStep(6).setVelocity(0.8f);
+
+			// Snare avec ghost
+			pattern.getTrack(1).getStep(4).setActive(true);
+			pattern.getTrack(1).getStep(4).setVelocity(0.9f);
+			pattern.getTrack(1).getStep(10).setActive(true);
+			pattern.getTrack(1).getStep(10).setVelocity(0.4f); // Ghost
+			pattern.getTrack(1).getStep(12).setActive(true);
+			pattern.getTrack(1).getStep(12).setVelocity(0.85f);
+
+			// Hi-hat shuffle
+			for (int i = 2; i < 16; i += 4) {
+				pattern.getTrack(2).getStep(i).setActive(true);
+				pattern.getTrack(2).getStep(i).setVelocity(0.6f);
+			}
+			break;
+
+		case StyleType::Latin:
+			// Pattern latin
+			pattern.clear();
+			// Kick pattern latin
+			pattern.getTrack(0).getStep(0).setActive(true);
+			pattern.getTrack(0).getStep(0).setVelocity(0.8f);
+			pattern.getTrack(0).getStep(5).setActive(true);
+			pattern.getTrack(0).getStep(5).setVelocity(0.7f);
+			pattern.getTrack(0).getStep(8).setActive(true);
+			pattern.getTrack(0).getStep(8).setVelocity(0.75f);
+			pattern.getTrack(0).getStep(13).setActive(true);
+			pattern.getTrack(0).getStep(13).setVelocity(0.7f);
+
+			// Snare sur 2 et 4
+			pattern.getTrack(1).getStep(4).setActive(true);
+			pattern.getTrack(1).getStep(4).setVelocity(0.8f);
+			pattern.getTrack(1).getStep(12).setActive(true);
+			pattern.getTrack(1).getStep(12).setVelocity(0.8f);
+
+			// Hi-hat ouvert sur off-beats
+			pattern.getTrack(3).getStep(2).setActive(true);
+			pattern.getTrack(3).getStep(2).setVelocity(0.6f);
+			pattern.getTrack(3).getStep(6).setActive(true);
+			pattern.getTrack(3).getStep(6).setVelocity(0.6f);
+			pattern.getTrack(3).getStep(10).setActive(true);
+			pattern.getTrack(3).getStep(10).setVelocity(0.6f);
+			pattern.getTrack(3).getStep(14).setActive(true);
+			pattern.getTrack(3).getStep(14).setVelocity(0.6f);
+			break;
+
+		case StyleType::Punk:
+			// Pattern punk rapide et agressif
+			pattern.clear();
+			// Kick sur tous les temps
+			for (int i = 0; i < 16; i += 4) {
+				pattern.getTrack(0).getStep(i).setActive(true);
+				pattern.getTrack(0).getStep(i).setVelocity(0.95f);
+			}
+			// Snare sur 2 et 4 très fort
+			pattern.getTrack(1).getStep(4).setActive(true);
+			pattern.getTrack(1).getStep(4).setVelocity(1.0f);
+			pattern.getTrack(1).getStep(12).setActive(true);
+			pattern.getTrack(1).getStep(12).setVelocity(1.0f);
+			// Hi-hat 8èmes rapides
+			for (int i = 0; i < 16; i += 2) {
+				pattern.getTrack(2).getStep(i).setActive(true);
+				pattern.getTrack(2).getStep(i).setVelocity(0.8f);
+			}
+			// Crash sur le 1
+			pattern.getTrack(4).getStep(0).setActive(true);
+			pattern.getTrack(4).getStep(0).setVelocity(0.9f);
 			break;
 
 		default:
-			newPattern->generateBasicRockPattern();
+			pattern.generateBasicRockPattern();
 			break;
 		}
-
-		loadPatternToSlot(std::move(newPattern), activeSlot);
 	}
 
 } // namespace BeatCrafter

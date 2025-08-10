@@ -23,6 +23,8 @@ namespace BeatCrafter {
 		BeatCrafterProcessor& processor;
 		ModernLookAndFeel modernLookAndFeel;
 
+		int lastPlayheadPosition = -1;
+
 		// GUI Components
 		std::unique_ptr<PatternGrid> patternGrid;
 		std::unique_ptr<SlotManager> slotManager;
@@ -35,7 +37,6 @@ namespace BeatCrafter {
 
 		juce::TextButton generateButton{ "Generate" };
 		juce::TextButton clearButton{ "Clear" };
-		juce::TextButton playButton{ "Play" };
 
 		// Parameter attachments
 		std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> intensityAttachment;
@@ -44,7 +45,7 @@ namespace BeatCrafter {
 		void setupComponents();
 		void onGenerateClicked();
 		void onClearClicked();
-		void onPlayClicked();
+		void updatePatternDisplay();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};

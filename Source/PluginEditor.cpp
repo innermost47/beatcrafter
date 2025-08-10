@@ -31,8 +31,8 @@ namespace BeatCrafter {
 		intensitySlider.setRange(0.0, 1.0);
 		intensitySlider.setValue(processor.intensityParam->get());
 		intensitySlider.onValueChange = [this]() {
-			processor.intensityParam->setValueNotifyingHost(
-				intensitySlider.getValue());
+			processor.intensityParam->setValueNotifyingHost(intensitySlider.getValue());
+			updatePatternDisplay();
 			};
 		addAndMakeVisible(intensitySlider);
 
@@ -59,10 +59,21 @@ namespace BeatCrafter {
 
 		clearButton.onClick = [this]() { onClearClicked(); };
 		addAndMakeVisible(clearButton);
+	}
 
-		playButton.onClick = [this]() { onPlayClicked(); };
-		playButton.setToggleState(processor.playParam->get(), juce::dontSendNotification);
-		addAndMakeVisible(playButton);
+	void BeatCrafterEditor::updatePatternDisplay() {
+		auto& engine = processor.getPatternEngine();
+		float currentIntensity = processor.intensityParam->get();
+		engine.setIntensity(currentIntensity);
+
+		// Obtenir le pattern avec l'intensité appliquée
+		Pattern displayPattern = engine.getDisplayPattern();
+
+		// IMPORTANT : Conserver la position du playhead du pattern original
+		displayPattern.setCurrentStep(engine.getCurrentPattern().getCurrentStep());
+
+		// Mettre à jour l'affichage avec le pattern modifié
+		patternGrid->updateWithIntensity(displayPattern);
 	}
 
 	void BeatCrafterEditor::paint(juce::Graphics& g) {
@@ -97,16 +108,12 @@ namespace BeatCrafter {
 		generateButton.setBounds(controlsArea.removeFromLeft(80).reduced(0, 10));
 		controlsArea.removeFromLeft(10);
 		clearButton.setBounds(controlsArea.removeFromLeft(80).reduced(0, 10));
-		controlsArea.removeFromLeft(10);
-		playButton.setBounds(controlsArea.removeFromLeft(80).reduced(0, 10));
 
 		// Intensity slider at bottom
 		auto bottomArea = bounds.removeFromBottom(60);
 		intensityLabel.setBounds(bottomArea.removeFromLeft(80).reduced(20, 0));
 		intensitySlider.setBounds(bottomArea.reduced(20, 15));
 
-		jassert(slotManager != nullptr);
-		jassert(patternGrid != nullptr);
 		// Slot manager
 		auto slotArea = bounds.removeFromTop(60);
 		slotManager->setBounds(slotArea.reduced(20, 10));
@@ -116,10 +123,14 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterEditor::timerCallback() {
-		// Update play button state
-		bool isPlaying = processor.getPatternEngine().getIsPlaying();
-		if (playButton.getToggleState() != isPlaying) {
-			playButton.setToggleState(isPlaying, juce::dontSendNotification);
+		auto& engine = processor.getPatternEngine();
+		auto& currentPattern = engine.getCurrentPattern();
+
+		// Mettre à jour la position du playhead
+		int newPlayhead = currentPattern.getCurrentStep();
+		if (newPlayhead != lastPlayheadPosition) {
+			lastPlayheadPosition = newPlayhead;
+			patternGrid->repaint();
 		}
 
 		// Update slot states
@@ -138,16 +149,5 @@ namespace BeatCrafter {
 		patternGrid->repaint();
 	}
 
-	void BeatCrafterEditor::onPlayClicked() {
-		bool newState = !processor.playParam->get();
-		processor.playParam->setValueNotifyingHost(newState);
-
-		if (newState) {
-			processor.getPatternEngine().start();
-		}
-		else {
-			processor.getPatternEngine().stop();
-		}
-	}
 
 } // namespace BeatCrafter

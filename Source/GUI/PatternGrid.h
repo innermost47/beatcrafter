@@ -22,6 +22,8 @@ namespace BeatCrafter {
 
 		void timerCallback() override;
 
+		void updateWithIntensity(const Pattern& intensifiedPattern);
+
 		// Callbacks
 		std::function<void(int track, int step, bool active)> onStepChanged;
 

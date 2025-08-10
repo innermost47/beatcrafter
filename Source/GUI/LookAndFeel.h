@@ -41,24 +41,24 @@ namespace BeatCrafter {
 		juce::Font getLabelFont(juce::Label&);
 		juce::Font getTextButtonFont(juce::TextButton&, int buttonHeight);
 
-		// Couleurs publiques pour usage dans les components
-		juce::Colour backgroundDark;
-		juce::Colour backgroundMid;
-		juce::Colour backgroundLight;
-		juce::Colour accent;
-		juce::Colour accentDark;
-		juce::Colour accentLight;
-		juce::Colour textColour;
-		juce::Colour textDimmed;
+		// Couleurs publiques pour usage dans les components - AVEC INITIALISATION
+		juce::Colour backgroundDark = juce::Colour(0xff1a1a1a);
+		juce::Colour backgroundMid = juce::Colour(0xff2d2d2d);
+		juce::Colour backgroundLight = juce::Colour(0xff404040);
+		juce::Colour accent = juce::Colour(0xff00bcd4);
+		juce::Colour accentDark = juce::Colour(0xff0097a7);
+		juce::Colour accentLight = juce::Colour(0xff4dd0e1);
+		juce::Colour textColour = juce::Colour(0xfff0f0f0);
+		juce::Colour textDimmed = juce::Colour(0xff888888);
 
-		juce::Colour stepActive;
-		juce::Colour stepInactive;
-		juce::Colour stepHover;
-		juce::Colour stepPlaying;
+		juce::Colour stepActive = juce::Colour(0xff00bcd4);
+		juce::Colour stepInactive = juce::Colour(0xff404040);
+		juce::Colour stepHover = juce::Colour(0xff4dd0e1);
+		juce::Colour stepPlaying = juce::Colour(0xffff6b35);
 
-		juce::Colour slotEmpty;
-		juce::Colour slotLoaded;
-		juce::Colour slotActive;
+		juce::Colour slotEmpty = juce::Colour(0xff2d2d2d);
+		juce::Colour slotLoaded = juce::Colour(0xff404040);
+		juce::Colour slotActive = juce::Colour(0xff00bcd4);
 	};
 
 } // namespace BeatCrafter
