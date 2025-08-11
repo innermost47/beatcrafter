@@ -75,6 +75,13 @@ namespace BeatCrafter {
 			}
 		}
 
+		void clearCurrentPattern() {
+			if (slots[activeSlot]) {
+				slots[activeSlot]->clear();
+				setIntensity(0.0f); // Remettre l'intensité à 0 aussi
+			}
+		}
+
 		void generateNewPatternForSlot(int slot, StyleType style, float complexity = 0.5f);
 
 		StyleType getSlotStyle(int slot) const {

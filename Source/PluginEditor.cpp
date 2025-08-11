@@ -153,7 +153,13 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterEditor::onClearClicked() {
-		processor.getPatternEngine().getCurrentPattern().clear();
+		processor.getPatternEngine().clearCurrentPattern();
+
+		// Mettre à jour le slider d'intensité visuellement
+		intensitySlider.setValue(0.0f, juce::dontSendNotification);
+		processor.intensityParam->setValueNotifyingHost(0.0f);
+
+		// Forcer la mise à jour de l'affichage
 		patternGrid->repaint();
 	}
 
