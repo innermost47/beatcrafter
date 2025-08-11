@@ -12,7 +12,7 @@
 
 The core philosophy: start simple and build complexity musically. Patterns begin with minimal elements (snare only on beat 3) and progressively evolve into full arrangements as intensity increases, respecting the authentic characteristics of each musical style.
 
-![screenshot](assets/screenshot.png)
+![screenshot](./screenshot.png)
 
 ## ✨ Features
 
