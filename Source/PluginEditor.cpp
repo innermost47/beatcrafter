@@ -25,8 +25,17 @@ namespace BeatCrafter {
 
 		// Slot Manager
 		slotManager = std::make_unique<SlotManager>(processor.getPatternEngine());
-		addAndMakeVisible(slotManager.get());
 
+		// Connecter le callback de changement de slot
+		slotManager->onSlotChanged = [this](int slot) {
+			updateStyleComboForCurrentSlot();
+
+			// NOUVEAU : Mettre à jour l'affichage du pattern
+			patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
+			patternGrid->repaint();
+			};
+
+		addAndMakeVisible(slotManager.get());
 		// Intensity Slider
 		intensitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
 		intensitySlider.setRange(0.0, 1.0);
@@ -41,12 +50,21 @@ namespace BeatCrafter {
 		intensityLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textColour);
 		addAndMakeVisible(intensityLabel);
 
-		// Style Combo
 		styleCombo.addItemList(processor.styleParam->choices, 1);
-		styleCombo.setSelectedId(processor.styleParam->getIndex() + 1);
+
+		// Synchroniser avec le style du slot actuel
+		updateStyleComboForCurrentSlot();
+
 		styleCombo.onChange = [this]() {
-			processor.styleParam->setValueNotifyingHost(
-				styleCombo.getSelectedId() - 1);
+			int selectedStyle = styleCombo.getSelectedId() - 1;
+
+			// Mettre à jour le style pour le slot actuel
+			int currentSlot = processor.getPatternEngine().getActiveSlot();
+			processor.slotStyleParams[currentSlot]->setValueNotifyingHost(selectedStyle);
+			processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(selectedStyle));
+
+			// Régénérer le pattern avec le nouveau style
+			onGenerateClicked();
 			};
 		addAndMakeVisible(styleCombo);
 
@@ -60,6 +78,12 @@ namespace BeatCrafter {
 
 		clearButton.onClick = [this]() { onClearClicked(); };
 		addAndMakeVisible(clearButton);
+	}
+
+	void BeatCrafterEditor::updateStyleComboForCurrentSlot() {
+		int currentSlot = processor.getPatternEngine().getActiveSlot();
+		StyleType currentStyle = processor.getPatternEngine().getSlotStyle(currentSlot);
+		styleCombo.setSelectedId(static_cast<int>(currentStyle) + 1, juce::dontSendNotification);
 	}
 
 	void BeatCrafterEditor::updatePatternDisplay() {

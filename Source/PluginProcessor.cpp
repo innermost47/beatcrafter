@@ -16,6 +16,16 @@ namespace BeatCrafter {
 			juce::StringArray{ "Rock", "Metal", "Jazz", "Funk", "Electronic", "HipHop", "Latin", "Punk" },
 			0));
 
+		for (int i = 0; i < 8; ++i) {
+			juce::String paramId = "slotStyle" + juce::String(i);
+			juce::String paramName = "Slot " + juce::String(i + 1) + " Style";
+
+			slotStyleParams[i] = new juce::AudioParameterChoice(
+				paramId, paramName,
+				juce::StringArray{ "Rock", "Metal", "Jazz", "Funk", "Electronic", "HipHop", "Latin", "Punk" },
+				0);
+			addParameter(slotStyleParams[i]);
+		}
 	}
 
 	BeatCrafterProcessor::~BeatCrafterProcessor() {
@@ -70,22 +80,42 @@ namespace BeatCrafter {
 	juce::AudioProcessorEditor* BeatCrafterProcessor::createEditor() {
 		return new BeatCrafterEditor(*this);
 	}
+
 	void BeatCrafterProcessor::getStateInformation(juce::MemoryBlock& destData) {
-		// Store parameters - SUPPRIMER playParam
 		auto state = juce::ValueTree("BeatCrafterState");
 		state.setProperty("intensity", intensityParam->get(), nullptr);
 		state.setProperty("style", styleParam->getIndex(), nullptr);
+
+		// NOUVEAU : Sauvegarder les styles de chaque slot
+		for (int i = 0; i < 8; ++i) {
+			juce::String propName = "slotStyle" + juce::String(i);
+			state.setProperty(propName, slotStyleParams[i]->getIndex(), nullptr);
+		}
+
+		// Sauvegarder le slot actif
+		state.setProperty("activeSlot", getPatternEngine().getActiveSlot(), nullptr);
 
 		juce::MemoryOutputStream stream(destData, false);
 		state.writeToStream(stream);
 	}
 
 	void BeatCrafterProcessor::setStateInformation(const void* data, int sizeInBytes) {
-		// Restore parameters - SUPPRIMER playParam
 		auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
 		if (tree.isValid()) {
 			intensityParam->setValueNotifyingHost(tree.getProperty("intensity", 0.5f));
 			styleParam->setValueNotifyingHost(tree.getProperty("style", 0));
+
+			// NOUVEAU : Restaurer les styles des slots
+			for (int i = 0; i < 8; ++i) {
+				juce::String propName = "slotStyle" + juce::String(i);
+				int styleIndex = tree.getProperty(propName, 0);
+				slotStyleParams[i]->setValueNotifyingHost(styleIndex);
+				getPatternEngine().setSlotStyle(i, static_cast<StyleType>(styleIndex));
+			}
+
+			// Restaurer le slot actif
+			int activeSlot = tree.getProperty("activeSlot", 0);
+			getPatternEngine().switchToSlot(activeSlot, true);
 		}
 	}
 

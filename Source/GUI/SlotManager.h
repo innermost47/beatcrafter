@@ -34,6 +34,7 @@ namespace BeatCrafter {
 
 		void resized() override;
 		void updateSlotStates();
+		std::function<void(int slot)> onSlotChanged;
 
 	private:
 		PatternEngine& patternEngine;

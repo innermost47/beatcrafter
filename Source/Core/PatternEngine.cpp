@@ -8,6 +8,43 @@ namespace BeatCrafter {
 		auto pattern = std::make_unique<Pattern>("Rock Basic");
 		pattern->generateBasicRockPattern();
 		slots[0] = std::move(pattern);
+
+		for (int i = 0; i < 8; ++i) {
+			slotStyles[i] = StyleType::Rock;
+		}
+	}
+
+	void PatternEngine::generateNewPatternForSlot(int slot, StyleType style, float complexity) {
+		if (slot < 0 || slot >= 8) return;
+
+		// Créer un nouveau pattern
+		auto newPattern = std::make_unique<Pattern>("Generated " + juce::String(slot + 1));
+
+		// Appliquer le style
+		switch (style) {
+		case StyleType::Rock:
+			newPattern->generateBasicRockPattern();
+			if (complexity > 0.5f) {
+				newPattern->getTrack(0).getStep(2).setActive(true);
+				newPattern->getTrack(0).getStep(2).setVelocity(0.7f);
+				newPattern->getTrack(0).getStep(10).setActive(true);
+				newPattern->getTrack(0).getStep(10).setVelocity(0.7f);
+			}
+			break;
+		case StyleType::Metal:
+			newPattern->generateBasicMetalPattern();
+			break;
+		case StyleType::Jazz:
+			newPattern->generateBasicJazzPattern();
+			break;
+			// ... autres styles comme dans generateNewPattern() ...
+		default:
+			newPattern->generateBasicRockPattern();
+			break;
+		}
+
+		// Charger dans le slot
+		loadPatternToSlot(std::move(newPattern), slot);
 	}
 
 	void PatternEngine::loadPatternToSlot(std::unique_ptr<Pattern> pattern, int slot) {

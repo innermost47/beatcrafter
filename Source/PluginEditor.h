@@ -46,6 +46,7 @@ namespace BeatCrafter {
 		void onGenerateClicked();
 		void onClearClicked();
 		void updatePatternDisplay();
+		void updateStyleComboForCurrentSlot();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};

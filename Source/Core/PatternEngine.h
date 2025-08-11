@@ -69,10 +69,31 @@ namespace BeatCrafter {
 			return slots[activeSlot] ? *slots[activeSlot] : dummyPattern;
 		}
 
+		void setSlotStyle(int slot, StyleType style) {
+			if (slot >= 0 && slot < 8) {
+				slotStyles[slot] = style;
+			}
+		}
+
+		void generateNewPatternForSlot(int slot, StyleType style, float complexity = 0.5f);
+
+		StyleType getSlotStyle(int slot) const {
+			if (slot >= 0 && slot < 8) {
+				return slotStyles[slot];
+			}
+			return StyleType::Rock;
+		}
+
+		StyleType getCurrentSlotStyle() const {
+			return slotStyles[activeSlot];
+		}
+
 	private:
 		std::array<std::unique_ptr<Pattern>, 8> slots;
 		int activeSlot = 0;
 		int queuedSlot = -1;
+
+		std::array<StyleType, 8> slotStyles;
 
 		mutable Pattern intensifiedPatternCache;
 		mutable bool intensityCacheValid = false;

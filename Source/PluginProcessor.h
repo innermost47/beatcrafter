@@ -42,6 +42,7 @@ namespace BeatCrafter {
 		// Parameters
 		juce::AudioParameterFloat* intensityParam;
 		juce::AudioParameterChoice* styleParam;
+		std::array<juce::AudioParameterChoice*, 8> slotStyleParams;
 
 	private:
 		PatternEngine patternEngine;
