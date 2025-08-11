@@ -7,7 +7,6 @@ namespace BeatCrafter {
 		: AudioProcessor(BusesProperties()
 			.withOutput("Output", juce::AudioChannelSet::stereo(), true)) {
 
-		// Add parameters
 		addParameter(intensityParam = new juce::AudioParameterFloat(
 			"intensity", "Intensity", 0.0f, 1.0f, 0.5f));
 
@@ -39,7 +38,6 @@ namespace BeatCrafter {
 	}
 
 	bool BeatCrafterProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const {
-		// We only support stereo output (even though we produce MIDI)
 		if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
 			return false;
 
@@ -50,17 +48,63 @@ namespace BeatCrafter {
 		juce::MidiBuffer& midiMessages) {
 		buffer.clear();
 
-		// Get play head position from host
+		juce::MidiBuffer processedMidi;
+
+		for (const auto metadata : midiMessages) {
+			auto message = metadata.getMessage();
+
+			if (message.isController()) {
+				int ccNumber = message.getControllerNumber();
+				int channel = message.getChannel() - 1;
+				int value = message.getControllerValue();
+
+				if (midiLearnMode) {
+					if (midiLearnTargetType == 0) {
+						intensityMapping.ccNumber = ccNumber;
+						intensityMapping.channel = channel;
+						stopMidiLearn();
+					}
+					else if (midiLearnTargetType >= 1 && midiLearnTargetType <= 8) {
+						slotMappings[midiLearnTargetSlot].ccNumber = ccNumber;
+						slotMappings[midiLearnTargetSlot].channel = channel;
+						stopMidiLearn();
+					}
+				}
+				else {
+					if (intensityMapping.isValid() &&
+						ccNumber == intensityMapping.ccNumber &&
+						channel == intensityMapping.channel) {
+						float newIntensity = value / 127.0f;
+						intensityParam->setValueNotifyingHost(newIntensity);
+					}
+
+					for (int i = 0; i < 8; ++i) {
+						if (slotMappings[i].isValid() &&
+							ccNumber == slotMappings[i].ccNumber &&
+							channel == slotMappings[i].channel) {
+							if (value > 63) {
+								getPatternEngine().switchToSlot(i, false);
+							}
+							break;
+						}
+					}
+				}
+			}
+			else {
+				processedMidi.addEvent(message, metadata.samplePosition);
+			}
+		}
+
+		midiMessages.swapWith(processedMidi);
+
 		auto playHead = getPlayHead();
 		if (playHead == nullptr) return;
 
 		auto posInfo = playHead->getPosition();
 		if (!posInfo.hasValue()) return;
 
-		// Update parameters
 		patternEngine.setIntensity(intensityParam->get());
 
-		// SIMPLIFIER : se baser uniquement sur l'état du DAW
 		bool hostIsPlaying = posInfo->getIsPlaying();
 
 		if (hostIsPlaying) {
@@ -84,12 +128,10 @@ namespace BeatCrafter {
 	void BeatCrafterProcessor::getStateInformation(juce::MemoryBlock& destData) {
 		auto state = juce::ValueTree("BeatCrafterState");
 
-		// Paramètres existants
 		state.setProperty("intensity", intensityParam->get(), nullptr);
 		state.setProperty("style", styleParam->getIndex(), nullptr);
 		state.setProperty("activeSlot", getPatternEngine().getActiveSlot(), nullptr);
 
-		// Sauvegarder les styles et seeds de chaque slot
 		for (int i = 0; i < 8; ++i) {
 			juce::String styleProps = "slotStyle" + juce::String(i);
 			juce::String seedProps = "slotSeed" + juce::String(i);
@@ -98,23 +140,19 @@ namespace BeatCrafter {
 			state.setProperty(seedProps, (int)getPatternEngine().getSlotSeed(i), nullptr);
 		}
 
-		// NOUVEAU : Sauvegarder les patterns de chaque slot
 		for (int slotIndex = 0; slotIndex < 8; ++slotIndex) {
 			Pattern* pattern = getPatternEngine().getSlot(slotIndex);
 			if (pattern) {
 				auto slotNode = juce::ValueTree("Slot" + juce::String(slotIndex));
 
-				// Propriétés du pattern
 				slotNode.setProperty("name", pattern->getName(), nullptr);
 				slotNode.setProperty("swing", pattern->getSwing(), nullptr);
 				slotNode.setProperty("length", pattern->getLength(), nullptr);
 
-				// Time signature
 				auto ts = pattern->getTimeSignature();
 				slotNode.setProperty("timeSignatureNum", ts.numerator, nullptr);
 				slotNode.setProperty("timeSignatureDenom", ts.denominator, nullptr);
 
-				// Sauvegarder chaque track
 				for (int trackIndex = 0; trackIndex < pattern->getNumTracks(); ++trackIndex) {
 					auto trackNode = juce::ValueTree("Track" + juce::String(trackIndex));
 					const auto& track = pattern->getTrack(trackIndex);
@@ -122,11 +160,10 @@ namespace BeatCrafter {
 					trackNode.setProperty("name", track.getName(), nullptr);
 					trackNode.setProperty("midiNote", track.getMidiNote(), nullptr);
 
-					// Sauvegarder chaque step
 					for (int stepIndex = 0; stepIndex < track.getLength(); ++stepIndex) {
 						const auto& step = track.getStep(stepIndex);
 
-						if (step.isActive()) { // Sauvegarder seulement les steps actifs
+						if (step.isActive()) {
 							auto stepNode = juce::ValueTree("Step" + juce::String(stepIndex));
 							stepNode.setProperty("active", step.isActive(), nullptr);
 							stepNode.setProperty("velocity", step.getVelocity(), nullptr);
@@ -144,6 +181,20 @@ namespace BeatCrafter {
 			}
 		}
 
+		if (intensityMapping.isValid()) {
+			state.setProperty("intensityMidiCC", intensityMapping.ccNumber, nullptr);
+			state.setProperty("intensityMidiChannel", intensityMapping.channel, nullptr);
+		}
+
+		for (int i = 0; i < 8; ++i) {
+			if (slotMappings[i].isValid()) {
+				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
+				juce::String channelProp = "slot" + juce::String(i) + "MidiChannel";
+				state.setProperty(ccProp, slotMappings[i].ccNumber, nullptr);
+				state.setProperty(channelProp, slotMappings[i].channel, nullptr);
+			}
+		}
+
 		juce::MemoryOutputStream stream(destData, false);
 		state.writeToStream(stream);
 	}
@@ -151,11 +202,9 @@ namespace BeatCrafter {
 	void BeatCrafterProcessor::setStateInformation(const void* data, int sizeInBytes) {
 		auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
 		if (tree.isValid()) {
-			// Restaurer les paramètres de base
 			intensityParam->setValueNotifyingHost(tree.getProperty("intensity", 0.5f));
 			styleParam->setValueNotifyingHost(tree.getProperty("style", 0));
 
-			// Restaurer les styles et seeds des slots
 			for (int i = 0; i < 8; ++i) {
 				juce::String styleProps = "slotStyle" + juce::String(i);
 				juce::String seedProps = "slotSeed" + juce::String(i);
@@ -168,45 +217,36 @@ namespace BeatCrafter {
 				getPatternEngine().setSlotSeed(i, seed);
 			}
 
-			// NOUVEAU : Restaurer les patterns de chaque slot
 			for (int slotIndex = 0; slotIndex < 8; ++slotIndex) {
 				auto slotNode = tree.getChildWithName("Slot" + juce::String(slotIndex));
 				if (slotNode.isValid()) {
-					// Créer un nouveau pattern
 					auto restoredPattern = std::make_unique<Pattern>(
 						slotNode.getProperty("name", "Pattern " + juce::String(slotIndex + 1))
 					);
 
-					// Restaurer les propriétés du pattern
 					restoredPattern->setSwing(slotNode.getProperty("swing", 0.0f));
 					int patternLength = slotNode.getProperty("length", 16);
 					restoredPattern->setLength(patternLength);
 
-					// Time signature
 					TimeSignature ts;
 					ts.numerator = slotNode.getProperty("timeSignatureNum", 4);
 					ts.denominator = slotNode.getProperty("timeSignatureDenom", 4);
 					restoredPattern->setTimeSignature(ts);
 
-					// Restaurer chaque track
 					for (int trackIndex = 0; trackIndex < restoredPattern->getNumTracks(); ++trackIndex) {
 						auto trackNode = slotNode.getChildWithName("Track" + juce::String(trackIndex));
 						if (trackNode.isValid()) {
 							auto& track = restoredPattern->getTrack(trackIndex);
 
-							// Restaurer les propriétés de la track
 							track.setName(trackNode.getProperty("name", track.getName()));
 							track.setMidiNote(trackNode.getProperty("midiNote", track.getMidiNote()));
 
-							// Effacer la track avant de restaurer
 							track.clear();
 
-							// Restaurer chaque step
 							for (int childIndex = 0; childIndex < trackNode.getNumChildren(); ++childIndex) {
 								auto stepNode = trackNode.getChild(childIndex);
 								juce::String stepName = stepNode.getType().toString();
 
-								// Extraire l'index du step depuis le nom (Step0, Step1, etc.)
 								if (stepName.startsWith("Step")) {
 									int stepIndex = stepName.substring(4).getIntValue();
 									if (stepIndex >= 0 && stepIndex < track.getLength()) {
@@ -221,21 +261,78 @@ namespace BeatCrafter {
 							}
 						}
 					}
-
-					// Charger le pattern restauré dans le slot
 					getPatternEngine().loadPatternToSlot(std::move(restoredPattern), slotIndex);
 				}
+
+
 			}
 
-			// Restaurer le slot actif en dernier
+			if (tree.hasProperty("intensityMidiCC")) {
+				intensityMapping.ccNumber = tree.getProperty("intensityMidiCC", -1);
+				intensityMapping.channel = tree.getProperty("intensityMidiChannel", -1);
+			}
+
+			for (int i = 0; i < 8; ++i) {
+				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
+				juce::String channelProp = "slot" + juce::String(i) + "MidiChannel";
+
+				if (tree.hasProperty(ccProp)) {
+					slotMappings[i].ccNumber = tree.getProperty(ccProp, -1);
+					slotMappings[i].channel = tree.getProperty(channelProp, -1);
+				}
+			}
 			int activeSlot = tree.getProperty("activeSlot", 0);
 			getPatternEngine().switchToSlot(activeSlot, true);
 		}
 	}
 
-} // namespace BeatCrafter
+	void BeatCrafterProcessor::startMidiLearn(int targetType, int targetSlot) {
+		midiLearnMode = true;
+		midiLearnTargetType = targetType;
+		midiLearnTargetSlot = targetSlot;
+	}
 
-// Required for plugin
+	void BeatCrafterProcessor::stopMidiLearn() {
+		midiLearnMode = false;
+		midiLearnTargetType = -1;
+		midiLearnTargetSlot = -1;
+	}
+
+	void BeatCrafterProcessor::clearMidiMapping(int targetType, int targetSlot) {
+		if (targetType == 0) {
+			intensityMapping = MidiMapping{};
+		}
+		else if (targetType >= 1 && targetType <= 8 && targetSlot >= 0 && targetSlot < 8) {
+			slotMappings[targetSlot] = MidiMapping{};
+		}
+	}
+
+	bool BeatCrafterProcessor::hasMidiMapping(int targetType, int targetSlot) const {
+		if (targetType == 0) {
+			return intensityMapping.isValid();
+		}
+		else if (targetType >= 1 && targetType <= 8 && targetSlot >= 0 && targetSlot < 8) {
+			return slotMappings[targetSlot].isValid();
+		}
+		return false;
+	}
+
+	juce::String BeatCrafterProcessor::getMidiMappingDescription(int targetType, int targetSlot) const {
+		MidiMapping mapping;
+		if (targetType == 0) {
+			mapping = intensityMapping;
+		}
+		else if (targetType >= 1 && targetType <= 8 && targetSlot >= 0 && targetSlot < 8) {
+			mapping = slotMappings[targetSlot];
+		}
+
+		if (mapping.isValid()) {
+			return "CH" + juce::String(mapping.channel + 1) + " CC" + juce::String(mapping.ccNumber);
+		}
+		return "Not mapped";
+	}
+}
+
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
 	return new BeatCrafter::BeatCrafterProcessor();
 }

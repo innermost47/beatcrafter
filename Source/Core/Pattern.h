@@ -24,9 +24,9 @@ namespace BeatCrafter {
 
 	private:
 		bool active;
-		float velocity;      // 0.0 - 1.0
-		float microTiming;   // -0.5 to +0.5 (in step units)
-		float probability;   // 0.0 - 1.0 for random variations
+		float velocity;
+		float microTiming;
+		float probability;
 	};
 
 	class Track {
@@ -84,10 +84,10 @@ namespace BeatCrafter {
 		void generateBasicMetalPattern();
 		void generateBasicJazzPattern();
 		void generateBasicFunkPattern();
-		void generateBasicElectronicPattern(); // NOUVEAU
-		void generateBasicHipHopPattern();     // NOUVEAU
-		void generateBasicLatinPattern();      // NOUVEAU
-		void generateBasicPunkPattern();       // NOUVEAU
+		void generateBasicElectronicPattern();
+		void generateBasicHipHopPattern();
+		void generateBasicLatinPattern();
+		void generateBasicPunkPattern();
 
 	private:
 		juce::String patternName;
@@ -97,4 +97,4 @@ namespace BeatCrafter {
 		int currentStep;
 	};
 
-} // namespace BeatCrafter
+}

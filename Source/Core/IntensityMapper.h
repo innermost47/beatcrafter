@@ -14,4 +14,4 @@ namespace BeatCrafter {
 		static void addMaximumIntensity(Pattern& pattern, float intensity);
 	};
 
-} // namespace BeatCrafter
+}

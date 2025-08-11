@@ -28,7 +28,6 @@ namespace BeatCrafter {
 
 		void updateWithIntensity(const Pattern& intensifiedPattern);
 
-		// Callbacks
 		std::function<void(int track, int step, bool active)> onStepChanged;
 
 	private:
@@ -58,4 +57,4 @@ namespace BeatCrafter {
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatternGrid)
 	};
 
-} // namespace BeatCrafter
+}

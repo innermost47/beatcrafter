@@ -8,14 +8,12 @@ namespace BeatCrafter {
 		ModernLookAndFeel();
 		~ModernLookAndFeel() override = default;
 
-		// Override pour boutons custom
 		void drawButtonBackground(juce::Graphics& g,
 			juce::Button& button,
 			const juce::Colour& backgroundColour,
 			bool shouldDrawButtonAsHighlighted,
 			bool shouldDrawButtonAsDown) override;
 
-		// Override pour sliders modernes
 		void drawLinearSlider(juce::Graphics& g,
 			int x, int y, int width, int height,
 			float sliderPos, float minSliderPos, float maxSliderPos,
@@ -41,7 +39,6 @@ namespace BeatCrafter {
 		juce::Font getLabelFont(juce::Label&);
 		juce::Font getTextButtonFont(juce::TextButton&, int buttonHeight);
 
-		// Couleurs publiques pour usage dans les components - AVEC INITIALISATION
 		juce::Colour backgroundDark = juce::Colour(0xff1a1a1a);
 		juce::Colour backgroundMid = juce::Colour(0xff2d2d2d);
 		juce::Colour backgroundLight = juce::Colour(0xff404040);
@@ -61,4 +58,4 @@ namespace BeatCrafter {
 		juce::Colour slotActive = juce::Colour(0xff00bcd4);
 	};
 
-} // namespace BeatCrafter
+}

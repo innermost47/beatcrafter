@@ -15,7 +15,6 @@ namespace BeatCrafter {
 		static std::mt19937& getRNG();
 
 		static void addGhostNotes(Pattern& pattern, int track, float probability);
-		static void addRandomHits(Pattern& pattern, int track, float density, float velocity);
 		static void changeSnarePattern(Pattern& pattern, float intensity, StyleType style);
 		static void addHiHatRideVariations(Pattern& pattern, float intensity, StyleType style);
 		static void addRandomFills(Pattern& pattern, float intensity);

@@ -2,7 +2,6 @@
 
 namespace BeatCrafter {
 
-	// General MIDI Drum Map (Channel 10)
 	namespace GMDrum {
 		constexpr int KICK_1 = 36;
 		constexpr int KICK_2 = 35;
@@ -23,11 +22,10 @@ namespace BeatCrafter {
 		constexpr int TOM_FLOOR_LO = 41;
 		constexpr int COWBELL = 56;
 		constexpr int TAMBOURINE = 54;
-		constexpr int CHINA_CYMBAL = 52;    // NOUVEAU
-		constexpr int SPLASH_CYMBAL = 55;   // NOUVEAU
+		constexpr int CHINA_CYMBAL = 52;
+		constexpr int SPLASH_CYMBAL = 55;
 	}
 
-	// Style types
 	enum class StyleType {
 		Rock,
 		Metal,
@@ -39,14 +37,13 @@ namespace BeatCrafter {
 		Punk
 	};
 
-	// Time signatures
 	struct TimeSignature {
 		int numerator;
 		int denominator;
 
 		int getStepsPerBar() const {
-			return (numerator * 4) / denominator * 4; // 16th notes
+			return (numerator * 4) / denominator * 4;
 		}
 	};
 
-} // namespace BeatCrafter
+}

@@ -3,29 +3,22 @@
 namespace BeatCrafter {
 
 	ModernLookAndFeel::ModernLookAndFeel() {
-		// Set all the colours for the modern dark theme
-
-		// Window background
 		setColour(juce::ResizableWindow::backgroundColourId, backgroundDark);
 		setColour(juce::DocumentWindow::textColourId, textColour);
 
-		// Default component colors
 		setColour(juce::TextEditor::backgroundColourId, backgroundMid);
 		setColour(juce::TextEditor::textColourId, textColour);
 		setColour(juce::TextEditor::outlineColourId, backgroundLight);
 
-		// Labels
 		setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
 		setColour(juce::Label::textColourId, textColour);
 		setColour(juce::Label::outlineColourId, juce::Colours::transparentBlack);
 
-		// Buttons
 		setColour(juce::TextButton::buttonColourId, backgroundMid);
 		setColour(juce::TextButton::buttonOnColourId, accent);
 		setColour(juce::TextButton::textColourOffId, textColour);
 		setColour(juce::TextButton::textColourOnId, backgroundDark);
 
-		// ComboBox
 		setColour(juce::ComboBox::backgroundColourId, backgroundMid);
 		setColour(juce::ComboBox::textColourId, textColour);
 		setColour(juce::ComboBox::outlineColourId, backgroundLight);
@@ -33,14 +26,12 @@ namespace BeatCrafter {
 		setColour(juce::ComboBox::arrowColourId, textDimmed);
 		setColour(juce::ComboBox::focusedOutlineColourId, accent);
 
-		// PopupMenu
 		setColour(juce::PopupMenu::backgroundColourId, backgroundMid);
 		setColour(juce::PopupMenu::textColourId, textColour);
 		setColour(juce::PopupMenu::highlightedBackgroundColourId, accent);
 		setColour(juce::PopupMenu::highlightedTextColourId, backgroundDark);
 		setColour(juce::PopupMenu::headerTextColourId, textDimmed);
 
-		// Slider
 		setColour(juce::Slider::thumbColourId, accent);
 		setColour(juce::Slider::trackColourId, backgroundLight);
 		setColour(juce::Slider::backgroundColourId, backgroundDark);
@@ -51,42 +42,33 @@ namespace BeatCrafter {
 		setColour(juce::Slider::textBoxHighlightColourId, accent);
 		setColour(juce::Slider::textBoxOutlineColourId, backgroundLight);
 
-		// ScrollBar
 		setColour(juce::ScrollBar::backgroundColourId, backgroundDark);
 		setColour(juce::ScrollBar::thumbColourId, backgroundLight);
 
-		// TreeView
 		setColour(juce::TreeView::backgroundColourId, backgroundDark);
 		setColour(juce::TreeView::linesColourId, backgroundLight);
 		setColour(juce::TreeView::dragAndDropIndicatorColourId, accent);
 		setColour(juce::TreeView::selectedItemBackgroundColourId, accent.withAlpha(0.3f));
 
-		// AlertWindow
 		setColour(juce::AlertWindow::backgroundColourId, backgroundMid);
 		setColour(juce::AlertWindow::textColourId, textColour);
 		setColour(juce::AlertWindow::outlineColourId, backgroundLight);
 
-		// ProgressBar
 		setColour(juce::ProgressBar::backgroundColourId, backgroundLight);
 		setColour(juce::ProgressBar::foregroundColourId, accent);
 
-		// TooltipWindow
 		setColour(juce::TooltipWindow::backgroundColourId, backgroundMid);
 		setColour(juce::TooltipWindow::textColourId, textColour);
 		setColour(juce::TooltipWindow::outlineColourId, backgroundLight);
 
-		// CaretComponent
 		setColour(juce::CaretComponent::caretColourId, accent);
 
-		// GroupComponent
 		setColour(juce::GroupComponent::outlineColourId, backgroundLight);
 		setColour(juce::GroupComponent::textColourId, textDimmed);
 
-		// BubbleComponent
 		setColour(juce::BubbleComponent::backgroundColourId, backgroundMid);
 		setColour(juce::BubbleComponent::outlineColourId, backgroundLight);
 
-		// DirectoryContentsDisplayComponent
 		setColour(juce::DirectoryContentsDisplayComponent::highlightColourId, accent.withAlpha(0.3f));
 		setColour(juce::DirectoryContentsDisplayComponent::textColourId, textColour);
 		setColour(juce::DirectoryContentsDisplayComponent::highlightedTextColourId, textColour);
@@ -114,22 +96,18 @@ namespace BeatCrafter {
 			baseColour = backgroundColour.brighter(0.2f);
 		}
 
-		// Draw shadow
 		g.setColour(juce::Colours::black.withAlpha(0.2f));
 		g.fillRoundedRectangle(bounds.translated(0, 1), cornerSize);
 
-		// Draw main button
 		g.setColour(baseColour);
 		g.fillRoundedRectangle(bounds, cornerSize);
 
-		// Draw subtle gradient overlay
 		juce::ColourGradient gradient(baseColour.brighter(0.1f), 0, bounds.getY(),
 			baseColour.darker(0.1f), 0, bounds.getBottom(),
 			false);
 		g.setGradientFill(gradient);
 		g.fillRoundedRectangle(bounds, cornerSize);
 
-		// Draw border
 		g.setColour(button.getToggleState() ? accentLight : backgroundLight);
 		g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
 	}
@@ -142,18 +120,14 @@ namespace BeatCrafter {
 
 		if (style == juce::Slider::LinearHorizontal || style == juce::Slider::LinearVertical) {
 			auto isHorizontal = style == juce::Slider::LinearHorizontal;
-
-			// Calculate track bounds
 			auto trackWidth = isHorizontal ? width : 6.0f;
 			auto trackHeight = isHorizontal ? 6.0f : height;
 			auto trackX = isHorizontal ? x : x + (width - trackWidth) * 0.5f;
 			auto trackY = isHorizontal ? y + (height - trackHeight) * 0.5f : y;
 
-			// Draw track background
 			g.setColour(backgroundLight);
 			g.fillRoundedRectangle(trackX, trackY, trackWidth, trackHeight, 3.0f);
 
-			// Draw filled portion
 			g.setColour(accent);
 			if (isHorizontal) {
 				auto filledWidth = sliderPos - x;
@@ -164,25 +138,20 @@ namespace BeatCrafter {
 				g.fillRoundedRectangle(trackX, sliderPos, trackWidth, filledHeight, 3.0f);
 			}
 
-			// Draw thumb
 			auto thumbWidth = 20.0f;
 			auto thumbX = isHorizontal ? sliderPos - thumbWidth * 0.5f : x + width * 0.5f - thumbWidth * 0.5f;
 			auto thumbY = isHorizontal ? y + height * 0.5f - thumbWidth * 0.5f : sliderPos - thumbWidth * 0.5f;
 
-			// Thumb shadow
 			g.setColour(juce::Colours::black.withAlpha(0.2f));
 			g.fillEllipse(thumbX + 1, thumbY + 1, thumbWidth, thumbWidth);
 
-			// Thumb outer ring
 			g.setColour(accent);
 			g.fillEllipse(thumbX, thumbY, thumbWidth, thumbWidth);
 
-			// Thumb inner circle
 			g.setColour(backgroundDark);
 			g.fillEllipse(thumbX + thumbWidth * 0.25f, thumbY + thumbWidth * 0.25f,
 				thumbWidth * 0.5f, thumbWidth * 0.5f);
 
-			// Thumb highlight
 			g.setColour(accentLight.withAlpha(0.3f));
 			g.fillEllipse(thumbX + thumbWidth * 0.15f, thumbY + thumbWidth * 0.15f,
 				thumbWidth * 0.4f, thumbWidth * 0.4f);
@@ -201,22 +170,18 @@ namespace BeatCrafter {
 		auto rw = radius * 2.0f;
 		auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
 
-		// Background circle
 		g.setColour(backgroundLight);
 		g.fillEllipse(rx, ry, rw, rw);
 
-		// Value arc
 		juce::Path arcPath;
 		arcPath.addPieSegment(rx, ry, rw, rw, rotaryStartAngle, angle, 0.8f);
 		g.setColour(accent);
 		g.fillPath(arcPath);
 
-		// Center knob
 		auto knobRadius = radius * 0.6f;
 		g.setColour(backgroundMid);
 		g.fillEllipse(centreX - knobRadius, centreY - knobRadius, knobRadius * 2.0f, knobRadius * 2.0f);
 
-		// Pointer
 		juce::Path pointer;
 		auto pointerLength = radius * 0.4f;
 		auto pointerThickness = 3.0f;
@@ -232,15 +197,12 @@ namespace BeatCrafter {
 		auto cornerSize = 4.0f;
 		auto bounds = juce::Rectangle<float>(0, 0, width, height).reduced(0.5f, 0.5f);
 
-		// Background
 		g.setColour(backgroundMid);
 		g.fillRoundedRectangle(bounds, cornerSize);
 
-		// Border
 		g.setColour(box.hasKeyboardFocus(false) ? accent : backgroundLight);
 		g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
 
-		// Arrow
 		juce::Path arrow;
 		arrow.addTriangle(width - 20.0f, height * 0.5f - 3.0f,
 			width - 10.0f, height * 0.5f - 3.0f,
@@ -265,7 +227,6 @@ namespace BeatCrafter {
 			return;
 		}
 
-		// CORRECTION ICI - gestion sécurisée du pointeur textColour
 		juce::Colour textColourToUse;
 		if (textColour != nullptr) {
 			textColourToUse = *textColour;
@@ -274,7 +235,7 @@ namespace BeatCrafter {
 			textColourToUse = backgroundDark;
 		}
 		else {
-			textColourToUse = this->textColour; // Utiliser la couleur de la classe
+			textColourToUse = this->textColour;
 		}
 
 		auto r = area.reduced(1);
@@ -326,4 +287,4 @@ namespace BeatCrafter {
 		return juce::Font(juce::jmin(15.0f, buttonHeight * 0.6f));
 	}
 
-} // namespace BeatCrafter
+}

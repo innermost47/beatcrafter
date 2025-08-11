@@ -25,7 +25,6 @@ namespace BeatCrafter {
 
 		int lastPlayheadPosition = -1;
 
-		// GUI Components
 		std::unique_ptr<PatternGrid> patternGrid;
 		std::unique_ptr<SlotManager> slotManager;
 
@@ -38,9 +37,17 @@ namespace BeatCrafter {
 		juce::TextButton generateButton{ "Generate" };
 		juce::TextButton clearButton{ "Clear" };
 
-		// Parameter attachments
 		std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> intensityAttachment;
 		std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> styleAttachment;
+
+		juce::TextButton intensityMidiLearnButton{ "LEARN" };
+		juce::Label intensityMidiLabel;
+		std::array<juce::TextButton, 8> slotMidiLearnButtons;
+		std::array<juce::Label, 8> slotMidiLabels;
+
+		void updateMidiLearnButtons();
+		void onIntensityMidiLearnClicked();
+		void onSlotMidiLearnClicked(int slot);
 
 		void setupComponents();
 		void onGenerateClicked();
@@ -51,4 +58,4 @@ namespace BeatCrafter {
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};
 
-} // namespace BeatCrafter
+}

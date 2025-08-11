@@ -1,18 +1,14 @@
 cmake_minimum_required(VERSION 3.22)
 
-# Version et nom du projet
 project(BeatCrafter VERSION 0.1.0)
 
-# C++ 17 minimum pour JUCE moderne
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Options de build
 option(BUILD_STANDALONE "Build standalone application" ON)
 option(BUILD_VST3 "Build VST3 plugin" ON)
 option(BUILD_AU "Build AU plugin" OFF)
 
-# Clone JUCE si nécessaire
 include(FetchContent)
 FetchContent_Declare(
     JUCE
@@ -23,32 +19,23 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(JUCE)
 
-# Plugin/App configuration
 juce_add_plugin(BeatCrafter
-    # Metadata
-    COMPANY_NAME "BeatCrafter"
+    COMPANY_NAME "Innermost47"
     PLUGIN_MANUFACTURER_CODE BCrf
     PLUGIN_CODE BCr1
     
-    # Formats
     FORMATS VST3 Standalone
-    
-    # Plugin characteristics
+
     IS_SYNTH FALSE
     IS_MIDI_EFFECT TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT TRUE
     PRODUCES_MIDI_OUTPUT TRUE
-    
-    # Names
+
     PRODUCT_NAME "BeatCrafter"
     BUNDLE_ID "com.beatcrafter.beatcrafter"
-    
-    # Icon
-    # ICON_BIG Assets/icon.png
 )
 
-# Source files
 target_sources(BeatCrafter
     PRIVATE
         Source/PluginProcessor.cpp
@@ -62,7 +49,6 @@ target_sources(BeatCrafter
         Source/GUI/SlotManager.cpp
 )
 
-# Compile definitions
 target_compile_definitions(BeatCrafter
     PUBLIC
         JUCE_WEB_BROWSER=0
@@ -72,7 +58,6 @@ target_compile_definitions(BeatCrafter
         JUCE_REPORT_APP_USAGE=0
 )
 
-# Link libraries
 target_link_libraries(BeatCrafter
     PRIVATE
         juce::juce_audio_basics
@@ -93,7 +78,6 @@ target_link_libraries(BeatCrafter
         juce::juce_recommended_warning_flags
 )
 
-# Platform specific settings
 if(MSVC)
     target_compile_options(BeatCrafter PRIVATE /W4)
 else()

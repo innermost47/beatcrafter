@@ -36,19 +36,40 @@ namespace BeatCrafter {
 		void getStateInformation(juce::MemoryBlock& destData) override;
 		void setStateInformation(const void* data, int sizeInBytes) override;
 
-		// Public access to engine for GUI
 		PatternEngine& getPatternEngine() { return patternEngine; }
 
-		// Parameters
 		juce::AudioParameterFloat* intensityParam;
 		juce::AudioParameterChoice* styleParam;
 		std::array<juce::AudioParameterChoice*, 8> slotStyleParams;
+
+		void startMidiLearn(int targetType, int targetSlot = -1);
+		void stopMidiLearn();
+		bool isMidiLearning() const { return midiLearnMode; }
+		int getMidiLearnTarget() const { return midiLearnTargetType; }
+		int getMidiLearnSlot() const { return midiLearnTargetSlot; }
+
+		void clearMidiMapping(int targetType, int targetSlot = -1);
+		bool hasMidiMapping(int targetType, int targetSlot = -1) const;
+		juce::String getMidiMappingDescription(int targetType, int targetSlot = -1) const;
 
 	private:
 		PatternEngine patternEngine;
 		double currentSampleRate = 44100.0;
 
+		bool midiLearnMode = false;
+		int midiLearnTargetType = -1;
+		int midiLearnTargetSlot = -1;
+
+		struct MidiMapping {
+			int ccNumber = -1;
+			int channel = -1;
+			bool isValid() const { return ccNumber >= 0 && channel >= 0; }
+		};
+
+		MidiMapping intensityMapping;
+		std::array<MidiMapping, 8> slotMappings;
+
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterProcessor)
 	};
 
-} // namespace BeatCrafter
+}
