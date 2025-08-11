@@ -183,31 +183,14 @@ namespace BeatCrafter {
 		clear();
 
 		getTrack(0).getStep(0).setActive(true);
-		getTrack(0).getStep(0).setVelocity(0.9f);
-		getTrack(0).getStep(8).setActive(true);
-		getTrack(0).getStep(8).setVelocity(0.85f);
+		getTrack(0).getStep(0).setVelocity(0.85f + (rand() % 15) / 100.0f);
 
 		getTrack(1).getStep(8).setActive(true);
-		getTrack(1).getStep(8).setVelocity(0.85f);
+		getTrack(1).getStep(8).setVelocity(0.9f);
 
-		for (int i = 0; i < 16; i += 2) {
-			getTrack(2).getStep(i).setActive(true);
-			if (i % 4 == 0) {
-				getTrack(2).getStep(i).setVelocity(0.7f);
-			}
-			else {
-				getTrack(2).getStep(i).setVelocity(0.5f);
-			}
-		}
-
-		getTrack(3).getStep(6).setActive(true);
-		getTrack(3).getStep(6).setVelocity(0.6f);
-		getTrack(3).getStep(14).setActive(true);
-		getTrack(3).getStep(14).setVelocity(0.6f);
-
-		getTrack(4).getStep(0).setActive(true);
-		getTrack(4).getStep(0).setVelocity(0.6f);
-		getTrack(4).getStep(0).setProbability(0.3f);
+		getTrack(2).getStep(4).setActive(true);
+		getTrack(2).getStep(4).setVelocity(0.4f);
+		getTrack(2).getStep(4).setProbability(0.7f);
 	}
 
 	void Pattern::generateBasicMetalPattern() {
@@ -216,22 +199,15 @@ namespace BeatCrafter {
 		getTrack(0).getStep(0).setActive(true);
 		getTrack(0).getStep(0).setVelocity(0.95f);
 		getTrack(0).getStep(2).setActive(true);
-		getTrack(0).getStep(2).setVelocity(0.85f);
-		getTrack(0).getStep(8).setActive(true);
-		getTrack(0).getStep(8).setVelocity(0.9f);
-		getTrack(0).getStep(10).setActive(true);
-		getTrack(0).getStep(10).setVelocity(0.85f);
+		getTrack(0).getStep(2).setVelocity(0.7f);
+		getTrack(0).getStep(2).setProbability(0.8f);
 
 		getTrack(1).getStep(8).setActive(true);
 		getTrack(1).getStep(8).setVelocity(0.95f);
 
-		for (int i = 0; i < 16; i += 2) {
-			getTrack(5).getStep(i).setActive(true);
-			getTrack(5).getStep(i).setVelocity(0.5f + (i % 4 == 0 ? 0.1f : 0.0f));
-		}
-
-		getTrack(4).getStep(0).setActive(true);
-		getTrack(4).getStep(0).setVelocity(0.8f);
+		getTrack(5).getStep(6).setActive(true);
+		getTrack(5).getStep(6).setVelocity(0.5f);
+		getTrack(5).getStep(6).setProbability(0.7f);
 	}
 
 	void Pattern::generateBasicJazzPattern() {
@@ -240,153 +216,102 @@ namespace BeatCrafter {
 		setSwing(0.67f);
 
 		getTrack(0).getStep(0).setActive(true);
-		getTrack(0).getStep(0).setVelocity(0.5f);
-		getTrack(0).getStep(10).setActive(true);
-		getTrack(0).getStep(10).setVelocity(0.4f);
-		getTrack(0).getStep(10).setProbability(0.6f);
+		getTrack(0).getStep(0).setVelocity(0.4f + (rand() % 20) / 100.0f);
 
 		getTrack(1).getStep(8).setActive(true);
-		getTrack(1).getStep(8).setVelocity(0.6f);
-		getTrack(1).getStep(3).setActive(true);
-		getTrack(1).getStep(3).setVelocity(0.3f);
-		getTrack(1).getStep(11).setActive(true);
-		getTrack(1).getStep(11).setVelocity(0.25f);
+		getTrack(1).getStep(8).setVelocity(0.55f);
 
-		for (int i = 0; i < 16; i += 2) {
-			getTrack(5).getStep(i).setActive(true);
-			getTrack(5).getStep(i).setVelocity(0.4f + (i % 4 == 0 ? 0.1f : 0.0f));
-		}
-
-		getTrack(9).getStep(2).setActive(true);
-		getTrack(9).getStep(2).setVelocity(0.3f);
-		getTrack(9).getStep(10).setActive(true);
-		getTrack(9).getStep(10).setVelocity(0.3f);
+		getTrack(5).getStep(2).setActive(true);
+		getTrack(5).getStep(2).setVelocity(0.3f);
+		getTrack(5).getStep(10).setActive(true);
+		getTrack(5).getStep(10).setVelocity(0.35f);
+		getTrack(5).getStep(10).setProbability(0.7f);
 	}
 
 	void Pattern::generateBasicFunkPattern() {
 		clear();
 
 		getTrack(0).getStep(0).setActive(true);
-		getTrack(0).getStep(0).setVelocity(0.95f);
-		getTrack(0).getStep(3).setActive(true);
-		getTrack(0).getStep(3).setVelocity(0.7f);
-		getTrack(0).getStep(10).setActive(true);
-		getTrack(0).getStep(10).setVelocity(0.9f);
+		getTrack(0).getStep(0).setVelocity(0.9f);
+		getTrack(0).getStep(6).setActive(true);
+		getTrack(0).getStep(6).setVelocity(0.6f);
+		getTrack(0).getStep(6).setProbability(0.75f);
 
 		getTrack(1).getStep(8).setActive(true);
-		getTrack(1).getStep(8).setVelocity(0.9f);
-		getTrack(1).getStep(2).setActive(true);
-		getTrack(1).getStep(2).setVelocity(0.3f);
-		getTrack(1).getStep(6).setActive(true);
-		getTrack(1).getStep(6).setVelocity(0.25f);
-		getTrack(1).getStep(15).setActive(true);
-		getTrack(1).getStep(15).setVelocity(0.4f);
+		getTrack(1).getStep(8).setVelocity(0.85f);
 
-		for (int i = 0; i < 16; ++i) {
-			if (i == 6 || i == 14) {
-				getTrack(3).getStep(i).setActive(true);
-				getTrack(3).getStep(i).setVelocity(0.6f);
-			}
-			else {
-				getTrack(2).getStep(i).setActive(true);
-				getTrack(2).getStep(i).setVelocity(0.5f + (i % 2) * 0.2f);
-			}
-		}
+		getTrack(2).getStep(4).setActive(true);
+		getTrack(2).getStep(4).setVelocity(0.5f);
+		getTrack(2).getStep(12).setActive(true);
+		getTrack(2).getStep(12).setVelocity(0.4f);
+		getTrack(2).getStep(12).setProbability(0.8f);
 	}
 
 	void Pattern::generateBasicElectronicPattern() {
 		clear();
 
-		for (int i = 0; i < 16; i += 4) {
-			getTrack(0).getStep(i).setActive(true);
-			getTrack(0).getStep(i).setVelocity(0.9f);
-		}
+		getTrack(0).getStep(0).setActive(true);
+		getTrack(0).getStep(0).setVelocity(0.9f);
 
 		getTrack(1).getStep(8).setActive(true);
-		getTrack(1).getStep(8).setVelocity(0.8f);
+		getTrack(1).getStep(8).setVelocity(0.7f);
+		getTrack(1).getStep(8).setProbability(0.8f);
 
-		for (int i = 0; i < 16; ++i) {
-			getTrack(2).getStep(i).setActive(true);
-			getTrack(2).getStep(i).setVelocity(0.3f + (i % 4 == 0 ? 0.2f : 0.0f));
-		}
-
-		getTrack(3).getStep(2).setActive(true);
-		getTrack(3).getStep(2).setVelocity(0.5f);
-		getTrack(3).getStep(10).setActive(true);
-		getTrack(3).getStep(10).setVelocity(0.5f);
+		getTrack(2).getStep(4).setActive(true);
+		getTrack(2).getStep(4).setVelocity(0.4f);
+		getTrack(2).getStep(12).setActive(true);
+		getTrack(2).getStep(12).setVelocity(0.5f);
 	}
 
 	void Pattern::generateBasicHipHopPattern() {
 		clear();
 
 		getTrack(0).getStep(0).setActive(true);
-		getTrack(0).getStep(0).setVelocity(1.0f);
+		getTrack(0).getStep(0).setVelocity(0.95f);
 
 		getTrack(1).getStep(8).setActive(true);
 		getTrack(1).getStep(8).setVelocity(0.9f);
 
-		getTrack(2).getStep(2).setActive(true);
-		getTrack(2).getStep(2).setVelocity(0.5f);
-		getTrack(2).getStep(6).setActive(true);
-		getTrack(2).getStep(6).setVelocity(0.4f);
-		getTrack(2).getStep(10).setActive(true);
-		getTrack(2).getStep(10).setVelocity(0.5f);
-		getTrack(2).getStep(14).setActive(true);
-		getTrack(2).getStep(14).setVelocity(0.4f);
-
-		getTrack(3).getStep(12).setActive(true);
-		getTrack(3).getStep(12).setVelocity(0.6f);
+		getTrack(2).getStep(4).setActive(true);
+		getTrack(2).getStep(4).setVelocity(0.45f);
+		getTrack(2).getStep(12).setActive(true);
+		getTrack(2).getStep(12).setVelocity(0.35f);
+		getTrack(2).getStep(12).setProbability(0.6f);
 	}
 
 	void Pattern::generateBasicLatinPattern() {
 		clear();
 
 		getTrack(0).getStep(0).setActive(true);
-		getTrack(0).getStep(0).setVelocity(0.8f);
-		getTrack(0).getStep(5).setActive(true);
-		getTrack(0).getStep(5).setVelocity(0.7f);
+		getTrack(0).getStep(0).setVelocity(0.75f);
+		getTrack(0).getStep(6).setActive(true);
+		getTrack(0).getStep(6).setVelocity(0.5f);
+		getTrack(0).getStep(6).setProbability(0.8f);
 
 		getTrack(1).getStep(8).setActive(true);
 		getTrack(1).getStep(8).setVelocity(0.8f);
 
-		for (int i = 0; i < 16; i += 2) {
-			getTrack(2).getStep(i).setActive(true);
-			getTrack(2).getStep(i).setVelocity(0.4f);
-		}
-
-		getTrack(3).getStep(2).setActive(true);
-		getTrack(3).getStep(2).setVelocity(0.6f);
-		getTrack(3).getStep(6).setActive(true);
-		getTrack(3).getStep(6).setVelocity(0.6f);
-		getTrack(3).getStep(10).setActive(true);
-		getTrack(3).getStep(10).setVelocity(0.6f);
-		getTrack(3).getStep(14).setActive(true);
-		getTrack(3).getStep(14).setVelocity(0.6f);
+		getTrack(3).getStep(4).setActive(true);
+		getTrack(3).getStep(4).setVelocity(0.55f);
+		getTrack(3).getStep(12).setActive(true);
+		getTrack(3).getStep(12).setVelocity(0.5f);
+		getTrack(3).getStep(12).setProbability(0.75f);
 	}
 
 	void Pattern::generateBasicPunkPattern() {
 		clear();
 
-		for (int i = 0; i < 16; i += 4) {
-			getTrack(0).getStep(i).setActive(true);
-			getTrack(0).getStep(i).setVelocity(0.9f);
-		}
+		getTrack(0).getStep(0).setActive(true);
+		getTrack(0).getStep(0).setVelocity(0.9f);
 
 		getTrack(1).getStep(8).setActive(true);
 		getTrack(1).getStep(8).setVelocity(1.0f);
 
-		for (int i = 0; i < 16; i += 2) {
-			getTrack(2).getStep(i).setActive(true);
-			getTrack(2).getStep(i).setVelocity(0.7f);
-		}
-
-		getTrack(3).getStep(6).setActive(true);
-		getTrack(3).getStep(6).setVelocity(0.8f);
-		getTrack(3).getStep(14).setActive(true);
-		getTrack(3).getStep(14).setVelocity(0.8f);
-
-		getTrack(4).getStep(0).setActive(true);
-		getTrack(4).getStep(0).setVelocity(0.9f);
+		getTrack(2).getStep(4).setActive(true);
+		getTrack(2).getStep(4).setVelocity(0.6f);
+		getTrack(2).getStep(4).setProbability(0.7f);
+		getTrack(2).getStep(12).setActive(true);
+		getTrack(2).getStep(12).setVelocity(0.65f);
 	}
 
 }

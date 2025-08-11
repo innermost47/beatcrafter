@@ -20,6 +20,10 @@ namespace BeatCrafter {
 		static void addRandomFills(Pattern& pattern, float intensity);
 		static float randomFloat(float min, float max);
 		static bool randomChance(float probability);
+		static void applyBaseIntensityScaling(Pattern& pattern, float intensity);
+		static void addSubtleVariations(Pattern& pattern, float intensity, StyleType style);
+		static void addBreakMode(Pattern& pattern, float intensity, StyleType style);
+
 	};
 
 }
