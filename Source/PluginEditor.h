@@ -19,6 +19,8 @@ namespace BeatCrafter {
 		void resized() override;
 		void timerCallback() override;
 
+		void updateFromProcessorState();
+
 	private:
 		BeatCrafterProcessor& processor;
 		ModernLookAndFeel modernLookAndFeel;

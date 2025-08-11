@@ -125,6 +125,12 @@ namespace BeatCrafter {
 		return new BeatCrafterEditor(*this);
 	}
 
+	void BeatCrafterProcessor::updateEditorFromState() {
+		if (auto* editor = dynamic_cast<BeatCrafterEditor*>(getActiveEditor())) {
+			editor->updateFromProcessorState();
+		}
+	}
+
 	void BeatCrafterProcessor::getStateInformation(juce::MemoryBlock& destData) {
 		auto state = juce::ValueTree("BeatCrafterState");
 
@@ -283,6 +289,8 @@ namespace BeatCrafter {
 			}
 			int activeSlot = tree.getProperty("activeSlot", 0);
 			getPatternEngine().switchToSlot(activeSlot, true);
+
+			updateEditorFromState();
 		}
 	}
 

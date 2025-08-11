@@ -69,6 +69,8 @@ namespace BeatCrafter {
 		MidiMapping intensityMapping;
 		std::array<MidiMapping, 8> slotMappings;
 
+		void updateEditorFromState();
+
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterProcessor)
 	};
 

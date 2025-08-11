@@ -236,4 +236,12 @@ namespace BeatCrafter {
 		}
 		updateMidiLearnButtons();
 	}
+
+	void BeatCrafterEditor::updateFromProcessorState() {
+		intensitySlider.setValue(processor.intensityParam->get(), juce::dontSendNotification);
+		updateStyleComboForCurrentSlot();
+		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
+		patternGrid->repaint();
+		slotManager->updateSlotStates();
+	}
 }
