@@ -2,10 +2,6 @@
 
 namespace BeatCrafter {
 
-	//============================================================================
-	// Step Implementation
-	//============================================================================
-
 	Step::Step()
 		: active(false),
 		velocity(0.8f),
@@ -44,10 +40,6 @@ namespace BeatCrafter {
 	void Step::setProbability(float p) {
 		probability = juce::jlimit(0.0f, 1.0f, p);
 	}
-
-	//============================================================================
-	// Track Implementation
-	//============================================================================
 
 	Track::Track(const juce::String& name, int midiNote)
 		: trackName(name),
@@ -98,16 +90,11 @@ namespace BeatCrafter {
 		}
 	}
 
-	//============================================================================
-	// Pattern Implementation
-	//============================================================================
-
 	Pattern::Pattern(const juce::String& name)
 		: patternName(name),
 		swing(0.0f),
 		currentStep(0) {
 
-		// Initialize default drum kit tracks with General MIDI mapping
 		tracks.emplace_back("Kick", GMDrum::KICK_1);
 		tracks.emplace_back("Snare", GMDrum::SNARE);
 		tracks.emplace_back("Hi-Hat", GMDrum::HIHAT_CLOSED);
@@ -116,6 +103,10 @@ namespace BeatCrafter {
 		tracks.emplace_back("Ride", GMDrum::RIDE);
 		tracks.emplace_back("Tom Hi", GMDrum::TOM_HIGH);
 		tracks.emplace_back("Tom Low", GMDrum::TOM_LOW);
+		tracks.emplace_back("Ride Bell", GMDrum::RIDE_BELL);
+		tracks.emplace_back("HH Pedal", GMDrum::HIHAT_PEDAL);
+		tracks.emplace_back("Splash", GMDrum::CRASH_2);
+		tracks.emplace_back("China", 52);
 
 		signature = { 4, 4 };
 	}
@@ -191,23 +182,16 @@ namespace BeatCrafter {
 	void Pattern::generateBasicRockPattern() {
 		clear();
 
-		// Classic rock beat
-		// Kick on 1 and 3 (beats 0 and 8 in 16th notes)
 		getTrack(0).getStep(0).setActive(true);
 		getTrack(0).getStep(0).setVelocity(0.9f);
 		getTrack(0).getStep(8).setActive(true);
 		getTrack(0).getStep(8).setVelocity(0.85f);
 
-		// Snare on 2 and 4 (beats 4 and 12)
-		getTrack(1).getStep(4).setActive(true);
-		getTrack(1).getStep(4).setVelocity(0.85f);
-		getTrack(1).getStep(12).setActive(true);
-		getTrack(1).getStep(12).setVelocity(0.9f);
+		getTrack(1).getStep(8).setActive(true);
+		getTrack(1).getStep(8).setVelocity(0.85f);
 
-		// Hi-hat pattern - 8th notes with accent on downbeats
 		for (int i = 0; i < 16; i += 2) {
 			getTrack(2).getStep(i).setActive(true);
-			// Stronger velocity on quarter notes
 			if (i % 4 == 0) {
 				getTrack(2).getStep(i).setVelocity(0.7f);
 			}
@@ -216,16 +200,19 @@ namespace BeatCrafter {
 			}
 		}
 
-		// Optional: Add a crash on the first beat
+		getTrack(3).getStep(6).setActive(true);
+		getTrack(3).getStep(6).setVelocity(0.6f);
+		getTrack(3).getStep(14).setActive(true);
+		getTrack(3).getStep(14).setVelocity(0.6f);
+
 		getTrack(4).getStep(0).setActive(true);
 		getTrack(4).getStep(0).setVelocity(0.6f);
-		getTrack(4).getStep(0).setProbability(0.3f); // Only plays 30% of the time
+		getTrack(4).getStep(0).setProbability(0.3f);
 	}
 
 	void Pattern::generateBasicMetalPattern() {
 		clear();
 
-		// Double kick pattern
 		getTrack(0).getStep(0).setActive(true);
 		getTrack(0).getStep(0).setVelocity(0.95f);
 		getTrack(0).getStep(2).setActive(true);
@@ -235,19 +222,14 @@ namespace BeatCrafter {
 		getTrack(0).getStep(10).setActive(true);
 		getTrack(0).getStep(10).setVelocity(0.85f);
 
-		// Snare on 2 and 4
-		getTrack(1).getStep(4).setActive(true);
-		getTrack(1).getStep(4).setVelocity(0.95f);
-		getTrack(1).getStep(12).setActive(true);
-		getTrack(1).getStep(12).setVelocity(0.95f);
+		getTrack(1).getStep(8).setActive(true);
+		getTrack(1).getStep(8).setVelocity(0.95f);
 
-		// Fast hi-hat or ride pattern
-		for (int i = 0; i < 16; ++i) {
-			getTrack(2).getStep(i).setActive(true);
-			getTrack(2).getStep(i).setVelocity(0.4f + (i % 2) * 0.2f);
+		for (int i = 0; i < 16; i += 2) {
+			getTrack(5).getStep(i).setActive(true);
+			getTrack(5).getStep(i).setVelocity(0.5f + (i % 4 == 0 ? 0.1f : 0.0f));
 		}
 
-		// Crash accents
 		getTrack(4).getStep(0).setActive(true);
 		getTrack(4).getStep(0).setVelocity(0.8f);
 	}
@@ -255,81 +237,156 @@ namespace BeatCrafter {
 	void Pattern::generateBasicJazzPattern() {
 		clear();
 
-		// Set swing feel
 		setSwing(0.67f);
 
-		// Light kick pattern
 		getTrack(0).getStep(0).setActive(true);
 		getTrack(0).getStep(0).setVelocity(0.5f);
 		getTrack(0).getStep(10).setActive(true);
 		getTrack(0).getStep(10).setVelocity(0.4f);
 		getTrack(0).getStep(10).setProbability(0.6f);
 
-		// Snare ghost notes and accents
+		getTrack(1).getStep(8).setActive(true);
+		getTrack(1).getStep(8).setVelocity(0.6f);
 		getTrack(1).getStep(3).setActive(true);
-		getTrack(1).getStep(3).setVelocity(0.3f); // Ghost note
-		getTrack(1).getStep(4).setActive(true);
-		getTrack(1).getStep(4).setVelocity(0.6f);
-		getTrack(1).getStep(7).setActive(true);
-		getTrack(1).getStep(7).setVelocity(0.25f); // Ghost note
+		getTrack(1).getStep(3).setVelocity(0.3f);
 		getTrack(1).getStep(11).setActive(true);
-		getTrack(1).getStep(11).setVelocity(0.35f); // Ghost note
-		getTrack(1).getStep(12).setActive(true);
-		getTrack(1).getStep(12).setVelocity(0.55f);
+		getTrack(1).getStep(11).setVelocity(0.25f);
 
-		// Ride cymbal pattern
 		for (int i = 0; i < 16; i += 2) {
 			getTrack(5).getStep(i).setActive(true);
 			getTrack(5).getStep(i).setVelocity(0.4f + (i % 4 == 0 ? 0.1f : 0.0f));
 		}
 
-		// Occasional hi-hat pedal
-		getTrack(2).getStep(2).setActive(true);
-		getTrack(2).getStep(2).setVelocity(0.3f);
-		getTrack(2).getStep(10).setActive(true);
-		getTrack(2).getStep(10).setVelocity(0.3f);
+		getTrack(9).getStep(2).setActive(true);
+		getTrack(9).getStep(2).setVelocity(0.3f);
+		getTrack(9).getStep(10).setActive(true);
+		getTrack(9).getStep(10).setVelocity(0.3f);
 	}
 
 	void Pattern::generateBasicFunkPattern() {
 		clear();
 
-		// Syncopated kick
 		getTrack(0).getStep(0).setActive(true);
 		getTrack(0).getStep(0).setVelocity(0.95f);
 		getTrack(0).getStep(3).setActive(true);
 		getTrack(0).getStep(3).setVelocity(0.7f);
-		getTrack(0).getStep(8).setActive(true);
-		getTrack(0).getStep(8).setVelocity(0.85f);
 		getTrack(0).getStep(10).setActive(true);
 		getTrack(0).getStep(10).setVelocity(0.9f);
 
-		// Snare with ghost notes
+		getTrack(1).getStep(8).setActive(true);
+		getTrack(1).getStep(8).setVelocity(0.9f);
 		getTrack(1).getStep(2).setActive(true);
-		getTrack(1).getStep(2).setVelocity(0.3f); // Ghost
-		getTrack(1).getStep(4).setActive(true);
-		getTrack(1).getStep(4).setVelocity(0.9f);
+		getTrack(1).getStep(2).setVelocity(0.3f);
 		getTrack(1).getStep(6).setActive(true);
-		getTrack(1).getStep(6).setVelocity(0.25f); // Ghost
-		getTrack(1).getStep(7).setActive(true);
-		getTrack(1).getStep(7).setVelocity(0.35f); // Ghost
-		getTrack(1).getStep(12).setActive(true);
-		getTrack(1).getStep(12).setVelocity(0.85f);
+		getTrack(1).getStep(6).setVelocity(0.25f);
 		getTrack(1).getStep(15).setActive(true);
-		getTrack(1).getStep(15).setVelocity(0.4f); // Ghost
+		getTrack(1).getStep(15).setVelocity(0.4f);
 
-		// Hi-hat pattern with opens
 		for (int i = 0; i < 16; ++i) {
 			if (i == 6 || i == 14) {
-				// Open hi-hat
 				getTrack(3).getStep(i).setActive(true);
 				getTrack(3).getStep(i).setVelocity(0.6f);
 			}
 			else {
-				// Closed hi-hat
 				getTrack(2).getStep(i).setActive(true);
 				getTrack(2).getStep(i).setVelocity(0.5f + (i % 2) * 0.2f);
 			}
 		}
 	}
 
-} // namespace BeatCrafter
+	void Pattern::generateBasicElectronicPattern() {
+		clear();
+
+		for (int i = 0; i < 16; i += 4) {
+			getTrack(0).getStep(i).setActive(true);
+			getTrack(0).getStep(i).setVelocity(0.9f);
+		}
+
+		getTrack(1).getStep(8).setActive(true);
+		getTrack(1).getStep(8).setVelocity(0.8f);
+
+		for (int i = 0; i < 16; ++i) {
+			getTrack(2).getStep(i).setActive(true);
+			getTrack(2).getStep(i).setVelocity(0.3f + (i % 4 == 0 ? 0.2f : 0.0f));
+		}
+
+		getTrack(3).getStep(2).setActive(true);
+		getTrack(3).getStep(2).setVelocity(0.5f);
+		getTrack(3).getStep(10).setActive(true);
+		getTrack(3).getStep(10).setVelocity(0.5f);
+	}
+
+	void Pattern::generateBasicHipHopPattern() {
+		clear();
+
+		getTrack(0).getStep(0).setActive(true);
+		getTrack(0).getStep(0).setVelocity(1.0f);
+
+		getTrack(1).getStep(8).setActive(true);
+		getTrack(1).getStep(8).setVelocity(0.9f);
+
+		getTrack(2).getStep(2).setActive(true);
+		getTrack(2).getStep(2).setVelocity(0.5f);
+		getTrack(2).getStep(6).setActive(true);
+		getTrack(2).getStep(6).setVelocity(0.4f);
+		getTrack(2).getStep(10).setActive(true);
+		getTrack(2).getStep(10).setVelocity(0.5f);
+		getTrack(2).getStep(14).setActive(true);
+		getTrack(2).getStep(14).setVelocity(0.4f);
+
+		getTrack(3).getStep(12).setActive(true);
+		getTrack(3).getStep(12).setVelocity(0.6f);
+	}
+
+	void Pattern::generateBasicLatinPattern() {
+		clear();
+
+		getTrack(0).getStep(0).setActive(true);
+		getTrack(0).getStep(0).setVelocity(0.8f);
+		getTrack(0).getStep(5).setActive(true);
+		getTrack(0).getStep(5).setVelocity(0.7f);
+
+		getTrack(1).getStep(8).setActive(true);
+		getTrack(1).getStep(8).setVelocity(0.8f);
+
+		for (int i = 0; i < 16; i += 2) {
+			getTrack(2).getStep(i).setActive(true);
+			getTrack(2).getStep(i).setVelocity(0.4f);
+		}
+
+		getTrack(3).getStep(2).setActive(true);
+		getTrack(3).getStep(2).setVelocity(0.6f);
+		getTrack(3).getStep(6).setActive(true);
+		getTrack(3).getStep(6).setVelocity(0.6f);
+		getTrack(3).getStep(10).setActive(true);
+		getTrack(3).getStep(10).setVelocity(0.6f);
+		getTrack(3).getStep(14).setActive(true);
+		getTrack(3).getStep(14).setVelocity(0.6f);
+	}
+
+	void Pattern::generateBasicPunkPattern() {
+		clear();
+
+		for (int i = 0; i < 16; i += 4) {
+			getTrack(0).getStep(i).setActive(true);
+			getTrack(0).getStep(i).setVelocity(0.9f);
+		}
+
+		getTrack(1).getStep(8).setActive(true);
+		getTrack(1).getStep(8).setVelocity(1.0f);
+
+		for (int i = 0; i < 16; i += 2) {
+			getTrack(2).getStep(i).setActive(true);
+			getTrack(2).getStep(i).setVelocity(0.7f);
+		}
+
+		getTrack(3).getStep(6).setActive(true);
+		getTrack(3).getStep(6).setVelocity(0.8f);
+		getTrack(3).getStep(14).setActive(true);
+		getTrack(3).getStep(14).setVelocity(0.8f);
+
+		getTrack(4).getStep(0).setActive(true);
+		getTrack(4).getStep(0).setVelocity(0.9f);
+	}
+
+}

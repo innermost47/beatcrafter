@@ -17,26 +17,20 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterEditor::setupComponents() {
-		// Pattern Grid
 		patternGrid = std::make_unique<PatternGrid>();
 		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
 		patternGrid->setPatternEngine(&processor.getPatternEngine());
 		addAndMakeVisible(patternGrid.get());
 
-		// Slot Manager
 		slotManager = std::make_unique<SlotManager>(processor.getPatternEngine());
 
-		// Connecter le callback de changement de slot
 		slotManager->onSlotChanged = [this](int slot) {
 			updateStyleComboForCurrentSlot();
-
-			// NOUVEAU : Mettre à jour l'affichage du pattern
 			patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
 			patternGrid->repaint();
 			};
 
 		addAndMakeVisible(slotManager.get());
-		// Intensity Slider
 		intensitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
 		intensitySlider.setRange(0.0, 1.0);
 		intensitySlider.setValue(processor.intensityParam->get());
@@ -52,18 +46,13 @@ namespace BeatCrafter {
 
 		styleCombo.addItemList(processor.styleParam->choices, 1);
 
-		// Synchroniser avec le style du slot actuel
 		updateStyleComboForCurrentSlot();
 
 		styleCombo.onChange = [this]() {
 			int selectedStyle = styleCombo.getSelectedId() - 1;
-
-			// Mettre à jour le style pour le slot actuel
 			int currentSlot = processor.getPatternEngine().getActiveSlot();
 			processor.slotStyleParams[currentSlot]->setValueNotifyingHost(selectedStyle);
 			processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(selectedStyle));
-
-			// Régénérer le pattern avec le nouveau style
 			onGenerateClicked();
 			};
 		addAndMakeVisible(styleCombo);
@@ -72,7 +61,6 @@ namespace BeatCrafter {
 		styleLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textColour);
 		addAndMakeVisible(styleLabel);
 
-		// Buttons
 		generateButton.onClick = [this]() { onGenerateClicked(); };
 		addAndMakeVisible(generateButton);
 
@@ -87,20 +75,23 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterEditor::updatePatternDisplay() {
-		processor.getPatternEngine().setIntensity(processor.intensityParam->get());
-		patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
-		patternGrid->repaint();
+		auto& engine = processor.getPatternEngine();
+		float currentIntensity = processor.intensityParam->get();
+		static float lastIntensity = -1.0f;
+		if (currentIntensity != lastIntensity) {
+			engine.regenerateSlotSeed(engine.getActiveSlot());
+			lastIntensity = currentIntensity;
+		}
+
+		engine.setIntensity(currentIntensity);
+		patternGrid->updateWithIntensity(*engine.getDisplayPattern());
 	}
 
 	void BeatCrafterEditor::paint(juce::Graphics& g) {
 		g.fillAll(modernLookAndFeel.backgroundDark);
-
-		// Title
 		g.setColour(modernLookAndFeel.accent);
 		g.setFont(24.0f);
 		g.drawText("BEATCRAFTER", 20, 10, 200, 30, juce::Justification::left);
-
-		// Version
 		g.setColour(modernLookAndFeel.textDimmed);
 		g.setFont(10.0f);
 		g.drawText("v0.1.0", 220, 20, 50, 20, juce::Justification::left);
@@ -108,38 +99,30 @@ namespace BeatCrafter {
 
 	void BeatCrafterEditor::resized() {
 		auto bounds = getLocalBounds();
-
-		// Top controls area
 		auto topArea = bounds.removeFromTop(100);
-		topArea.removeFromTop(40); // Title space
+		topArea.removeFromTop(40);
 
 		auto controlsArea = topArea.reduced(20, 0);
 
-		// Style selector
 		styleLabel.setBounds(controlsArea.removeFromLeft(40));
 		styleCombo.setBounds(controlsArea.removeFromLeft(120).reduced(0, 10));
 		controlsArea.removeFromLeft(20);
 
-		// Buttons
 		generateButton.setBounds(controlsArea.removeFromLeft(80).reduced(0, 10));
 		controlsArea.removeFromLeft(10);
 		clearButton.setBounds(controlsArea.removeFromLeft(80).reduced(0, 10));
 
-		// Intensity slider at bottom
 		auto bottomArea = bounds.removeFromBottom(60);
 		intensityLabel.setBounds(bottomArea.removeFromLeft(80).reduced(20, 0));
 		intensitySlider.setBounds(bottomArea.reduced(20, 15));
 
-		// Slot manager
 		auto slotArea = bounds.removeFromTop(60);
 		slotManager->setBounds(slotArea.reduced(20, 10));
 
-		// Pattern grid takes remaining space
 		patternGrid->setBounds(bounds.reduced(20, 10));
 	}
 
 	void BeatCrafterEditor::timerCallback() {
-		// Mettre à jour le pattern affiché avec l'intensité actuelle
 		patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
 		patternGrid->repaint();
 		slotManager->updateSlotStates();
@@ -154,14 +137,8 @@ namespace BeatCrafter {
 
 	void BeatCrafterEditor::onClearClicked() {
 		processor.getPatternEngine().clearCurrentPattern();
-
-		// Mettre à jour le slider d'intensité visuellement
 		intensitySlider.setValue(0.0f, juce::dontSendNotification);
 		processor.intensityParam->setValueNotifyingHost(0.0f);
-
-		// Forcer la mise à jour de l'affichage
 		patternGrid->repaint();
 	}
-
-
-} // namespace BeatCrafter
+}

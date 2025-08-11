@@ -4,6 +4,7 @@
 #include "Pattern.h"
 #include <array>
 #include <memory>
+#include <random>
 
 namespace BeatCrafter {
 
@@ -12,7 +13,6 @@ namespace BeatCrafter {
 		PatternEngine();
 		~PatternEngine() = default;
 
-		// Pattern management
 		const Pattern& getCurrentPattern() const { return *slots[activeSlot]; }
 
 		Pattern* getCurrentBasePattern() {
@@ -29,20 +29,17 @@ namespace BeatCrafter {
 		void switchToSlot(int slot, bool immediate = false);
 		int getActiveSlot() const { return activeSlot; }
 
-		// MIDI generation
 		void processBlock(juce::MidiBuffer& midiMessages,
 			int numSamples,
 			double sampleRate,
 			const juce::AudioPlayHead::PositionInfo& posInfo);
 
-		// Intensity control
 		void setIntensity(float intensity) {
 			currentIntensity = intensity;
-			intensityCacheValid = false;  // Invalider le cache
+			intensityCacheValid = false;
 		}
 		float getIntensity() const { return currentIntensity; }
 
-		// Transport
 		void start() { isPlaying = true; }
 		void stop() {
 			isPlaying = false;
@@ -52,7 +49,6 @@ namespace BeatCrafter {
 		}
 		bool getIsPlaying() const { return isPlaying; }
 
-		// Generation
 		void generateNewPattern(StyleType style, float complexity = 0.5f);
 
 		const Pattern* getDisplayPattern() const {
@@ -78,7 +74,7 @@ namespace BeatCrafter {
 		void clearCurrentPattern() {
 			if (slots[activeSlot]) {
 				slots[activeSlot]->clear();
-				setIntensity(0.0f); // Remettre l'intensité à 0 aussi
+				setIntensity(0.0f);
 			}
 		}
 
@@ -95,12 +91,33 @@ namespace BeatCrafter {
 			return slotStyles[activeSlot];
 		}
 
+		void regenerateSlotSeed(int slot) {
+			if (slot >= 0 && slot < 8) {
+				std::random_device rd;
+				slotRandomSeeds[slot] = rd();
+			}
+		}
+
+		uint32_t getSlotSeed(int slot) const {
+			if (slot >= 0 && slot < 8) {
+				return slotRandomSeeds[slot];
+			}
+			return 0;
+		}
+
+		void setSlotSeed(int slot, uint32_t seed) {
+			if (slot >= 0 && slot < 8) {
+				slotRandomSeeds[slot] = seed;
+			}
+		}
+
 	private:
 		std::array<std::unique_ptr<Pattern>, 8> slots;
 		int activeSlot = 0;
 		int queuedSlot = -1;
 
 		std::array<StyleType, 8> slotStyles;
+		std::array<uint32_t, 8> slotRandomSeeds;
 
 		mutable Pattern intensifiedPatternCache;
 		mutable bool intensityCacheValid = false;
@@ -117,7 +134,7 @@ namespace BeatCrafter {
 			int samplePosition,
 			const Pattern& pattern,
 			int stepIndex);
+		void applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity);
 
 	};
-
-} // namespace BeatCrafter
+}

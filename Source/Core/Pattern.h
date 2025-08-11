@@ -84,6 +84,10 @@ namespace BeatCrafter {
 		void generateBasicMetalPattern();
 		void generateBasicJazzPattern();
 		void generateBasicFunkPattern();
+		void generateBasicElectronicPattern(); // NOUVEAU
+		void generateBasicHipHopPattern();     // NOUVEAU
+		void generateBasicLatinPattern();      // NOUVEAU
+		void generateBasicPunkPattern();       // NOUVEAU
 
 	private:
 		juce::String patternName;

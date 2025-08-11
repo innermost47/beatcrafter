@@ -4,7 +4,7 @@ namespace BeatCrafter {
 
 	PatternGrid::PatternGrid() {
 		lookAndFeel = dynamic_cast<ModernLookAndFeel*>(&getLookAndFeel());
-		startTimerHz(30); // 30 FPS pour animation fluide
+		startTimerHz(30);
 	}
 
 	PatternGrid::~PatternGrid() {
@@ -21,7 +21,6 @@ namespace BeatCrafter {
 	}
 
 	void PatternGrid::updateWithIntensity(const Pattern& intensifiedPattern) {
-		// Stocker une copie temporaire du pattern intensifié
 		static Pattern tempPattern("Display");
 		tempPattern = intensifiedPattern;
 		currentPattern = &tempPattern;
@@ -48,7 +47,6 @@ namespace BeatCrafter {
 	void PatternGrid::resized() {
 		auto bounds = getLocalBounds();
 
-		// Calculate cell dimensions
 		int numSteps = currentPattern ? currentPattern->getLength() : 16;
 		int numTracks = currentPattern ? currentPattern->getNumTracks() : 8;
 
@@ -61,7 +59,6 @@ namespace BeatCrafter {
 
 		auto [track, step] = getStepFromPosition(event.getPosition());
 		if (track >= 0 && step >= 0) {
-			// Obtenir le pattern éditable depuis PatternEngine
 			if (patternEngine) {
 				Pattern* editablePattern = patternEngine->getCurrentBasePattern();
 				if (editablePattern) {
@@ -70,8 +67,6 @@ namespace BeatCrafter {
 					stepObj.setActive(newState);
 					if (onStepChanged)
 						onStepChanged(track, step, newState);
-
-					// Mettre à jour l'affichage avec l'intensité
 					currentPattern = patternEngine->getDisplayPattern();
 					repaint();
 				}
@@ -130,7 +125,6 @@ namespace BeatCrafter {
 	void PatternGrid::drawBackground(juce::Graphics& g) {
 		g.fillAll(lookAndFeel->backgroundDark);
 
-		// Header backgrounds
 		g.setColour(lookAndFeel->backgroundMid);
 		g.fillRect(juce::Rectangle<float>(0.0f, 0.0f, (float)getWidth(), (float)headerHeight));
 		g.fillRect(juce::Rectangle<float>(0.0f, 0.0f, (float)headerWidth, (float)getHeight()));
@@ -144,11 +138,9 @@ namespace BeatCrafter {
 
 		g.setColour(lookAndFeel->backgroundLight.withAlpha(0.3f));
 
-		// Vertical lines
 		for (int i = 0; i <= numSteps; ++i) {
 			float x = headerWidth + i * cellWidth;
 
-			// Stronger lines every 4 steps (beat markers)
 			if (i % 4 == 0) {
 				g.setColour(lookAndFeel->backgroundLight.withAlpha(0.5f));
 				g.drawLine(x, headerHeight, x, getHeight(), 2.0f);
@@ -159,7 +151,6 @@ namespace BeatCrafter {
 			}
 		}
 
-		// Horizontal lines
 		g.setColour(lookAndFeel->backgroundLight.withAlpha(0.3f));
 		for (int i = 0; i <= numTracks; ++i) {
 			float y = headerHeight + i * cellHeight;
@@ -170,23 +161,16 @@ namespace BeatCrafter {
 	void PatternGrid::drawSteps(juce::Graphics& g) {
 		if (!currentPattern) return;
 
-		Pattern displayPattern = *currentPattern;
-		if (patternEngine) {
-			displayPattern = patternEngine->applyIntensity(*currentPattern, patternEngine->getIntensity());
-		}
-
 		for (int track = 0; track < currentPattern->getNumTracks(); ++track) {
 			for (int step = 0; step < currentPattern->getLength(); ++step) {
 				auto bounds = getStepBounds(track, step).reduced(2.0f);
 				const auto& stepObj = currentPattern->getTrack(track).getStep(step);
 
-				// Hover effect
 				if (track == hoveredTrack && step == hoveredStep) {
 					g.setColour(lookAndFeel->stepHover);
 					g.fillRoundedRectangle(bounds, 2.0f);
 				}
 
-				// Step state
 				if (stepObj.isActive()) {
 					float alpha = 0.5f + stepObj.getVelocity() * 0.5f;
 					g.setColour(lookAndFeel->stepActive.withAlpha(alpha));
@@ -216,11 +200,9 @@ namespace BeatCrafter {
 
 		float x = headerWidth + playheadPos * cellWidth;
 
-		// Glow effect
 		g.setColour(lookAndFeel->accent.withAlpha(0.3f));
 		g.fillRect(x - 2, headerHeight, cellWidth + 4, getHeight() - headerHeight);
 
-		// Main playhead line
 		g.setColour(lookAndFeel->accent);
 		g.drawLine(x + cellWidth * 0.5f, headerHeight,
 			x + cellWidth * 0.5f, getHeight(), 2.0f);
@@ -255,7 +237,6 @@ namespace BeatCrafter {
 			auto bounds = juce::Rectangle<float>(headerWidth + i * cellWidth, 0,
 				cellWidth, headerHeight);
 
-			// Highlight beat numbers
 			if (i % 4 == 0) {
 				g.setColour(lookAndFeel->textColour);
 				g.setFont(11.0f);
@@ -271,4 +252,4 @@ namespace BeatCrafter {
 		}
 	}
 
-} // namespace BeatCrafter
+}
