@@ -1,4 +1,5 @@
 ﻿# 🥁 BeatCrafter
+
 **Intelligent MIDI Drum Pattern Generator VST3 - Proof of Concept**
 
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
@@ -11,7 +12,7 @@
 
 The core philosophy: start simple and build complexity musically. Patterns begin with minimal elements (snare only on beat 3) and progressively evolve into full arrangements as intensity increases, respecting the authentic characteristics of each musical style.
 
-![screenshot]("./Assets/screenshot.png")
+![screenshot](assets/screenshot.png)
 
 ## ✨ Features
 
@@ -28,6 +29,7 @@ The core philosophy: start simple and build complexity musically. Patterns begin
 ## 🚧 Development Status
 
 This is a **proof of concept** with ongoing work on:
+
 - ⚠️ **Rhythmic Coherence** - Improving musical authenticity of generated patterns
 - 🎵 **Style Refinement** - Better characteristic patterns for each genre
 - 🥁 **Cymbal Logic** - More realistic hi-hat/ride/splash combinations
@@ -36,6 +38,7 @@ This is a **proof of concept** with ongoing work on:
 ## 🚀 Quick Start
 
 ### Build from Source
+
 ```bash
 # Clone the repo
 git clone https://github.com/innermost47/beatcrafter.git
@@ -68,7 +71,7 @@ Each style follows its own musical evolution:
 ## 🥁 General MIDI Drum Map
 
 | Instrument | MIDI Note | Note Name |
-|------------|-----------|-----------|
+| ---------- | --------- | --------- |
 | Kick       | 36        | C1        |
 | Snare      | 38        | D1        |
 | Hi-Hat     | 42        | F#1       |
@@ -105,8 +108,9 @@ Each style follows its own musical evolution:
 ## 🤝 Contributing
 
 This is an open proof of concept! Pull requests welcome, especially for:
+
 - Rhythmic pattern improvements
-- New style implementations  
+- New style implementations
 - Performance optimizations
 - UI/UX enhancements
 

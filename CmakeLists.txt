@@ -38,15 +38,15 @@ juce_add_plugin(BeatCrafter
 
 target_sources(BeatCrafter
     PRIVATE
-        Source/PluginProcessor.cpp
-        Source/PluginEditor.cpp
-        Source/Core/Pattern.cpp
-        Source/Core/PatternEngine.cpp
-        Source/Core/IntensityMapper.cpp
-        Source/Core/StyleIntensityGenerator.cpp
-        Source/GUI/PatternGrid.cpp
-        Source/GUI/LookAndFeel.cpp
-        Source/GUI/SlotManager.cpp
+        src/PluginProcessor.cpp
+        src/PluginEditor.cpp
+        src/Core/Pattern.cpp
+        src/Core/PatternEngine.cpp
+        src/Core/IntensityMapper.cpp
+        src/Core/StyleIntensityGenerator.cpp
+        src/GUI/PatternGrid.cpp
+        src/GUI/LookAndFeel.cpp
+        src/GUI/SlotManager.cpp
 )
 
 target_compile_definitions(BeatCrafter
