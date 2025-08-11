@@ -18,12 +18,16 @@ namespace BeatCrafter {
 		for (int i = 0; i < 8; ++i) {
 			juce::String paramId = "slotStyle" + juce::String(i);
 			juce::String paramName = "Slot " + juce::String(i + 1) + " Style";
-
 			slotStyleParams[i] = new juce::AudioParameterChoice(
 				paramId, paramName,
 				juce::StringArray{ "Rock", "Metal", "Jazz", "Funk", "Electronic", "HipHop", "Latin", "Punk" },
 				0);
 			addParameter(slotStyleParams[i]);
+		}
+
+		for (int i = 0; i < 8; ++i) {
+			StyleType paramStyle = static_cast<StyleType>(slotStyleParams[i]->getIndex());
+			getPatternEngine().setSlotStyle(i, paramStyle);
 		}
 	}
 
@@ -126,9 +130,11 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterProcessor::updateEditorFromState() {
-		if (auto* editor = dynamic_cast<BeatCrafterEditor*>(getActiveEditor())) {
-			editor->updateFromProcessorState();
-		}
+		juce::Timer::callAfterDelay(100, [this]() {
+			if (auto* editor = dynamic_cast<BeatCrafterEditor*>(getActiveEditor())) {
+				editor->updateFromProcessorState();
+			}
+			});
 	}
 
 	void BeatCrafterProcessor::getStateInformation(juce::MemoryBlock& destData) {
@@ -209,7 +215,9 @@ namespace BeatCrafter {
 		auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
 		if (tree.isValid()) {
 			intensityParam->setValueNotifyingHost(tree.getProperty("intensity", 0.5f));
-			styleParam->setValueNotifyingHost(tree.getProperty("style", 0));
+			int styleIndex = tree.getProperty("style", 0);
+			float normalizedStyle = styleIndex / (float)(styleParam->choices.size() - 1);
+			styleParam->setValueNotifyingHost(normalizedStyle);
 
 			for (int i = 0; i < 8; ++i) {
 				juce::String styleProps = "slotStyle" + juce::String(i);
@@ -218,7 +226,9 @@ namespace BeatCrafter {
 				int styleIndex = tree.getProperty(styleProps, 0);
 				uint32_t seed = static_cast<uint32_t>(static_cast<int>(tree.getProperty(seedProps, 0)));
 
-				slotStyleParams[i]->setValueNotifyingHost(styleIndex);
+				float normalizedValue = styleIndex / (float)(slotStyleParams[i]->choices.size() - 1);
+				slotStyleParams[i]->setValueNotifyingHost(normalizedValue);
+
 				getPatternEngine().setSlotStyle(i, static_cast<StyleType>(styleIndex));
 				getPatternEngine().setSlotSeed(i, seed);
 			}

@@ -68,14 +68,22 @@ namespace BeatCrafter {
 		intensityMidiLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
 		addAndMakeVisible(intensityMidiLabel);
 
-		styleCombo.addItemList(processor.styleParam->choices, 1);
+		styleCombo.addItem("Rock", 1);
+		styleCombo.addItem("Metal", 2);
+		styleCombo.addItem("Jazz", 3);
+		styleCombo.addItem("Funk", 4);
+		styleCombo.addItem("Electronic", 5);
+		styleCombo.addItem("HipHop", 6);
+		styleCombo.addItem("Latin", 7);
+		styleCombo.addItem("Punk", 8);
 
 		updateStyleComboForCurrentSlot();
 
 		styleCombo.onChange = [this]() {
 			int selectedStyle = styleCombo.getSelectedId() - 1;
 			int currentSlot = processor.getPatternEngine().getActiveSlot();
-			processor.slotStyleParams[currentSlot]->setValueNotifyingHost(selectedStyle);
+			float normalized = selectedStyle / (float)(processor.slotStyleParams[currentSlot]->choices.size() - 1);
+			processor.slotStyleParams[currentSlot]->setValueNotifyingHost(normalized);
 			processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(selectedStyle));
 			onGenerateClicked();
 			};
@@ -94,8 +102,12 @@ namespace BeatCrafter {
 
 	void BeatCrafterEditor::updateStyleComboForCurrentSlot() {
 		int currentSlot = processor.getPatternEngine().getActiveSlot();
-		StyleType currentStyle = processor.getPatternEngine().getSlotStyle(currentSlot);
-		styleCombo.setSelectedId(static_cast<int>(currentStyle) + 1, juce::dontSendNotification);
+		int styleFromParam = processor.slotStyleParams[currentSlot]->getIndex();
+		StyleType styleFromEngine = processor.getPatternEngine().getSlotStyle(currentSlot);
+		if (static_cast<int>(styleFromEngine) != styleFromParam) {
+			processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(styleFromParam));
+		}
+		styleCombo.setSelectedId(styleFromParam + 1, juce::dontSendNotification);
 	}
 
 	void BeatCrafterEditor::updatePatternDisplay() {
@@ -171,7 +183,8 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterEditor::onGenerateClicked() {
-		auto style = static_cast<StyleType>(processor.styleParam->getIndex());
+		int currentSlot = processor.getPatternEngine().getActiveSlot();
+		auto style = static_cast<StyleType>(processor.slotStyleParams[currentSlot]->getIndex());
 		float complexity = processor.intensityParam->get();
 		processor.getPatternEngine().generateNewPattern(style, complexity);
 		patternGrid->repaint();
@@ -239,9 +252,12 @@ namespace BeatCrafter {
 
 	void BeatCrafterEditor::updateFromProcessorState() {
 		intensitySlider.setValue(processor.intensityParam->get(), juce::dontSendNotification);
-		updateStyleComboForCurrentSlot();
+		int currentSlot = processor.getPatternEngine().getActiveSlot();
+		int currentStyleIndex = processor.slotStyleParams[currentSlot]->getIndex();
+		styleCombo.setSelectedId(currentStyleIndex + 1, juce::dontSendNotification);
 		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
 		patternGrid->repaint();
 		slotManager->updateSlotStates();
+		updateMidiLearnButtons();
 	}
 }
