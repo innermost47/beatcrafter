@@ -115,6 +115,8 @@ namespace BeatCrafter {
 	}
 
 	void BeatCrafterEditor::timerCallback() {
+		// Mettre à jour le pattern affiché avec l'intensité actuelle
+		patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
 		patternGrid->repaint();
 		slotManager->updateSlotStates();
 	}
