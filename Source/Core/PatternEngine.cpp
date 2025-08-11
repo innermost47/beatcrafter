@@ -166,16 +166,17 @@ namespace BeatCrafter {
 				hihatTrack.getStep(i).setVelocity(0.4f + (i % 2) * 0.3f);
 			}
 
-			// Tom fills on last bar
-			if (result.getCurrentStep() >= 12) {
-				auto& tomHiTrack = result.getTrack(6);
-				auto& tomLoTrack = result.getTrack(7);
+			auto& tomHiTrack = result.getTrack(6);
+			auto& tomLoTrack = result.getTrack(7);
 
-				tomHiTrack.getStep(12).setActive(true);
-				tomHiTrack.getStep(13).setActive(true);
-				tomLoTrack.getStep(14).setActive(true);
-				tomLoTrack.getStep(15).setActive(true);
-			}
+			tomHiTrack.getStep(12).setActive(true);
+			tomHiTrack.getStep(12).setVelocity(0.8f);
+			tomHiTrack.getStep(13).setActive(true);
+			tomHiTrack.getStep(13).setVelocity(0.7f);
+			tomLoTrack.getStep(14).setActive(true);
+			tomLoTrack.getStep(14).setVelocity(0.8f);
+			tomLoTrack.getStep(15).setActive(true);
+			tomLoTrack.getStep(15).setVelocity(0.9f);
 		}
 
 		return result;
