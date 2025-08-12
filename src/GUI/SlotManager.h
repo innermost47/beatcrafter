@@ -39,7 +39,7 @@ namespace BeatCrafter {
 	private:
 		PatternEngine& patternEngine;
 		std::array<std::unique_ptr<SlotButton>, 8> slotButtons;
-
+		juce::String styleTypeToString(StyleType style);
 		void onSlotClicked(int slot);
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SlotManager)

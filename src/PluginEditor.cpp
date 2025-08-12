@@ -45,7 +45,7 @@ namespace BeatCrafter {
 
 		intensitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
 		intensitySlider.setRange(0.0, 1.0, 0.01);
-		intensitySlider.setValue(processor.intensityParam->get());
+		intensitySlider.setValue(processor.intensityParam->get(), juce::dontSendNotification);
 		intensitySlider.onValueChange = [this]() {
 			processor.intensityParam->setValueNotifyingHost(intensitySlider.getValue());
 			updatePatternDisplay();

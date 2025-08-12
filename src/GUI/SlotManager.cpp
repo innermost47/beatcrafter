@@ -68,12 +68,28 @@ namespace BeatCrafter {
 
 	SlotManager::SlotManager(PatternEngine& engine) : patternEngine(engine) {
 		for (int i = 0; i < 8; ++i) {
+			StyleType slotStyle = patternEngine.getSlotStyle(i);
 			slotButtons[i] = std::make_unique<SlotButton>(i);
+			slotButtons[i]->setButtonText(styleTypeToString(slotStyle));
 			slotButtons[i]->onClick = [this, i]() { onSlotClicked(i); };
 			addAndMakeVisible(slotButtons[i].get());
 		}
 
 		updateSlotStates();
+	}
+
+	juce::String SlotManager::styleTypeToString(StyleType style) {
+		switch (style) {
+		case StyleType::Rock: return "Rock";
+		case StyleType::Metal: return "Metal";
+		case StyleType::Jazz: return "Jazz";
+		case StyleType::Funk: return "Funk";
+		case StyleType::Electronic: return "Electronic";
+		case StyleType::HipHop: return "Hip Hop";
+		case StyleType::Latin: return "Latin";
+		case StyleType::Punk: return "Punk";
+		default: return "Unknown";
+		}
 	}
 
 	void SlotManager::resized() {
@@ -92,6 +108,8 @@ namespace BeatCrafter {
 			bool hasPattern = patternEngine.getSlot(i) != nullptr;
 			bool isActive = (i == activeSlot);
 			slotButtons[i]->setSlotState(hasPattern, isActive);
+			StyleType slotStyle = patternEngine.getSlotStyle(i);
+			slotButtons[i]->setButtonText(styleTypeToString(slotStyle));
 		}
 	}
 
