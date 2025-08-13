@@ -124,15 +124,26 @@ namespace BeatCrafter {
 
 		pattern.getTrack(0).getStep(0).setActive(true);
 		pattern.getTrack(0).getStep(0).setVelocity(0.9f);
+		pattern.getTrack(0).getStep(4).setActive(true);
+		pattern.getTrack(0).getStep(4).setVelocity(0.9f);
+		pattern.getTrack(0).getStep(8).setActive(true);
+		pattern.getTrack(0).getStep(8).setVelocity(0.9f);
+		pattern.getTrack(0).getStep(12).setActive(true);
+		pattern.getTrack(0).getStep(12).setVelocity(0.9f);
 
-		pattern.getTrack(1).getStep(8).setActive(true);
-		pattern.getTrack(1).getStep(8).setVelocity(0.7f);
-		pattern.getTrack(1).getStep(8).setProbability(0.8f);
+		pattern.getTrack(1).getStep(4).setActive(true);
+		pattern.getTrack(1).getStep(4).setVelocity(0.7f);
+		pattern.getTrack(1).getStep(12).setActive(true);
+		pattern.getTrack(1).getStep(12).setVelocity(0.7f);
 
-		pattern.getTrack(2).getStep(4).setActive(true);
-		pattern.getTrack(2).getStep(4).setVelocity(0.4f);
-		pattern.getTrack(2).getStep(12).setActive(true);
-		pattern.getTrack(2).getStep(12).setVelocity(0.5f);
+		pattern.getTrack(2).getStep(2).setActive(true);
+		pattern.getTrack(2).getStep(2).setVelocity(0.4f);
+		pattern.getTrack(2).getStep(6).setActive(true);
+		pattern.getTrack(2).getStep(6).setVelocity(0.4f);
+		pattern.getTrack(2).getStep(10).setActive(true);
+		pattern.getTrack(2).getStep(10).setVelocity(0.4f);
+		pattern.getTrack(2).getStep(14).setActive(true);
+		pattern.getTrack(2).getStep(14).setVelocity(0.4f);
 	}
 
 	void StyleManager::generateHipHopPattern(Pattern& pattern) {
@@ -360,6 +371,24 @@ namespace BeatCrafter {
 							kickTrack.getStep(i + 1).setActive(true);
 							kickTrack.getStep(i + 1).setVelocity(randomFloat(0.75f, 0.9f));
 						}
+					}
+				}
+			}
+		}
+
+		if (style == StyleType::Electronic && intensity > 0.3f) {
+			auto& kickTrack = pattern.getTrack(0);
+
+			kickTrack.getStep(0).setActive(true);
+			kickTrack.getStep(4).setActive(true);
+			kickTrack.getStep(8).setActive(true);
+			kickTrack.getStep(12).setActive(true);
+			if (intensity > 0.6f) {
+				for (int i = 2; i < 16; i += 4) {
+					if (randomChance(intensity * 0.4f)) {
+						kickTrack.getStep(i).setActive(true);
+						kickTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
+						kickTrack.getStep(i).setProbability(0.6f + intensity * 0.3f);
 					}
 				}
 			}
