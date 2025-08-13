@@ -56,7 +56,10 @@ namespace BeatCrafter {
 
 	void PatternGrid::mouseDown(const juce::MouseEvent& event) {
 		if (!currentPattern) return;
+		if (isVelocityPopupOpen) return;
+
 		if (event.mods.isCtrlDown()) {
+			startMidiDragAndDrop(event);
 			return;
 		}
 
@@ -66,14 +69,70 @@ namespace BeatCrafter {
 				Pattern* editablePattern = patternEngine->getCurrentBasePattern();
 				if (editablePattern) {
 					auto& stepObj = editablePattern->getTrack(track).getStep(step);
-					bool newState = !stepObj.isActive();
-					stepObj.setActive(newState);
-					if (onStepChanged)
-						onStepChanged(track, step, newState);
+
+					if (event.mods.isRightButtonDown()) {
+						if (stepObj.isActive()) {
+							showVelocityPopup(track, step);
+						}
+					}
+					else {
+						bool newState = !stepObj.isActive();
+						stepObj.setActive(newState);
+						if (newState) {
+							stepObj.setVelocity(0.7f);
+						}
+						if (onStepChanged)
+							onStepChanged(track, step, newState);
+					}
+
 					currentPattern = patternEngine->getDisplayPattern();
 					repaint();
 				}
 			}
+		}
+	}
+
+	void PatternGrid::showVelocityPopup(int track, int step) {
+		Pattern* editablePattern = patternEngine->getCurrentBasePattern();
+		if (!editablePattern) return;
+
+		auto& stepObj = editablePattern->getTrack(track).getStep(step);
+		if (!stepObj.isActive()) return;
+
+		closeVelocityPopup();
+
+		velocityPopup = std::make_unique<VelocityPopup>(
+			[this, track, step](float newVelocity) {
+				Pattern* editablePattern = patternEngine->getCurrentBasePattern();
+				if (editablePattern) {
+					auto& stepObj = editablePattern->getTrack(track).getStep(step);
+					stepObj.setVelocity(newVelocity);
+					currentPattern = patternEngine->getDisplayPattern();
+					repaint();
+				}
+			},
+			[this]() {
+				closeVelocityPopup();
+			}
+		);
+
+		velocityPopup->setVelocity(stepObj.getVelocity());
+		addAndMakeVisible(velocityPopup.get());
+		auto stepBounds = getStepBounds(track, step);
+		int popupX = stepBounds.getX() + stepBounds.getWidth() + 5;
+		int popupY = stepBounds.getY() - 20;
+		popupX = juce::jmin(popupX, getWidth() - velocityPopup->getWidth());
+		popupY = juce::jmax(popupY, 0);
+
+		velocityPopup->setTopLeftPosition(popupX, popupY);
+		isVelocityPopupOpen = true;
+	}
+
+	void PatternGrid::closeVelocityPopup() {
+		if (velocityPopup) {
+			removeChildComponent(velocityPopup.get());
+			velocityPopup.reset();
+			isVelocityPopupOpen = false;
 		}
 	}
 
