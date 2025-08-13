@@ -215,7 +215,7 @@ namespace BeatCrafter {
 				slotMidiLearnButtons[i].setColour(juce::TextButton::buttonColourId, juce::Colours::red);
 			}
 			else {
-				slotMidiLearnButtons[i].setButtonText("L");
+				slotMidiLearnButtons[i].setButtonText("Learn");
 				slotMidiLearnButtons[i].setColour(juce::TextButton::buttonColourId, modernLookAndFeel.backgroundMid);
 			}
 
@@ -259,5 +259,17 @@ namespace BeatCrafter {
 		patternGrid->repaint();
 		slotManager->updateSlotStates();
 		updateMidiLearnButtons();
+	}
+
+	void BeatCrafterEditor::updateIntensitySlider(float newIntensity) {
+		intensitySlider.setValue(newIntensity, juce::dontSendNotification);
+		updatePatternDisplay();
+	}
+
+	void BeatCrafterEditor::updateSlotButtons(int activeSlot) {
+		slotManager->updateSlotStates();
+		updateStyleComboForCurrentSlot();
+		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
+		patternGrid->repaint();
 	}
 }

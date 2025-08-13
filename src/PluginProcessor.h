@@ -63,6 +63,7 @@ namespace BeatCrafter {
 		struct MidiMapping {
 			int ccNumber = -1;
 			int channel = -1;
+			bool isNote = false;
 			bool isValid() const { return ccNumber >= 0 && channel >= 0; }
 		};
 

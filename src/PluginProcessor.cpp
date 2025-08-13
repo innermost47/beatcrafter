@@ -56,39 +56,77 @@ namespace BeatCrafter {
 
 		for (const auto metadata : midiMessages) {
 			auto message = metadata.getMessage();
-
 			if (message.isController()) {
 				int ccNumber = message.getControllerNumber();
 				int channel = message.getChannel() - 1;
 				int value = message.getControllerValue();
-
 				if (midiLearnMode) {
 					if (midiLearnTargetType == 0) {
 						intensityMapping.ccNumber = ccNumber;
 						intensityMapping.channel = channel;
+						intensityMapping.isNote = false;
 						stopMidiLearn();
 					}
 					else if (midiLearnTargetType >= 1 && midiLearnTargetType <= 8) {
 						slotMappings[midiLearnTargetSlot].ccNumber = ccNumber;
 						slotMappings[midiLearnTargetSlot].channel = channel;
+						slotMappings[midiLearnTargetSlot].isNote = false;
 						stopMidiLearn();
 					}
 				}
 				else {
-					if (intensityMapping.isValid() &&
+					if (intensityMapping.isValid() && !intensityMapping.isNote &&
 						ccNumber == intensityMapping.ccNumber &&
 						channel == intensityMapping.channel) {
 						float newIntensity = value / 127.0f;
 						intensityParam->setValueNotifyingHost(newIntensity);
+						juce::MessageManager::callAsync([this, newIntensity]() {
+							if (auto* editor = getActiveEditor()) {
+								if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
+									customEditor->updateIntensitySlider(newIntensity);
+								}
+							}});
 					}
+				}
+			}
+			else if (message.isNoteOn()) {
+				int noteNumber = message.getNoteNumber();
+				int channel = message.getChannel() - 1;
+				int velocity = message.getVelocity();
 
+				if (midiLearnMode) {
+					if (midiLearnTargetType == 0) {
+						intensityMapping.ccNumber = noteNumber;
+						intensityMapping.channel = channel;
+						intensityMapping.isNote = true;
+						stopMidiLearn();
+					}
+					else if (midiLearnTargetType >= 1 && midiLearnTargetType <= 8) {
+						slotMappings[midiLearnTargetSlot].ccNumber = noteNumber;
+						slotMappings[midiLearnTargetSlot].channel = channel;
+						slotMappings[midiLearnTargetSlot].isNote = true;
+						stopMidiLearn();
+					}
+				}
+				else {
+					if (intensityMapping.isValid() && intensityMapping.isNote &&
+						noteNumber == intensityMapping.ccNumber &&
+						channel == intensityMapping.channel) {
+						float newIntensity = velocity / 127.0f;
+						intensityParam->setValueNotifyingHost(newIntensity);
+					}
 					for (int i = 0; i < 8; ++i) {
-						if (slotMappings[i].isValid() &&
-							ccNumber == slotMappings[i].ccNumber &&
+						if (slotMappings[i].isValid() && slotMappings[i].isNote &&
+							noteNumber == slotMappings[i].ccNumber &&
 							channel == slotMappings[i].channel) {
-							if (value > 63) {
-								getPatternEngine().switchToSlot(i, false);
-							}
+							getPatternEngine().switchToSlot(i, true);
+							juce::MessageManager::callAsync([this, i]() {
+								if (auto* editor = getActiveEditor()) {
+									if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
+										customEditor->updateSlotButtons(i);
+									}
+								}
+								});
 							break;
 						}
 					}
@@ -197,14 +235,18 @@ namespace BeatCrafter {
 		if (intensityMapping.isValid()) {
 			state.setProperty("intensityMidiCC", intensityMapping.ccNumber, nullptr);
 			state.setProperty("intensityMidiChannel", intensityMapping.channel, nullptr);
+			state.setProperty("intensityMidiIsNote", intensityMapping.isNote, nullptr);
 		}
 
 		for (int i = 0; i < 8; ++i) {
 			if (slotMappings[i].isValid()) {
 				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
 				juce::String channelProp = "slot" + juce::String(i) + "MidiChannel";
+				juce::String isNoteProp = "slot" + juce::String(i) + "MidiIsNote";
+
 				state.setProperty(ccProp, slotMappings[i].ccNumber, nullptr);
 				state.setProperty(channelProp, slotMappings[i].channel, nullptr);
+				state.setProperty(isNoteProp, slotMappings[i].isNote, nullptr);
 			}
 		}
 
@@ -287,15 +329,18 @@ namespace BeatCrafter {
 			if (tree.hasProperty("intensityMidiCC")) {
 				intensityMapping.ccNumber = tree.getProperty("intensityMidiCC", -1);
 				intensityMapping.channel = tree.getProperty("intensityMidiChannel", -1);
+				intensityMapping.isNote = tree.getProperty("intensityMidiIsNote", false);
 			}
 
 			for (int i = 0; i < 8; ++i) {
 				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
 				juce::String channelProp = "slot" + juce::String(i) + "MidiChannel";
+				juce::String isNoteProp = "slot" + juce::String(i) + "MidiIsNote";
 
 				if (tree.hasProperty(ccProp)) {
 					slotMappings[i].ccNumber = tree.getProperty(ccProp, -1);
 					slotMappings[i].channel = tree.getProperty(channelProp, -1);
+					slotMappings[i].isNote = tree.getProperty(isNoteProp, false);
 				}
 			}
 			int activeSlot = tree.getProperty("activeSlot", 0);

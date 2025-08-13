@@ -18,7 +18,8 @@ namespace BeatCrafter {
 		void paint(juce::Graphics&) override;
 		void resized() override;
 		void timerCallback() override;
-
+		void updateIntensitySlider(float newIntensity);
+		void updateSlotButtons(int activeSlot);
 		void updateFromProcessorState();
 
 	private:
