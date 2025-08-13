@@ -1,19 +1,24 @@
-#include "StyleIntensityGenerator.h"
-#include <algorithm>
+#include "StyleManager.h"
 
 namespace BeatCrafter {
 
-	std::mt19937& StyleIntensityGenerator::getRNG() {
-		static std::random_device rd;
-		static std::mt19937 gen(rd());
-		return gen;
+	void StyleManager::generateBasicPattern(Pattern& pattern, StyleType style) {
+		pattern.clear();
+
+		switch (style) {
+		case StyleType::Rock: generateRockPattern(pattern); break;
+		case StyleType::Metal: generateMetalPattern(pattern); break;
+		case StyleType::Jazz: generateJazzPattern(pattern); break;
+		case StyleType::Funk: generateFunkPattern(pattern); break;
+		case StyleType::Electronic: generateElectronicPattern(pattern); break;
+		case StyleType::HipHop: generateHipHopPattern(pattern); break;
+		case StyleType::Latin: generateLatinPattern(pattern); break;
+		case StyleType::Punk: generatePunkPattern(pattern); break;
+		default: generateRockPattern(pattern); break;
+		}
 	}
 
-	Pattern StyleIntensityGenerator::applyStyleBasedIntensity(const Pattern& basePattern,
-		float intensity,
-		StyleType style,
-		uint32_t seed) {
-
+	Pattern StyleManager::applyIntensity(const Pattern& basePattern, float intensity, StyleType style, uint32_t seed) {
 		getRNG().seed(seed);
 		Pattern result = basePattern;
 
@@ -46,7 +51,244 @@ namespace BeatCrafter {
 		return result;
 	}
 
-	void StyleIntensityGenerator::applyBaseIntensityScaling(Pattern& pattern, float intensity) {
+	void StyleManager::generateRockPattern(Pattern& pattern) {
+		pattern.clear();
+
+		pattern.getTrack(0).getStep(0).setActive(true);
+		pattern.getTrack(0).getStep(0).setVelocity(0.85f + (rand() % 15) / 100.0f);
+
+		pattern.getTrack(1).getStep(8).setActive(true);
+		pattern.getTrack(1).getStep(8).setVelocity(0.9f);
+
+		pattern.getTrack(2).getStep(4).setActive(true);
+		pattern.getTrack(2).getStep(4).setVelocity(0.4f);
+		pattern.getTrack(2).getStep(4).setProbability(0.7f);
+	}
+
+	void StyleManager::generateMetalPattern(Pattern& pattern) {
+		pattern.clear();
+
+		pattern.getTrack(0).getStep(0).setActive(true);
+		pattern.getTrack(0).getStep(0).setVelocity(0.95f);
+		pattern.getTrack(0).getStep(2).setActive(true);
+		pattern.getTrack(0).getStep(2).setVelocity(0.7f);
+		pattern.getTrack(0).getStep(2).setProbability(0.8f);
+
+		pattern.getTrack(1).getStep(8).setActive(true);
+		pattern.getTrack(1).getStep(8).setVelocity(0.95f);
+
+		pattern.getTrack(5).getStep(6).setActive(true);
+		pattern.getTrack(5).getStep(6).setVelocity(0.5f);
+		pattern.getTrack(5).getStep(6).setProbability(0.7f);
+	}
+
+	void StyleManager::generateJazzPattern(Pattern& pattern) {
+		pattern.clear();
+
+		pattern.setSwing(0.67f);
+
+		pattern.getTrack(0).getStep(0).setActive(true);
+		pattern.getTrack(0).getStep(0).setVelocity(0.4f + (rand() % 20) / 100.0f);
+
+		pattern.getTrack(1).getStep(8).setActive(true);
+		pattern.getTrack(1).getStep(8).setVelocity(0.55f);
+
+		pattern.getTrack(5).getStep(2).setActive(true);
+		pattern.getTrack(5).getStep(2).setVelocity(0.3f);
+		pattern.getTrack(5).getStep(10).setActive(true);
+		pattern.getTrack(5).getStep(10).setVelocity(0.35f);
+		pattern.getTrack(5).getStep(10).setProbability(0.7f);
+	}
+
+	void StyleManager::generateFunkPattern(Pattern& pattern) {
+		pattern.clear();
+
+		pattern.getTrack(0).getStep(0).setActive(true);
+		pattern.getTrack(0).getStep(0).setVelocity(0.9f);
+		pattern.getTrack(0).getStep(6).setActive(true);
+		pattern.getTrack(0).getStep(6).setVelocity(0.6f);
+		pattern.getTrack(0).getStep(6).setProbability(0.75f);
+
+		pattern.getTrack(1).getStep(8).setActive(true);
+		pattern.getTrack(1).getStep(8).setVelocity(0.85f);
+
+		pattern.getTrack(2).getStep(4).setActive(true);
+		pattern.getTrack(2).getStep(4).setVelocity(0.5f);
+		pattern.getTrack(2).getStep(12).setActive(true);
+		pattern.getTrack(2).getStep(12).setVelocity(0.4f);
+		pattern.getTrack(2).getStep(12).setProbability(0.8f);
+	}
+
+	void StyleManager::generateElectronicPattern(Pattern& pattern) {
+		pattern.clear();
+
+		pattern.getTrack(0).getStep(0).setActive(true);
+		pattern.getTrack(0).getStep(0).setVelocity(0.9f);
+
+		pattern.getTrack(1).getStep(8).setActive(true);
+		pattern.getTrack(1).getStep(8).setVelocity(0.7f);
+		pattern.getTrack(1).getStep(8).setProbability(0.8f);
+
+		pattern.getTrack(2).getStep(4).setActive(true);
+		pattern.getTrack(2).getStep(4).setVelocity(0.4f);
+		pattern.getTrack(2).getStep(12).setActive(true);
+		pattern.getTrack(2).getStep(12).setVelocity(0.5f);
+	}
+
+	void StyleManager::generateHipHopPattern(Pattern& pattern) {
+		pattern.clear();
+
+		pattern.getTrack(0).getStep(0).setActive(true);
+		pattern.getTrack(0).getStep(0).setVelocity(0.95f);
+
+		pattern.getTrack(1).getStep(8).setActive(true);
+		pattern.getTrack(1).getStep(8).setVelocity(0.9f);
+
+		pattern.getTrack(2).getStep(4).setActive(true);
+		pattern.getTrack(2).getStep(4).setVelocity(0.45f);
+		pattern.getTrack(2).getStep(12).setActive(true);
+		pattern.getTrack(2).getStep(12).setVelocity(0.35f);
+		pattern.getTrack(2).getStep(12).setProbability(0.6f);
+	}
+
+	void StyleManager::generateLatinPattern(Pattern& pattern) {
+		pattern.clear();
+
+		pattern.getTrack(0).getStep(0).setActive(true);
+		pattern.getTrack(0).getStep(0).setVelocity(0.75f);
+		pattern.getTrack(0).getStep(6).setActive(true);
+		pattern.getTrack(0).getStep(6).setVelocity(0.5f);
+		pattern.getTrack(0).getStep(6).setProbability(0.8f);
+
+		pattern.getTrack(1).getStep(8).setActive(true);
+		pattern.getTrack(1).getStep(8).setVelocity(0.8f);
+
+		pattern.getTrack(3).getStep(4).setActive(true);
+		pattern.getTrack(3).getStep(4).setVelocity(0.55f);
+		pattern.getTrack(3).getStep(12).setActive(true);
+		pattern.getTrack(3).getStep(12).setVelocity(0.5f);
+		pattern.getTrack(3).getStep(12).setProbability(0.75f);
+	}
+
+	void StyleManager::generatePunkPattern(Pattern& pattern) {
+		pattern.clear();
+
+		pattern.getTrack(0).getStep(0).setActive(true);
+		pattern.getTrack(0).getStep(0).setVelocity(0.9f);
+
+		pattern.getTrack(1).getStep(8).setActive(true);
+		pattern.getTrack(1).getStep(8).setVelocity(1.0f);
+
+		pattern.getTrack(2).getStep(4).setActive(true);
+		pattern.getTrack(2).getStep(4).setVelocity(0.6f);
+		pattern.getTrack(2).getStep(4).setProbability(0.7f);
+		pattern.getTrack(2).getStep(12).setActive(true);
+		pattern.getTrack(2).getStep(12).setVelocity(0.65f);
+	}
+
+	void StyleManager::applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity) {
+		switch (style) {
+		case StyleType::Rock:
+			if (complexity > 0.5f) {
+				pattern.getTrack(0).getStep(2).setActive(true);
+				pattern.getTrack(0).getStep(2).setVelocity(0.7f);
+				pattern.getTrack(0).getStep(10).setActive(true);
+				pattern.getTrack(0).getStep(10).setVelocity(0.7f);
+			}
+			if (complexity > 0.7f) {
+				pattern.getTrack(1).getStep(4).setActive(true);
+				pattern.getTrack(1).getStep(4).setVelocity(0.8f);
+			}
+			break;
+
+		case StyleType::Metal:
+			if (complexity > 0.6f) {
+				pattern.getTrack(0).getStep(1).setActive(true);
+				pattern.getTrack(0).getStep(1).setVelocity(0.7f);
+				pattern.getTrack(0).getStep(9).setActive(true);
+				pattern.getTrack(0).getStep(9).setVelocity(0.7f);
+			}
+			if (complexity > 0.7f) {
+				pattern.getTrack(1).getStep(4).setActive(true);
+				pattern.getTrack(1).getStep(4).setVelocity(0.9f);
+			}
+			break;
+
+		case StyleType::Jazz:
+			if (complexity > 0.6f) {
+				pattern.getTrack(1).getStep(7).setActive(true);
+				pattern.getTrack(1).getStep(7).setVelocity(0.25f);
+				pattern.getTrack(1).getStep(15).setActive(true);
+				pattern.getTrack(1).getStep(15).setVelocity(0.3f);
+			}
+			break;
+
+		case StyleType::Electronic:
+			if (complexity > 0.6f) {
+				pattern.getTrack(1).getStep(4).setActive(true);
+				pattern.getTrack(1).getStep(4).setVelocity(0.8f);
+			}
+			if (complexity > 0.7f) {
+				pattern.getTrack(0).getStep(6).setActive(true);
+				pattern.getTrack(0).getStep(6).setVelocity(0.7f);
+			}
+			break;
+
+		case StyleType::HipHop:
+			if (complexity > 0.6f) {
+				pattern.getTrack(1).getStep(4).setActive(true);
+				pattern.getTrack(1).getStep(4).setVelocity(0.9f);
+			}
+			if (complexity > 0.7f) {
+				pattern.getTrack(0).getStep(3).setActive(true);
+				pattern.getTrack(0).getStep(3).setVelocity(0.8f);
+			}
+			break;
+
+		case StyleType::Funk:
+			if (complexity > 0.6f) {
+				pattern.getTrack(1).getStep(4).setActive(true);
+				pattern.getTrack(1).getStep(4).setVelocity(0.9f);
+			}
+			if (complexity > 0.7f) {
+				pattern.getTrack(1).getStep(10).setActive(true);
+				pattern.getTrack(1).getStep(10).setVelocity(0.35f);
+			}
+			break;
+
+		case StyleType::Latin:
+			if (complexity > 0.6f) {
+				pattern.getTrack(1).getStep(4).setActive(true);
+				pattern.getTrack(1).getStep(4).setVelocity(0.8f);
+			}
+			if (complexity > 0.7f) {
+				pattern.getTrack(0).getStep(13).setActive(true);
+				pattern.getTrack(0).getStep(13).setVelocity(0.7f);
+			}
+			break;
+
+		case StyleType::Punk:
+			if (complexity > 0.6f) {
+				pattern.getTrack(1).getStep(4).setActive(true);
+				pattern.getTrack(1).getStep(4).setVelocity(1.0f);
+			}
+			if (complexity > 0.7f) {
+				for (int i = 1; i < 16; i += 2) {
+					pattern.getTrack(2).getStep(i).setActive(true);
+					pattern.getTrack(2).getStep(i).setVelocity(0.6f);
+				}
+			}
+			break;
+		}
+	}
+
+	std::mt19937& StyleManager::getRNG() {
+		static std::random_device rd;
+		static std::mt19937 gen(rd());
+		return gen;
+	}
+
+	void StyleManager::applyBaseIntensityScaling(Pattern& pattern, float intensity) {
 		for (int trackIndex = 0; trackIndex < pattern.getNumTracks(); ++trackIndex) {
 			auto& track = pattern.getTrack(trackIndex);
 			for (int i = 0; i < pattern.getLength(); ++i) {
@@ -62,7 +304,7 @@ namespace BeatCrafter {
 		}
 	}
 
-	void StyleIntensityGenerator::addSubtleVariations(Pattern& pattern, float intensity, StyleType style) {
+	void StyleManager::addSubtleVariations(Pattern& pattern, float intensity, StyleType style) {
 		auto& kickTrack = pattern.getTrack(0);
 		auto& snareTrack = pattern.getTrack(1);
 		auto& hihatTrack = pattern.getTrack(2);
@@ -124,7 +366,7 @@ namespace BeatCrafter {
 		}
 	}
 
-	void StyleIntensityGenerator::addBreakMode(Pattern& pattern, float intensity, StyleType style) {
+	void StyleManager::addBreakMode(Pattern& pattern, float intensity, StyleType style) {
 		if (randomChance(0.6f)) {
 			auto& kickTrack = pattern.getTrack(0);
 			auto& snareTrack = pattern.getTrack(1);
@@ -424,7 +666,7 @@ namespace BeatCrafter {
 	}
 
 
-	void StyleIntensityGenerator::addGhostNotes(Pattern& pattern, int track, float probability) {
+	void StyleManager::addGhostNotes(Pattern& pattern, int track, float probability) {
 		auto& targetTrack = pattern.getTrack(track);
 		for (int i = 0; i < pattern.getLength(); ++i) {
 			if (!targetTrack.getStep(i).isActive() && randomChance(probability * 0.3f)) {
@@ -435,7 +677,7 @@ namespace BeatCrafter {
 		}
 	}
 
-	void StyleIntensityGenerator::addHiHatRideVariations(Pattern& pattern, float intensity, StyleType style) {
+	void StyleManager::addHiHatRideVariations(Pattern& pattern, float intensity, StyleType style) {
 		auto& hihatTrack = pattern.getTrack(2);
 		auto& openHihatTrack = pattern.getTrack(3);
 		auto& rideTrack = pattern.getTrack(5);
@@ -941,7 +1183,7 @@ namespace BeatCrafter {
 		}
 	}
 
-	void StyleIntensityGenerator::changeSnarePattern(Pattern& pattern, float intensity, StyleType style) {
+	void StyleManager::changeSnarePattern(Pattern& pattern, float intensity, StyleType style) {
 		auto& snareTrack = pattern.getTrack(1);
 		for (int i = 0; i < pattern.getLength(); ++i) {
 			snareTrack.getStep(i).setActive(false);
@@ -1152,7 +1394,7 @@ namespace BeatCrafter {
 		}
 	}
 
-	void StyleIntensityGenerator::addRandomFills(Pattern& pattern, float intensity) {
+	void StyleManager::addRandomFills(Pattern& pattern, float intensity) {
 		if (intensity > 0.7f && randomChance(intensity * 0.6f)) {
 			auto& tomHiTrack = pattern.getTrack(6);
 			auto& tomLoTrack = pattern.getTrack(7);
@@ -1174,13 +1416,14 @@ namespace BeatCrafter {
 		}
 	}
 
-	float StyleIntensityGenerator::randomFloat(float min, float max) {
+	float StyleManager::randomFloat(float min, float max) {
 		std::uniform_real_distribution<float> dis(min, max);
 		return dis(getRNG());
 	}
 
-	bool StyleIntensityGenerator::randomChance(float probability) {
+	bool StyleManager::randomChance(float probability) {
 		std::uniform_real_distribution<float> dis(0.0f, 1.0f);
 		return dis(getRNG()) < probability;
 	}
+
 }

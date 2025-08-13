@@ -43,7 +43,7 @@ target_sources(BeatCrafter
         src/Core/Pattern.cpp
         src/Core/PatternEngine.cpp
         src/Core/IntensityMapper.cpp
-        src/Core/StyleIntensityGenerator.cpp
+        src/Core/StyleManager.cpp
         src/GUI/PatternGrid.cpp
         src/GUI/LookAndFeel.cpp
         src/GUI/SlotManager.cpp

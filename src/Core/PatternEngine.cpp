@@ -1,12 +1,11 @@
 #include "PatternEngine.h"
-#include "StyleIntensityGenerator.h" 
 #include <random>
 
 namespace BeatCrafter {
 
 	PatternEngine::PatternEngine() {
 		auto pattern = std::make_unique<Pattern>("Rock Basic");
-		pattern->generateBasicRockPattern();
+		StyleManager::generateBasicPattern(*pattern, StyleType::Rock);
 		slots[0] = std::move(pattern);
 
 		std::random_device rd;
@@ -42,39 +41,10 @@ namespace BeatCrafter {
 		if (slot < 0 || slot >= 8) return;
 
 		auto newPattern = std::make_unique<Pattern>("Generated " + juce::String(slot + 1));
-
-		switch (style) {
-		case StyleType::Rock:
-			newPattern->generateBasicRockPattern();
-			break;
-		case StyleType::Metal:
-			newPattern->generateBasicMetalPattern();
-			break;
-		case StyleType::Jazz:
-			newPattern->generateBasicJazzPattern();
-			break;
-		case StyleType::Funk:
-			newPattern->generateBasicFunkPattern();
-			break;
-		case StyleType::Electronic:
-			newPattern->generateBasicElectronicPattern();
-			break;
-		case StyleType::HipHop:
-			newPattern->generateBasicHipHopPattern();
-			break;
-		case StyleType::Latin:
-			newPattern->generateBasicLatinPattern();
-			break;
-		case StyleType::Punk:
-			newPattern->generateBasicPunkPattern();
-			break;
-		default:
-			newPattern->generateBasicRockPattern();
-			break;
-		}
+		StyleManager::generateBasicPattern(*newPattern, style);
 
 		if (complexity > 0.5f) {
-			applyComplexityToPattern(*newPattern, style, complexity);
+			StyleManager::applyComplexityToPattern(*newPattern, style, complexity);
 		}
 
 		loadPatternToSlot(std::move(newPattern), slot);
@@ -180,7 +150,7 @@ namespace BeatCrafter {
 	Pattern PatternEngine::applyIntensity(const Pattern& basePattern, float intensity) const {
 		StyleType currentStyle = getSlotStyle(activeSlot);
 		uint32_t currentSeed = slotRandomSeeds[activeSlot];
-		return StyleIntensityGenerator::applyStyleBasedIntensity(basePattern, intensity, currentStyle, currentSeed);
+		return StyleManager::applyIntensity(basePattern, intensity, currentStyle, currentSeed);
 	}
 
 	void PatternEngine::generateNewPattern(StyleType style, float complexity) {
@@ -190,135 +160,10 @@ namespace BeatCrafter {
 
 		auto& pattern = *slots[activeSlot];
 		pattern.setName("Generated " + juce::String((int)style));
-
-		switch (style) {
-		case StyleType::Rock:
-			pattern.generateBasicRockPattern();
-			break;
-		case StyleType::Metal:
-			pattern.generateBasicMetalPattern();
-			break;
-		case StyleType::Jazz:
-			pattern.generateBasicJazzPattern();
-			break;
-		case StyleType::Funk:
-			pattern.generateBasicFunkPattern();
-			break;
-		case StyleType::Electronic:
-			pattern.generateBasicElectronicPattern();
-			break;
-		case StyleType::HipHop:
-			pattern.generateBasicHipHopPattern();
-			break;
-		case StyleType::Latin:
-			pattern.generateBasicLatinPattern();
-			break;
-		case StyleType::Punk:
-			pattern.generateBasicPunkPattern();
-			break;
-		default:
-			pattern.generateBasicRockPattern();
-			break;
-		}
+		StyleManager::generateBasicPattern(pattern, style);
 
 		if (complexity > 0.5f) {
-			applyComplexityToPattern(pattern, style, complexity);
-		}
-	}
-
-	void PatternEngine::applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity) {
-		switch (style) {
-		case StyleType::Rock:
-			if (complexity > 0.5f) {
-				pattern.getTrack(0).getStep(2).setActive(true);
-				pattern.getTrack(0).getStep(2).setVelocity(0.7f);
-				pattern.getTrack(0).getStep(10).setActive(true);
-				pattern.getTrack(0).getStep(10).setVelocity(0.7f);
-			}
-			if (complexity > 0.7f) {
-				pattern.getTrack(1).getStep(4).setActive(true);
-				pattern.getTrack(1).getStep(4).setVelocity(0.8f);
-			}
-			break;
-
-		case StyleType::Metal:
-			if (complexity > 0.6f) {
-				pattern.getTrack(0).getStep(1).setActive(true);
-				pattern.getTrack(0).getStep(1).setVelocity(0.7f);
-				pattern.getTrack(0).getStep(9).setActive(true);
-				pattern.getTrack(0).getStep(9).setVelocity(0.7f);
-			}
-			if (complexity > 0.7f) {
-				pattern.getTrack(1).getStep(4).setActive(true);
-				pattern.getTrack(1).getStep(4).setVelocity(0.9f);
-			}
-			break;
-
-		case StyleType::Jazz:
-			if (complexity > 0.6f) {
-				pattern.getTrack(1).getStep(7).setActive(true);
-				pattern.getTrack(1).getStep(7).setVelocity(0.25f);
-				pattern.getTrack(1).getStep(15).setActive(true);
-				pattern.getTrack(1).getStep(15).setVelocity(0.3f);
-			}
-			break;
-
-		case StyleType::Electronic:
-			if (complexity > 0.6f) {
-				pattern.getTrack(1).getStep(4).setActive(true);
-				pattern.getTrack(1).getStep(4).setVelocity(0.8f);
-			}
-			if (complexity > 0.7f) {
-				pattern.getTrack(0).getStep(6).setActive(true);
-				pattern.getTrack(0).getStep(6).setVelocity(0.7f);
-			}
-			break;
-
-		case StyleType::HipHop:
-			if (complexity > 0.6f) {
-				pattern.getTrack(1).getStep(4).setActive(true);
-				pattern.getTrack(1).getStep(4).setVelocity(0.9f);
-			}
-			if (complexity > 0.7f) {
-				pattern.getTrack(0).getStep(3).setActive(true);
-				pattern.getTrack(0).getStep(3).setVelocity(0.8f);
-			}
-			break;
-
-		case StyleType::Funk:
-			if (complexity > 0.6f) {
-				pattern.getTrack(1).getStep(4).setActive(true);
-				pattern.getTrack(1).getStep(4).setVelocity(0.9f);
-			}
-			if (complexity > 0.7f) {
-				pattern.getTrack(1).getStep(10).setActive(true);
-				pattern.getTrack(1).getStep(10).setVelocity(0.35f);
-			}
-			break;
-
-		case StyleType::Latin:
-			if (complexity > 0.6f) {
-				pattern.getTrack(1).getStep(4).setActive(true);
-				pattern.getTrack(1).getStep(4).setVelocity(0.8f);
-			}
-			if (complexity > 0.7f) {
-				pattern.getTrack(0).getStep(13).setActive(true);
-				pattern.getTrack(0).getStep(13).setVelocity(0.7f);
-			}
-			break;
-
-		case StyleType::Punk:
-			if (complexity > 0.6f) {
-				pattern.getTrack(1).getStep(4).setActive(true);
-				pattern.getTrack(1).getStep(4).setVelocity(1.0f);
-			}
-			if (complexity > 0.7f) {
-				for (int i = 1; i < 16; i += 2) {
-					pattern.getTrack(2).getStep(i).setActive(true);
-					pattern.getTrack(2).getStep(i).setVelocity(0.6f);
-				}
-			}
-			break;
+			StyleManager::applyComplexityToPattern(pattern, style, complexity);
 		}
 	}
 }

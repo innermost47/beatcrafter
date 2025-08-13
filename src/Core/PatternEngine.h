@@ -2,6 +2,7 @@
 #include <juce_core/juce_core.h>  
 #include <juce_audio_basics/juce_audio_basics.h>  
 #include "Pattern.h"
+#include "StyleManager.h" 
 #include <array>
 #include <memory>
 #include <random>

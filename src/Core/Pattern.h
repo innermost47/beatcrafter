@@ -1,6 +1,7 @@
 #pragma once
-#include <juce_core/juce_core.h> /
+#include <juce_core/juce_core.h> 
 #include "MidiConstants.h"
+#include "StyleManager.h" 
 #include <array>
 #include <vector>
 
@@ -80,14 +81,6 @@ namespace BeatCrafter {
 		TimeSignature getTimeSignature() const;
 		void setTimeSignature(TimeSignature ts);
 		void clear();
-		void generateBasicRockPattern();
-		void generateBasicMetalPattern();
-		void generateBasicJazzPattern();
-		void generateBasicFunkPattern();
-		void generateBasicElectronicPattern();
-		void generateBasicHipHopPattern();
-		void generateBasicLatinPattern();
-		void generateBasicPunkPattern();
 
 	private:
 		juce::String patternName;
