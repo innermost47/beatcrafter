@@ -15,7 +15,6 @@ The core philosophy: start simple and build complexity musically. Patterns begin
 ![screenshot](./screenshot.png)
 
 ## ✨ Features
-
 - 🎛️ **8 Pattern Slots** - Switch patterns live with foot controller during performance
 - 🎚️ **Dynamic Intensity Control** - Morph patterns from simple to complex (0-100%)
 - 🎸 **8 Music Styles** - Rock, Metal, Jazz, Funk, Electronic, HipHop, Latin, Punk
@@ -24,7 +23,7 @@ The core philosophy: start simple and build complexity musically. Patterns begin
 - 🎮 **MIDI Learn** - Map intensity and slot changes to any MIDI controller
 - 🦶 **Foot Controller Ready** - Designed for hands-free live performance
 - 📡 **MIDI Output Only** - Routes to any drum VST or hardware
-- 🌙 **Modern Dark UI** - Clean, stage-friendly interface
+- 🎧 **MIDI Export** - Ctrl+click to drag patterns directly into your DAW
 
 ## 🚧 Development Status
 

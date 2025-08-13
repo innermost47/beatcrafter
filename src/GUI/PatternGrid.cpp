@@ -56,6 +56,9 @@ namespace BeatCrafter {
 
 	void PatternGrid::mouseDown(const juce::MouseEvent& event) {
 		if (!currentPattern) return;
+		if (event.mods.isCtrlDown()) {
+			return;
+		}
 
 		auto [track, step] = getStepFromPosition(event.getPosition());
 		if (track >= 0 && step >= 0) {
@@ -72,6 +75,72 @@ namespace BeatCrafter {
 				}
 			}
 		}
+	}
+
+	void PatternGrid::mouseDrag(const juce::MouseEvent& event) {
+		if (!currentPattern) return;
+
+		if (event.mods.isCtrlDown()) {
+			if (event.getDistanceFromDragStart() > 5) {
+				setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+				startMidiDragAndDrop(event);
+			}
+		}
+	}
+
+	void PatternGrid::mouseUp(const juce::MouseEvent& event) {
+		setMouseCursor(juce::MouseCursor::NormalCursor);
+	}
+
+	void PatternGrid::startMidiDragAndDrop(const juce::MouseEvent& event) {
+		auto midiSequence = createMidiFromPattern();
+
+		if (midiSequence.getNumEvents() == 0) return;
+
+		juce::File tempDir = juce::File::getSpecialLocation(juce::File::tempDirectory);
+		juce::File midiFile = tempDir.getChildFile("pattern_" + juce::String(juce::Random::getSystemRandom().nextInt()) + ".mid");
+
+		juce::MidiFile midi;
+		midi.addTrack(midiSequence);
+		midi.setTicksPerQuarterNote(480);
+
+		juce::FileOutputStream stream(midiFile);
+		if (stream.openedOk()) {
+			midi.writeTo(stream);
+			stream.flush();
+			juce::StringArray files;
+			files.add(midiFile.getFullPathName());
+			juce::DragAndDropContainer::performExternalDragDropOfFiles(files, true);
+		}
+	}
+
+	juce::MidiMessageSequence PatternGrid::createMidiFromPattern() const {
+		juce::MidiMessageSequence sequence;
+
+		if (!currentPattern) return sequence;
+
+		double ticksPerStep = 480.0 / 4.0;
+
+		for (int track = 0; track < currentPattern->getNumTracks(); ++track) {
+			int midiNote = 36 + track;
+
+			for (int step = 0; step < currentPattern->getLength(); ++step) {
+				const auto& stepObj = currentPattern->getTrack(track).getStep(step);
+
+				if (stepObj.isActive()) {
+					double timeStamp = step * ticksPerStep;
+					int velocity = static_cast<int>(stepObj.getVelocity() * 127);
+					auto noteOn = juce::MidiMessage::noteOn(1, midiNote, static_cast<juce::uint8>(velocity));
+					noteOn.setTimeStamp(timeStamp);
+					sequence.addEvent(noteOn);
+					auto noteOff = juce::MidiMessage::noteOff(1, midiNote);
+					noteOff.setTimeStamp(timeStamp + ticksPerStep * 0.1);
+					sequence.addEvent(noteOff);
+				}
+			}
+		}
+
+		return sequence;
 	}
 
 	void PatternGrid::mouseMove(const juce::MouseEvent& event) {

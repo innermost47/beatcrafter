@@ -6,7 +6,7 @@
 
 namespace BeatCrafter {
 
-	class PatternGrid : public juce::Component,
+	class PatternGrid : public juce::Component, public juce::DragAndDropContainer,
 		public juce::Timer {
 	public:
 		PatternGrid();
@@ -22,6 +22,8 @@ namespace BeatCrafter {
 		void resized() override;
 		void mouseDown(const juce::MouseEvent& event) override;
 		void mouseMove(const juce::MouseEvent& event) override;
+		void mouseDrag(const juce::MouseEvent& event) override;
+		void mouseUp(const juce::MouseEvent& event) override;
 		void mouseExit(const juce::MouseEvent& event) override;
 
 		void timerCallback() override;
@@ -53,6 +55,9 @@ namespace BeatCrafter {
 		void drawPlayhead(juce::Graphics& g);
 		void drawTrackLabels(juce::Graphics& g);
 		void drawStepNumbers(juce::Graphics& g);
+
+		void startMidiDragAndDrop(const juce::MouseEvent& event);
+		juce::MidiMessageSequence createMidiFromPattern() const;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatternGrid)
 	};
