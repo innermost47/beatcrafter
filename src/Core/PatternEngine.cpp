@@ -16,6 +16,28 @@ namespace BeatCrafter {
 		}
 	}
 
+	void PatternEngine::resetToStart() {
+		for (auto& slot : slots) {
+			if (slot) {
+				slot->setCurrentStep(0);
+			}
+		}
+		isPlaying = true;
+	}
+
+	void PatternEngine::start() {
+		if (!isPlaying) {
+			resetToStart();
+		}
+	}
+
+	void PatternEngine::stop() {
+		isPlaying = false;
+		for (auto& slot : slots) {
+			if (slot) slot->setCurrentStep(0);
+		}
+	}
+
 	void PatternEngine::generateNewPatternForSlot(int slot, StyleType style, float complexity) {
 		if (slot < 0 || slot >= 8) return;
 
@@ -104,7 +126,9 @@ namespace BeatCrafter {
 		double ppqPerStep = 0.25;
 		int currentStepFromPPQ = static_cast<int>(ppqPosition / ppqPerStep) % patternLength;
 
-		if (currentStepFromPPQ != pattern.getCurrentStep()) {
+		if (currentStepFromPPQ != pattern.getCurrentStep() ||
+			(currentStepFromPPQ == 0 && ppqPosition < 0.1)) {
+
 			pattern.setCurrentStep(currentStepFromPPQ);
 
 			if (queuedSlot >= 0 && currentStepFromPPQ == 0) {

@@ -114,6 +114,7 @@ namespace BeatCrafter {
 		if (hostIsPlaying) {
 			if (!patternEngine.getIsPlaying()) {
 				patternEngine.start();
+				patternEngine.resetToStart();
 			}
 			patternEngine.processBlock(midiMessages, buffer.getNumSamples(),
 				currentSampleRate, *posInfo);

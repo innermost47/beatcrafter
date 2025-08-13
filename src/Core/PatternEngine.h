@@ -28,7 +28,7 @@ namespace BeatCrafter {
 		void loadPatternToSlot(std::unique_ptr<Pattern> pattern, int slot);
 		void switchToSlot(int slot, bool immediate = false);
 		int getActiveSlot() const { return activeSlot; }
-
+		void resetToStart();
 		void processBlock(juce::MidiBuffer& midiMessages,
 			int numSamples,
 			double sampleRate,
@@ -40,13 +40,8 @@ namespace BeatCrafter {
 		}
 		float getIntensity() const { return currentIntensity; }
 
-		void start() { isPlaying = true; }
-		void stop() {
-			isPlaying = false;
-			for (auto& slot : slots) {
-				if (slot) slot->setCurrentStep(0);
-			}
-		}
+		void start();
+		void stop();
 		bool getIsPlaying() const { return isPlaying; }
 
 		void generateNewPattern(StyleType style, float complexity = 0.5f);
