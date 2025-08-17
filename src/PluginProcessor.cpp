@@ -52,6 +52,35 @@ namespace BeatCrafter {
 		juce::MidiBuffer& midiMessages) {
 		buffer.clear();
 
+		processMidi(midiMessages);
+
+		auto playHead = getPlayHead();
+		if (playHead == nullptr) return;
+
+		auto posInfo = playHead->getPosition();
+		if (!posInfo.hasValue()) return;
+
+		patternEngine.setIntensity(intensityParam->get());
+
+		bool hostIsPlaying = posInfo->getIsPlaying();
+
+		if (hostIsPlaying) {
+			if (!patternEngine.getIsPlaying()) {
+				patternEngine.start();
+				patternEngine.resetToStart();
+			}
+			patternEngine.processBlock(midiMessages, buffer.getNumSamples(),
+				currentSampleRate, *posInfo);
+		}
+		else {
+			if (patternEngine.getIsPlaying()) {
+				patternEngine.stop();
+			}
+		}
+	}
+
+	void BeatCrafterProcessor::processMidi(juce::MidiBuffer& midiMessages)
+	{
 		juce::MidiBuffer processedMidi;
 
 		for (const auto metadata : midiMessages) {
@@ -86,6 +115,23 @@ namespace BeatCrafter {
 									customEditor->updateIntensitySlider(newIntensity);
 								}
 							}});
+					}
+					for (int i = 0; i < 8; ++i) {
+						if (slotMappings[i].isValid() && !slotMappings[i].isNote &&
+							ccNumber == slotMappings[i].ccNumber &&
+							channel == slotMappings[i].channel) {
+							if (value >= 64) {
+								getPatternEngine().switchToSlot(i, true);
+								juce::MessageManager::callAsync([this, i]() {
+									if (auto* editor = getActiveEditor()) {
+										if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
+											customEditor->updateSlotButtons(i);
+										}
+									}
+									});
+							}
+							break;
+						}
 					}
 				}
 			}
@@ -138,30 +184,6 @@ namespace BeatCrafter {
 		}
 
 		midiMessages.swapWith(processedMidi);
-
-		auto playHead = getPlayHead();
-		if (playHead == nullptr) return;
-
-		auto posInfo = playHead->getPosition();
-		if (!posInfo.hasValue()) return;
-
-		patternEngine.setIntensity(intensityParam->get());
-
-		bool hostIsPlaying = posInfo->getIsPlaying();
-
-		if (hostIsPlaying) {
-			if (!patternEngine.getIsPlaying()) {
-				patternEngine.start();
-				patternEngine.resetToStart();
-			}
-			patternEngine.processBlock(midiMessages, buffer.getNumSamples(),
-				currentSampleRate, *posInfo);
-		}
-		else {
-			if (patternEngine.getIsPlaying()) {
-				patternEngine.stop();
-			}
-		}
 	}
 
 	juce::AudioProcessorEditor* BeatCrafterProcessor::createEditor() {

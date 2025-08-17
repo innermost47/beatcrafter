@@ -17,6 +17,8 @@ namespace BeatCrafter {
 
 		void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
+		void processMidi(juce::MidiBuffer& midiMessages);
+
 		juce::AudioProcessorEditor* createEditor() override;
 		bool hasEditor() const override { return true; }
 
