@@ -1,16 +1,18 @@
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>      
+#include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
 #include "GUI/PatternGrid.h"
 #include "GUI/SlotManager.h"
 #include "GUI/LookAndFeel.h"
 
-namespace BeatCrafter {
+namespace BeatCrafter
+{
 
 	class BeatCrafterEditor : public juce::AudioProcessorEditor,
-		public juce::Timer {
+		public juce::Timer
+	{
 	public:
 		BeatCrafterEditor(BeatCrafterProcessor&);
 		~BeatCrafterEditor() override;
@@ -25,6 +27,7 @@ namespace BeatCrafter {
 	private:
 		BeatCrafterProcessor& processor;
 		ModernLookAndFeel modernLookAndFeel;
+		std::unique_ptr<juce::TooltipWindow> tooltipWindow;
 
 		int lastPlayheadPosition = -1;
 
@@ -40,6 +43,8 @@ namespace BeatCrafter {
 		juce::TextButton generateButton{ "Generate" };
 		juce::TextButton clearButton{ "Clear" };
 		juce::TextButton resetMidiMappingsButton{ "Reset" };
+		juce::ToggleButton liveJamButton{ "Live Jam" };
+		bool isLiveJamActive = false;
 
 		std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> intensityAttachment;
 		std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> styleAttachment;
@@ -59,6 +64,7 @@ namespace BeatCrafter {
 		void updatePatternDisplay();
 		void updateStyleComboForCurrentSlot();
 		void onResetMidiMappingsClicked();
+		void onLiveJamToggled();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};

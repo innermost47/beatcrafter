@@ -1,26 +1,30 @@
 #pragma once
-#include <juce_core/juce_core.h>  
-#include <juce_audio_basics/juce_audio_basics.h>  
+#include <juce_core/juce_core.h>
+#include <juce_audio_basics/juce_audio_basics.h>
 #include "Pattern.h"
-#include "StyleManager.h" 
+#include "StyleManager.h"
 #include <array>
 #include <memory>
 #include <random>
 
-namespace BeatCrafter {
+namespace BeatCrafter
+{
 
-	class PatternEngine {
+	class PatternEngine
+	{
 	public:
 		PatternEngine();
 		~PatternEngine() = default;
 
 		const Pattern& getCurrentPattern() const { return *slots[activeSlot]; }
 
-		Pattern* getCurrentBasePattern() {
+		Pattern* getCurrentBasePattern()
+		{
 			return slots[activeSlot].get();
 		}
 
-		Pattern* getSlot(int index) {
+		Pattern* getSlot(int index)
+		{
 			if (index >= 0 && index < 8 && slots[index])
 				return slots[index].get();
 			return nullptr;
@@ -35,7 +39,8 @@ namespace BeatCrafter {
 			double sampleRate,
 			const juce::AudioPlayHead::PositionInfo& posInfo);
 
-		void setIntensity(float intensity) {
+		void setIntensity(float intensity)
+		{
 			currentIntensity = intensity;
 			intensityCacheValid = false;
 		}
@@ -47,8 +52,10 @@ namespace BeatCrafter {
 
 		void generateNewPattern(StyleType style, float complexity = 0.5f);
 
-		const Pattern* getDisplayPattern() const {
-			if (!intensityCacheValid && slots[activeSlot]) {
+		const Pattern* getDisplayPattern() const
+		{
+			if (!intensityCacheValid && slots[activeSlot])
+			{
 				intensifiedPatternCache = applyIntensity(*slots[activeSlot], currentIntensity);
 				intensityCacheValid = true;
 			}
@@ -57,18 +64,23 @@ namespace BeatCrafter {
 
 		Pattern applyIntensity(const Pattern& basePattern, float intensity) const;
 
-		Pattern& getCurrentPattern() {
+		Pattern& getCurrentPattern()
+		{
 			return slots[activeSlot] ? *slots[activeSlot] : dummyPattern;
 		}
 
-		void setSlotStyle(int slot, StyleType style) {
-			if (slot >= 0 && slot < 8) {
+		void setSlotStyle(int slot, StyleType style)
+		{
+			if (slot >= 0 && slot < 8)
+			{
 				slotStyles[slot] = style;
 			}
 		}
 
-		void clearCurrentPattern() {
-			if (slots[activeSlot]) {
+		void clearCurrentPattern()
+		{
+			if (slots[activeSlot])
+			{
 				slots[activeSlot]->clear();
 				setIntensity(0.0f);
 			}
@@ -76,36 +88,46 @@ namespace BeatCrafter {
 
 		void generateNewPatternForSlot(int slot, StyleType style, float complexity = 0.5f);
 
-		StyleType getSlotStyle(int slot) const {
-			if (slot >= 0 && slot < 8) {
+		StyleType getSlotStyle(int slot) const
+		{
+			if (slot >= 0 && slot < 8)
+			{
 				return slotStyles[slot];
 			}
 			return StyleType::Rock;
 		}
 
-		StyleType getCurrentSlotStyle() const {
+		StyleType getCurrentSlotStyle() const
+		{
 			return slotStyles[activeSlot];
 		}
 
-		void regenerateSlotSeed(int slot) {
-			if (slot >= 0 && slot < 8) {
+		void regenerateSlotSeed(int slot)
+		{
+			if (slot >= 0 && slot < 8)
+			{
 				std::random_device rd;
 				slotRandomSeeds[slot] = rd();
 			}
 		}
 
-		uint32_t getSlotSeed(int slot) const {
-			if (slot >= 0 && slot < 8) {
+		uint32_t getSlotSeed(int slot) const
+		{
+			if (slot >= 0 && slot < 8)
+			{
 				return slotRandomSeeds[slot];
 			}
 			return 0;
 		}
 
-		void setSlotSeed(int slot, uint32_t seed) {
-			if (slot >= 0 && slot < 8) {
+		void setSlotSeed(int slot, uint32_t seed)
+		{
+			if (slot >= 0 && slot < 8)
+			{
 				slotRandomSeeds[slot] = seed;
 			}
 		}
+		void setLiveJamMode(bool enabled) { liveJamMode = enabled; }
 
 	private:
 		std::array<std::unique_ptr<Pattern>, 8> slots;
@@ -126,11 +148,15 @@ namespace BeatCrafter {
 		int samplesPerStep = 0;
 		int sampleCounter = 0;
 
+		bool liveJamMode = false;
+		juce::Random liveJamRandom;
+		int stepsSinceLastJam = 0;
+
 		void generateMidiForStep(juce::MidiBuffer& midiMessages,
 			int samplePosition,
 			const Pattern& pattern,
 			int stepIndex);
 		void applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity);
-
+		void addLiveJamElements(Pattern& pattern, int stepIndex, float intensity);
 	};
 }

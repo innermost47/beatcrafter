@@ -1,11 +1,13 @@
 #pragma once
-#include <juce_audio_processors/juce_audio_processors.h> 
-#include <juce_core/juce_core.h>   
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_core/juce_core.h>
 #include "Core/PatternEngine.h"
 
-namespace BeatCrafter {
+namespace BeatCrafter
+{
 
-	class BeatCrafterProcessor : public juce::AudioProcessor {
+	class BeatCrafterProcessor : public juce::AudioProcessor
+	{
 	public:
 		BeatCrafterProcessor();
 		~BeatCrafterProcessor() override;
@@ -54,6 +56,8 @@ namespace BeatCrafter {
 		bool hasMidiMapping(int targetType, int targetSlot = -1) const;
 		juce::String getMidiMappingDescription(int targetType, int targetSlot = -1) const;
 		void setupDefaultMidiMappings();
+		void setLiveJamMode(bool enabled);
+		bool getLiveJamMode() const { return liveJamModeState; }
 
 	private:
 		PatternEngine patternEngine;
@@ -63,7 +67,8 @@ namespace BeatCrafter {
 		int midiLearnTargetType = -1;
 		int midiLearnTargetSlot = -1;
 
-		struct MidiMapping {
+		struct MidiMapping
+		{
 			int ccNumber = -1;
 			int channel = -1;
 			bool isNote = false;
@@ -74,6 +79,10 @@ namespace BeatCrafter {
 		MidiMapping intensityMapping;
 		std::array<MidiMapping, 8> slotMappings;
 
+		bool liveJamMode = false;
+		juce::Random liveJamRandom;
+		int stepsSinceLastJam = 0;
+		bool liveJamModeState = false;
 		void updateEditorFromState();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterProcessor)
