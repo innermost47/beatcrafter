@@ -98,6 +98,9 @@ namespace BeatCrafter {
 
 		clearButton.onClick = [this]() { onClearClicked(); };
 		addAndMakeVisible(clearButton);
+
+		resetMidiMappingsButton.onClick = [this]() { onResetMidiMappingsClicked(); };
+		addAndMakeVisible(resetMidiMappingsButton);
 	}
 
 	void BeatCrafterEditor::updateStyleComboForCurrentSlot() {
@@ -170,7 +173,8 @@ namespace BeatCrafter {
 		intensitySlider.setBounds(intensityArea.reduced(20, 15));
 
 		auto intensityMidiArea = bottomAreaWithMidi.removeFromTop(20);
-		intensityMidiLabel.setBounds(intensityMidiArea.reduced(100, 0));
+		intensityMidiLabel.setBounds(intensityMidiArea.removeFromLeft(200).reduced(100, 0));
+		resetMidiMappingsButton.setBounds(intensityMidiArea.removeFromRight(120).reduced(5, 0));
 
 		patternGrid->setBounds(bounds.reduced(20, 10));
 	}
@@ -180,6 +184,15 @@ namespace BeatCrafter {
 		patternGrid->repaint();
 		slotManager->updateSlotStates();
 		updateMidiLearnButtons();
+	}
+
+	void BeatCrafterEditor::onResetMidiMappingsClicked() {
+		if (processor.isMidiLearning()) {
+			processor.stopMidiLearn();
+		}
+		processor.setupDefaultMidiMappings();
+		updateMidiLearnButtons();
+		updateIntensitySlider(processor.intensityParam->get());
 	}
 
 	void BeatCrafterEditor::onGenerateClicked() {

@@ -53,6 +53,7 @@ namespace BeatCrafter {
 		void clearMidiMapping(int targetType, int targetSlot = -1);
 		bool hasMidiMapping(int targetType, int targetSlot = -1) const;
 		juce::String getMidiMappingDescription(int targetType, int targetSlot = -1) const;
+		void setupDefaultMidiMappings();
 
 	private:
 		PatternEngine patternEngine;
@@ -66,6 +67,7 @@ namespace BeatCrafter {
 			int ccNumber = -1;
 			int channel = -1;
 			bool isNote = false;
+			bool isProgramChange = false;
 			bool isValid() const { return ccNumber >= 0 && channel >= 0; }
 		};
 

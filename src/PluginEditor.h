@@ -39,6 +39,7 @@ namespace BeatCrafter {
 
 		juce::TextButton generateButton{ "Generate" };
 		juce::TextButton clearButton{ "Clear" };
+		juce::TextButton resetMidiMappingsButton{ "Reset" };
 
 		std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> intensityAttachment;
 		std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> styleAttachment;
@@ -57,6 +58,7 @@ namespace BeatCrafter {
 		void onClearClicked();
 		void updatePatternDisplay();
 		void updateStyleComboForCurrentSlot();
+		void onResetMidiMappingsClicked();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};

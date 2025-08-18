@@ -79,6 +79,25 @@ namespace BeatCrafter {
 		}
 	}
 
+	void BeatCrafterProcessor::setupDefaultMidiMappings()
+	{
+		intensityMapping.ccNumber = 7;
+		intensityMapping.channel = 0;
+		intensityMapping.isNote = false;
+		intensityMapping.isProgramChange = false;
+
+		for (int i = 0; i < 4; ++i) {
+			slotMappings[i].ccNumber = i;
+			slotMappings[i].channel = 0;
+			slotMappings[i].isNote = false;
+			slotMappings[i].isProgramChange = true;
+		}
+
+		for (int i = 4; i < 8; ++i) {
+			slotMappings[i] = MidiMapping{};
+		}
+	}
+
 	void BeatCrafterProcessor::processMidi(juce::MidiBuffer& midiMessages)
 	{
 		juce::MidiBuffer processedMidi;
@@ -130,6 +149,38 @@ namespace BeatCrafter {
 									}
 									});
 							}
+							break;
+						}
+					}
+				}
+			}
+			else if (message.isProgramChange()) {
+				int programNumber = message.getProgramChangeNumber();
+				int channel = message.getChannel() - 1;
+
+				if (midiLearnMode) {
+					if (midiLearnTargetType >= 1 && midiLearnTargetType <= 8) {
+						slotMappings[midiLearnTargetSlot].ccNumber = programNumber;
+						slotMappings[midiLearnTargetSlot].channel = channel;
+						slotMappings[midiLearnTargetSlot].isNote = false;
+						slotMappings[midiLearnTargetSlot].isProgramChange = true;
+						stopMidiLearn();
+					}
+				}
+				else {
+					for (int i = 0; i < 8; ++i) {
+						if (slotMappings[i].isValid() &&
+							slotMappings[i].isProgramChange &&
+							programNumber == slotMappings[i].ccNumber &&
+							channel == slotMappings[i].channel) {
+							getPatternEngine().switchToSlot(i, true);
+							juce::MessageManager::callAsync([this, i]() {
+								if (auto* editor = getActiveEditor()) {
+									if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
+										customEditor->updateSlotButtons(i);
+									}
+								}
+								});
 							break;
 						}
 					}
@@ -265,10 +316,12 @@ namespace BeatCrafter {
 				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
 				juce::String channelProp = "slot" + juce::String(i) + "MidiChannel";
 				juce::String isNoteProp = "slot" + juce::String(i) + "MidiIsNote";
+				juce::String isProgramChangeProp = "slot" + juce::String(i) + "MidiIsProgramChange";
 
 				state.setProperty(ccProp, slotMappings[i].ccNumber, nullptr);
 				state.setProperty(channelProp, slotMappings[i].channel, nullptr);
 				state.setProperty(isNoteProp, slotMappings[i].isNote, nullptr);
+				state.setProperty(isProgramChangeProp, slotMappings[i].isProgramChange, nullptr);
 			}
 		}
 
@@ -347,28 +400,39 @@ namespace BeatCrafter {
 
 
 			}
-
+			bool hasSavedMidiMappings = false;
 			if (tree.hasProperty("intensityMidiCC")) {
 				intensityMapping.ccNumber = tree.getProperty("intensityMidiCC", -1);
 				intensityMapping.channel = tree.getProperty("intensityMidiChannel", -1);
 				intensityMapping.isNote = tree.getProperty("intensityMidiIsNote", false);
+				hasSavedMidiMappings = true;
 			}
 
 			for (int i = 0; i < 8; ++i) {
 				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
 				juce::String channelProp = "slot" + juce::String(i) + "MidiChannel";
 				juce::String isNoteProp = "slot" + juce::String(i) + "MidiIsNote";
+				juce::String isProgramChangeProp = "slot" + juce::String(i) + "MidiIsProgramChange";
+
 
 				if (tree.hasProperty(ccProp)) {
 					slotMappings[i].ccNumber = tree.getProperty(ccProp, -1);
 					slotMappings[i].channel = tree.getProperty(channelProp, -1);
 					slotMappings[i].isNote = tree.getProperty(isNoteProp, false);
+					slotMappings[i].isProgramChange = tree.getProperty(isProgramChangeProp, false);
+					hasSavedMidiMappings = true;
 				}
+			}
+			if (!hasSavedMidiMappings) {
+				setupDefaultMidiMappings();
 			}
 			int activeSlot = tree.getProperty("activeSlot", 0);
 			getPatternEngine().switchToSlot(activeSlot, true);
 
 			updateEditorFromState();
+		}
+		else {
+			setupDefaultMidiMappings();
 		}
 	}
 
@@ -413,7 +477,15 @@ namespace BeatCrafter {
 		}
 
 		if (mapping.isValid()) {
-			return "CH" + juce::String(mapping.channel + 1) + " CC" + juce::String(mapping.ccNumber);
+			if (mapping.isProgramChange) {
+				return "CH" + juce::String(mapping.channel + 1) + " PC" + juce::String(mapping.ccNumber);
+			}
+			else if (mapping.isNote) {
+				return "CH" + juce::String(mapping.channel + 1) + " Note" + juce::String(mapping.ccNumber);
+			}
+			else {
+				return "CH" + juce::String(mapping.channel + 1) + " CC" + juce::String(mapping.ccNumber);
+			}
 		}
 		return "Not mapped";
 	}
