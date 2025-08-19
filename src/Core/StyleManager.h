@@ -33,6 +33,8 @@ namespace BeatCrafter {
 		static void addBreakMode(Pattern& pattern, float intensity, StyleType style);
 		static float randomFloat(float min, float max);
 		static bool randomChance(float probability);
+		static void addSoftIntro(Pattern& pattern, float intensity, StyleType style);
+		static void generatePunkIntro(BeatCrafter::Pattern& pattern, float intensity);
 	};
 
 }

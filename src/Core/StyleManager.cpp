@@ -1,4 +1,5 @@
 #include "StyleManager.h"
+#include <algorithm>
 
 namespace BeatCrafter {
 
@@ -22,33 +23,279 @@ namespace BeatCrafter {
 		getRNG().seed(seed);
 		Pattern result = basePattern;
 
+		if (intensity == 0.0f) {
+			for (int trackIndex = 0; trackIndex < result.getNumTracks(); ++trackIndex) {
+				auto& track = result.getTrack(trackIndex);
+				for (int i = 0; i < result.getLength(); ++i) {
+					track.getStep(i).setActive(false);
+				}
+			}
+			return result;
+		}
+
+		if (intensity > 0.0f && intensity <= 0.15f) {
+			for (int trackIndex = 0; trackIndex < result.getNumTracks(); ++trackIndex) {
+				auto& track = result.getTrack(trackIndex);
+				for (int i = 0; i < result.getLength(); ++i) {
+					track.getStep(i).setActive(false);
+				}
+			}
+			addSoftIntro(result, intensity, style);
+			return result;
+		}
+
+		if (intensity > 0.15f && intensity <= 0.4f && style == StyleType::Punk) {
+			for (int trackIndex = 0; trackIndex < result.getNumTracks(); ++trackIndex) {
+				auto& track = result.getTrack(trackIndex);
+				for (int i = 0; i < result.getLength(); ++i) {
+					track.getStep(i).setActive(false);
+				}
+			}
+
+			auto& kickTrack = result.getTrack(0);
+			auto& snareTrack = result.getTrack(1);
+			auto& hihatTrack = result.getTrack(2);
+			auto& tomHiTrack = result.getTrack(6);
+			auto& tomLoTrack = result.getTrack(7);
+
+			if (intensity <= 0.25f) {
+
+				for (int i = 0; i < 16; i += 2) {
+					if (randomChance(0.5f - (intensity - 0.15f) * 3.0f)) {
+						tomLoTrack.getStep(i).setActive(true);
+						tomLoTrack.getStep(i).setVelocity(randomFloat(0.3f, 0.4f));
+					}
+				}
+
+				if (intensity > 0.2f) {
+					kickTrack.getStep(0).setActive(true);
+					kickTrack.getStep(0).setVelocity(randomFloat(0.5f, 0.6f));
+					kickTrack.getStep(8).setActive(true);
+					kickTrack.getStep(8).setVelocity(randomFloat(0.45f, 0.55f));
+				}
+
+				for (int i = 0; i < 16; i += 4) {
+					hihatTrack.getStep(i).setActive(true);
+					hihatTrack.getStep(i).setVelocity(randomFloat(0.3f, 0.4f));
+				}
+
+				if (intensity > 0.22f) {
+					snareTrack.getStep(8).setActive(true);
+					snareTrack.getStep(8).setVelocity(randomFloat(0.3f, 0.4f));
+				}
+			}
+			else if (intensity <= 0.35f) {
+				kickTrack.getStep(0).setActive(true);
+				kickTrack.getStep(0).setVelocity(randomFloat(0.65f, 0.75f));
+				kickTrack.getStep(4).setActive(true);
+				kickTrack.getStep(4).setVelocity(randomFloat(0.55f, 0.65f));
+				kickTrack.getStep(8).setActive(true);
+				kickTrack.getStep(8).setVelocity(randomFloat(0.65f, 0.75f));
+				kickTrack.getStep(12).setActive(true);
+				kickTrack.getStep(12).setVelocity(randomFloat(0.55f, 0.65f));
+
+				snareTrack.getStep(4).setActive(true);
+				snareTrack.getStep(4).setVelocity(randomFloat(0.6f, 0.7f));
+				snareTrack.getStep(12).setActive(true);
+				snareTrack.getStep(12).setVelocity(randomFloat(0.6f, 0.7f));
+
+				for (int i = 0; i < 16; i += 2) {
+					hihatTrack.getStep(i).setActive(true);
+					hihatTrack.getStep(i).setVelocity(randomFloat(0.4f, 0.5f));
+				}
+			}
+			else {
+				kickTrack.getStep(0).setActive(true);
+				kickTrack.getStep(0).setVelocity(randomFloat(0.7f, 0.8f));
+				kickTrack.getStep(4).setActive(true);
+				kickTrack.getStep(4).setVelocity(randomFloat(0.65f, 0.75f));
+				kickTrack.getStep(8).setActive(true);
+				kickTrack.getStep(8).setVelocity(randomFloat(0.7f, 0.8f));
+				kickTrack.getStep(12).setActive(true);
+				kickTrack.getStep(12).setVelocity(randomFloat(0.65f, 0.75f));
+
+				snareTrack.getStep(2).setActive(true);
+				snareTrack.getStep(2).setVelocity(randomFloat(0.65f, 0.75f));
+				snareTrack.getStep(6).setActive(true);
+				snareTrack.getStep(6).setVelocity(randomFloat(0.65f, 0.75f));
+				snareTrack.getStep(10).setActive(true);
+				snareTrack.getStep(10).setVelocity(randomFloat(0.65f, 0.75f));
+				snareTrack.getStep(14).setActive(true);
+				snareTrack.getStep(14).setVelocity(randomFloat(0.65f, 0.75f));
+
+				for (int i = 0; i < 16; ++i) {
+					hihatTrack.getStep(i).setActive(true);
+					hihatTrack.getStep(i).setVelocity(randomFloat(0.45f, 0.55f));
+				}
+			}
+
+			return result;
+		}
+
 		applyBaseIntensityScaling(result, intensity);
 
 		if (intensity > 0.1f) {
 			addSubtleVariations(result, intensity, style);
 		}
-
 		if (intensity > 0.3f) {
 			changeSnarePattern(result, intensity, style);
 		}
-
 		if (intensity > 0.4f) {
 			addHiHatRideVariations(result, intensity, style);
 		}
-
 		if (intensity > 0.5f) {
 			addGhostNotes(result, 1, intensity * 0.7f);
 		}
-
 		if (intensity > 0.7f) {
 			addRandomFills(result, intensity);
 		}
-
 		if (intensity > 0.9f) {
 			addBreakMode(result, intensity, style);
 		}
 
 		return result;
+	}
+
+	void StyleManager::addSoftIntro(Pattern& pattern, float intensity, StyleType style) {
+		for (int trackIndex = 0; trackIndex < pattern.getNumTracks(); ++trackIndex) {
+			auto& track = pattern.getTrack(trackIndex);
+			for (int i = 0; i < pattern.getLength(); ++i) {
+				track.getStep(i).setActive(false);
+			}
+		}
+
+		switch (style) {
+		case StyleType::Punk: {
+			generatePunkIntro(pattern, intensity);
+			break;
+		}
+
+		case StyleType::Metal:
+		case StyleType::Jazz: {
+			auto& rideTrack = pattern.getTrack(5);
+			for (int i = 0; i < 16; i += 4) {
+				if (randomChance(intensity * 4.0f)) {
+					rideTrack.getStep(i).setActive(true);
+					rideTrack.getStep(i).setVelocity(randomFloat(0.2f, 0.3f + intensity));
+				}
+			}
+			break;
+		}
+
+		default: {
+			auto& hihatTrack = pattern.getTrack(2);
+			for (int i = 2; i < 16; i += 4) {
+				if (randomChance(intensity * 4.0f)) {
+					hihatTrack.getStep(i).setActive(true);
+					hihatTrack.getStep(i).setVelocity(randomFloat(0.2f, 0.3f + intensity));
+				}
+			}
+			break;
+		}
+		}
+	}
+
+	void StyleManager::generatePunkIntro(BeatCrafter::Pattern& pattern, float intensity)
+	{
+		auto& tomHiTrack = pattern.getTrack(6);
+		auto& tomLoTrack = pattern.getTrack(7);
+
+		if (intensity <= 0.05f) {
+			for (int i = 0; i < 16; ++i) {
+				tomLoTrack.getStep(i).setActive(true);
+
+				float baseVelocity = 0.1f;
+				float waveIntensity = 0.05f;
+
+				float velocityVariation = sin((float)i * 0.8f) * waveIntensity;
+				float finalVelocity = baseVelocity + velocityVariation + randomFloat(-0.02f, 0.02f);
+
+				tomLoTrack.getStep(i).setVelocity(finalVelocity);
+				tomLoTrack.getStep(i).setProbability(0.7f);
+			}
+		}
+		else if (intensity <= 0.10f) {
+			for (int i = 0; i < 16; ++i) {
+				tomLoTrack.getStep(i).setActive(true);
+
+				float baseVelocity = 0.15f + (intensity * 0.5f);
+
+				float crescendo = 0.0f;
+				if (i >= 0 && i < 4) {
+					crescendo = (float)i / 4.0f * 0.1f;
+				}
+				else if (i >= 8 && i < 12) {
+					crescendo = (float)(i - 8) / 4.0f * 0.15f;
+				}
+
+				float accent = 0.0f;
+				if (i % 4 == 0) {
+					accent = 0.1f;
+				}
+
+				float finalVelocity = baseVelocity + crescendo + accent + randomFloat(-0.03f, 0.03f);
+				tomLoTrack.getStep(i).setVelocity(std::min(finalVelocity, 0.4f));
+
+				if ((i == 3 || i == 7 || i == 11 || i == 15) && randomChance(0.5f)) {
+					tomHiTrack.getStep(i).setActive(true);
+					tomHiTrack.getStep(i).setVelocity(finalVelocity * 0.8f);
+					tomHiTrack.getStep(i).setProbability(0.7f);
+				}
+			}
+		}
+		else {
+			for (int i = 0; i < 16; ++i) {
+				tomLoTrack.getStep(i).setActive(true);
+
+				float baseVelocity = 0.2f + (intensity * 1.5f);
+
+				float crescendo = 0.0f;
+				if (i < 8) {
+					crescendo = (float)i / 8.0f * 0.15f;
+				}
+				else {
+					crescendo = (float)(i - 8) / 8.0f * 0.2f;
+				}
+
+				float accent = 0.0f;
+				if (i == 0 || i == 8) {
+					accent = 0.15f;
+				}
+				else if (i % 2 == 0) {
+					accent = 0.08f;
+				}
+
+				float randomVariation = randomFloat(-0.04f, 0.04f);
+
+				float finalVelocity = baseVelocity + crescendo + accent + randomVariation;
+				tomLoTrack.getStep(i).setVelocity(std::min(finalVelocity, 0.5f));
+
+				bool useHighTom = false;
+				if (i % 4 == 1 || i % 4 == 3) {
+					useHighTom = randomChance(0.6f);
+				}
+				else if (i == 7 || i == 15) {
+					useHighTom = true;
+				}
+
+				if (useHighTom) {
+					tomHiTrack.getStep(i).setActive(true);
+					tomHiTrack.getStep(i).setVelocity(finalVelocity * 0.9f);
+					tomLoTrack.getStep(i).setVelocity(finalVelocity * 0.6f);
+				}
+			}
+
+			if (randomChance(0.4f)) {
+				int flamPos = randomChance(0.5f) ? 7 : 15;
+				tomLoTrack.getStep(flamPos).setVelocity(
+					tomLoTrack.getStep(flamPos).getVelocity() * 1.2f
+				);
+				if (flamPos > 0) {
+					tomHiTrack.getStep(flamPos - 1).setActive(true);
+					tomHiTrack.getStep(flamPos - 1).setVelocity(0.25f);
+				}
+			}
+		}
 	}
 
 	void StyleManager::generateRockPattern(Pattern& pattern) {
@@ -189,12 +436,6 @@ namespace BeatCrafter {
 
 		pattern.getTrack(1).getStep(8).setActive(true);
 		pattern.getTrack(1).getStep(8).setVelocity(1.0f);
-
-		pattern.getTrack(2).getStep(4).setActive(true);
-		pattern.getTrack(2).getStep(4).setVelocity(0.6f);
-		pattern.getTrack(2).getStep(4).setProbability(0.7f);
-		pattern.getTrack(2).getStep(12).setActive(true);
-		pattern.getTrack(2).getStep(12).setVelocity(0.65f);
 	}
 
 	void StyleManager::applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity) {
@@ -391,6 +632,64 @@ namespace BeatCrafter {
 						kickTrack.getStep(i).setProbability(0.6f + intensity * 0.3f);
 					}
 				}
+			}
+		}
+
+		if (style == StyleType::Punk && intensity > 0.2f) {
+			for (int i = 0; i < 16; ++i) {
+				kickTrack.getStep(i).setActive(false);
+			}
+			if (intensity <= 0.3f) {
+				kickTrack.getStep(0).setActive(true);
+				kickTrack.getStep(0).setVelocity(randomFloat(0.5f, 0.65f));
+			}
+			else if (intensity <= 0.4f) {
+				kickTrack.getStep(0).setActive(true);
+				kickTrack.getStep(0).setVelocity(randomFloat(0.6f, 0.75f));
+				kickTrack.getStep(8).setActive(true);
+				kickTrack.getStep(8).setVelocity(randomFloat(0.55f, 0.7f));
+			}
+			else if (intensity <= 0.5f) {
+				kickTrack.getStep(0).setActive(true);
+				kickTrack.getStep(0).setVelocity(randomFloat(0.7f, 0.8f));
+				kickTrack.getStep(4).setActive(true);
+				kickTrack.getStep(4).setVelocity(randomFloat(0.6f, 0.7f));
+				kickTrack.getStep(8).setActive(true);
+				kickTrack.getStep(8).setVelocity(randomFloat(0.7f, 0.8f));
+				kickTrack.getStep(12).setActive(true);
+				kickTrack.getStep(12).setVelocity(randomFloat(0.6f, 0.7f));
+			}
+			else if (intensity <= 0.7f) {
+				kickTrack.getStep(0).setActive(true);
+				kickTrack.getStep(0).setVelocity(randomFloat(0.75f, 0.85f));
+				kickTrack.getStep(4).setActive(true);
+				kickTrack.getStep(4).setVelocity(randomFloat(0.7f, 0.8f));
+				if (randomChance(0.6f)) {
+					kickTrack.getStep(5).setActive(true);
+					kickTrack.getStep(5).setVelocity(randomFloat(0.65f, 0.75f));
+				}
+				kickTrack.getStep(8).setActive(true);
+				kickTrack.getStep(8).setVelocity(randomFloat(0.75f, 0.85f));
+				kickTrack.getStep(12).setActive(true);
+				kickTrack.getStep(12).setVelocity(randomFloat(0.7f, 0.8f));
+				if (randomChance(0.6f)) {
+					kickTrack.getStep(13).setActive(true);
+					kickTrack.getStep(13).setVelocity(randomFloat(0.65f, 0.75f));
+				}
+			}
+			else {
+				kickTrack.getStep(0).setActive(true);
+				kickTrack.getStep(0).setVelocity(randomFloat(0.85f, 0.95f));
+				kickTrack.getStep(4).setActive(true);
+				kickTrack.getStep(4).setVelocity(randomFloat(0.8f, 0.9f));
+				kickTrack.getStep(5).setActive(true);
+				kickTrack.getStep(5).setVelocity(randomFloat(0.75f, 0.85f));
+				kickTrack.getStep(8).setActive(true);
+				kickTrack.getStep(8).setVelocity(randomFloat(0.85f, 0.95f));
+				kickTrack.getStep(12).setActive(true);
+				kickTrack.getStep(12).setVelocity(randomFloat(0.8f, 0.9f));
+				kickTrack.getStep(13).setActive(true);
+				kickTrack.getStep(13).setVelocity(randomFloat(0.75f, 0.85f));
 			}
 		}
 	}
@@ -1150,64 +1449,51 @@ namespace BeatCrafter {
 		case StyleType::Punk:
 			if (intensity <= 0.5f) {
 				for (int i = 0; i < 16; i += 2) {
-					if (i == 6 || i == 14) {
-						openHihatTrack.getStep(i).setActive(true);
-						openHihatTrack.getStep(i).setVelocity(randomFloat(0.7f, 0.9f));
-					}
-					else {
-						hihatTrack.getStep(i).setActive(true);
-						hihatTrack.getStep(i).setVelocity(randomFloat(0.6f, 0.8f));
-					}
+					hihatTrack.getStep(i).setActive(true);
+					hihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
 				}
 			}
 			else if (intensity <= 0.7f) {
 				for (int i = 0; i < 16; ++i) {
-					if (i == 6 || i == 14) {
-						openHihatTrack.getStep(i).setActive(true);
-						openHihatTrack.getStep(i).setVelocity(randomFloat(0.7f, 0.9f));
-					}
-					else {
-						hihatTrack.getStep(i).setActive(true);
-						hihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
-					}
+					hihatTrack.getStep(i).setActive(true);
+					hihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
 				}
+				openHihatTrack.getStep(6).setActive(true);
+				openHihatTrack.getStep(6).setVelocity(randomFloat(0.6f, 0.8f));
+				openHihatTrack.getStep(14).setActive(true);
+				openHihatTrack.getStep(14).setVelocity(randomFloat(0.6f, 0.8f));
 			}
-			else if (intensity <= 0.8f) {
-				for (int i = 0; i < 16; ++i) {
-					if (i == 4 || i == 12) {
-						splashTrack.getStep(i).setActive(true);
-						splashTrack.getStep(i).setVelocity(randomFloat(0.7f, 0.9f));
-					}
-					else if (i == 6 || i == 14) {
-						openHihatTrack.getStep(i).setActive(true);
-						openHihatTrack.getStep(i).setVelocity(randomFloat(0.7f, 0.9f));
-					}
-					else {
-						hihatTrack.getStep(i).setActive(true);
-						hihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
-					}
-				}
+			else if (intensity <= 0.9f) {
+				openHihatTrack.getStep(0).setActive(true);
+				openHihatTrack.getStep(0).setVelocity(randomFloat(0.7f, 0.9f));
+				openHihatTrack.getStep(4).setActive(true);
+				openHihatTrack.getStep(4).setVelocity(randomFloat(0.7f, 0.9f));
+				openHihatTrack.getStep(8).setActive(true);
+				openHihatTrack.getStep(8).setVelocity(randomFloat(0.7f, 0.9f));
+				openHihatTrack.getStep(12).setActive(true);
+				openHihatTrack.getStep(12).setVelocity(randomFloat(0.7f, 0.9f));
 			}
 			else {
-				for (int i = 0; i < 16; ++i) {
-					if (i == 0 || i == 8) {
-						chinaTrack.getStep(i).setActive(true);
-						chinaTrack.getStep(i).setVelocity(randomFloat(0.8f, 1.0f));
-					}
-					else if (i == 4 || i == 12) {
-						splashTrack.getStep(i).setActive(true);
-						splashTrack.getStep(i).setVelocity(randomFloat(0.7f, 0.9f));
-					}
-					else if (i == 6 || i == 14) {
-						openHihatTrack.getStep(i).setActive(true);
-						openHihatTrack.getStep(i).setVelocity(randomFloat(0.7f, 0.9f));
-					}
-					else {
-						hihatTrack.getStep(i).setActive(true);
-						hihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
-					}
+				openHihatTrack.getStep(0).setActive(true);
+				openHihatTrack.getStep(0).setVelocity(randomFloat(0.8f, 1.0f));
+				openHihatTrack.getStep(4).setActive(true);
+				openHihatTrack.getStep(4).setVelocity(randomFloat(0.8f, 1.0f));
+				openHihatTrack.getStep(8).setActive(true);
+				openHihatTrack.getStep(8).setVelocity(randomFloat(0.8f, 1.0f));
+				openHihatTrack.getStep(12).setActive(true);
+				openHihatTrack.getStep(12).setVelocity(randomFloat(0.8f, 1.0f));
+
+				splashTrack.getStep(0).setActive(true);
+				splashTrack.getStep(0).setVelocity(randomFloat(0.8f, 1.0f));
+				splashTrack.getStep(8).setActive(true);
+				splashTrack.getStep(8).setVelocity(randomFloat(0.8f, 1.0f));
+
+				if (randomChance(0.6f)) {
+					chinaTrack.getStep(4).setActive(true);
+					chinaTrack.getStep(4).setVelocity(randomFloat(0.8f, 1.0f));
 				}
 			}
+			break;
 			break;
 		}
 	}
@@ -1218,8 +1504,46 @@ namespace BeatCrafter {
 			snareTrack.getStep(i).setActive(false);
 		}
 		switch (style) {
-		case StyleType::Rock:
 		case StyleType::Punk:
+			if (intensity <= 0.4f) {
+				snareTrack.getStep(4).setActive(true);
+				snareTrack.getStep(4).setVelocity(randomFloat(0.8f, 0.95f));
+				snareTrack.getStep(12).setActive(true);
+				snareTrack.getStep(12).setVelocity(randomFloat(0.8f, 0.95f));
+			}
+			else if (intensity <= 0.7f) {
+				snareTrack.getStep(2).setActive(true);
+				snareTrack.getStep(2).setVelocity(randomFloat(0.85f, 0.95f));
+				snareTrack.getStep(6).setActive(true);
+				snareTrack.getStep(6).setVelocity(randomFloat(0.85f, 0.95f));
+				snareTrack.getStep(10).setActive(true);
+				snareTrack.getStep(10).setVelocity(randomFloat(0.85f, 0.95f));
+				snareTrack.getStep(14).setActive(true);
+				snareTrack.getStep(14).setVelocity(randomFloat(0.85f, 0.95f));
+			}
+			else {
+				snareTrack.getStep(2).setActive(true);
+				snareTrack.getStep(2).setVelocity(randomFloat(0.9f, 1.0f));
+				snareTrack.getStep(6).setActive(true);
+				snareTrack.getStep(6).setVelocity(randomFloat(0.9f, 1.0f));
+				snareTrack.getStep(10).setActive(true);
+				snareTrack.getStep(10).setVelocity(randomFloat(0.9f, 1.0f));
+				snareTrack.getStep(14).setActive(true);
+				snareTrack.getStep(14).setVelocity(randomFloat(0.9f, 1.0f));
+
+				if (randomChance(intensity * 0.3f)) {
+					snareTrack.getStep(1).setActive(true);
+					snareTrack.getStep(1).setVelocity(randomFloat(0.3f, 0.5f));
+					snareTrack.getStep(1).setProbability(0.6f);
+				}
+				if (randomChance(intensity * 0.3f)) {
+					snareTrack.getStep(9).setActive(true);
+					snareTrack.getStep(9).setVelocity(randomFloat(0.3f, 0.5f));
+					snareTrack.getStep(9).setProbability(0.6f);
+				}
+			}
+			break;
+		case StyleType::Rock:
 			if (intensity <= 0.3f) {
 				snareTrack.getStep(8).setActive(true);
 				snareTrack.getStep(8).setVelocity(randomFloat(0.8f, 0.9f));
