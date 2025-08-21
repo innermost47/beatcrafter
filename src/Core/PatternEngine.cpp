@@ -20,7 +20,7 @@ namespace BeatCrafter
 
 	void PatternEngine::resetToStart()
 	{
-		for (auto &slot : slots)
+		for (auto& slot : slots)
 		{
 			if (slot)
 			{
@@ -41,7 +41,7 @@ namespace BeatCrafter
 	void PatternEngine::stop()
 	{
 		isPlaying = false;
-		for (auto &slot : slots)
+		for (auto& slot : slots)
 		{
 			if (slot)
 				slot->setCurrentStep(0);
@@ -88,10 +88,10 @@ namespace BeatCrafter
 		}
 	}
 
-	void PatternEngine::processBlock(juce::MidiBuffer &midiMessages,
-									 int numSamples,
-									 double sampleRate,
-									 const juce::AudioPlayHead::PositionInfo &posInfo)
+	void PatternEngine::processBlock(juce::MidiBuffer& midiMessages,
+		int numSamples,
+		double sampleRate,
+		const juce::AudioPlayHead::PositionInfo& posInfo)
 	{
 
 		midiMessages.clear();
@@ -112,7 +112,7 @@ namespace BeatCrafter
 		double sixteenthsPerSecond = beatsPerSecond * 4.0;
 		samplesPerStep = static_cast<int>(sampleRate / sixteenthsPerSecond);
 
-		auto &pattern = *slots[activeSlot];
+		auto& pattern = *slots[activeSlot];
 		int patternLength = pattern.getLength();
 
 		double ppqPerStep = 0.25;
@@ -136,10 +136,11 @@ namespace BeatCrafter
 		lastPpqPosition = ppqPosition;
 	}
 
-	void PatternEngine::addLiveJamElements(Pattern &pattern, int stepIndex, float intensity)
+	void PatternEngine::addLiveJamElements(Pattern& pattern, int stepIndex, float intensity)
 	{
 		stepsSinceLastJam++;
-		float jamChance = intensity * 0.15f;
+
+		float jamChance = currentLiveJamIntensity * 0.15f;
 
 		if (liveJamRandom.nextFloat() < jamChance)
 		{
@@ -153,8 +154,8 @@ namespace BeatCrafter
 				if (!pattern.getTrack(0).getStep(stepIndex).isActive())
 				{
 					pattern.getTrack(0).getStep(stepIndex).setActive(true);
-					pattern.getTrack(0).getStep(stepIndex).setVelocity(0.6f + intensity * 0.3f);
-					pattern.getTrack(0).getStep(stepIndex).setProbability(0.8f);
+					pattern.getTrack(0).getStep(stepIndex).setVelocity(0.4f + currentLiveJamIntensity * 0.5f);
+					pattern.getTrack(0).getStep(stepIndex).setProbability(0.6f + currentLiveJamIntensity * 0.3f);
 				}
 				break;
 
@@ -162,8 +163,8 @@ namespace BeatCrafter
 				if (!pattern.getTrack(1).getStep(stepIndex).isActive())
 				{
 					pattern.getTrack(1).getStep(stepIndex).setActive(true);
-					pattern.getTrack(1).getStep(stepIndex).setVelocity(0.3f + liveJamRandom.nextFloat() * 0.4f);
-					pattern.getTrack(1).getStep(stepIndex).setProbability(0.7f);
+					pattern.getTrack(1).getStep(stepIndex).setVelocity(0.2f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(1).getStep(stepIndex).setProbability(0.5f + currentLiveJamIntensity * 0.4f);
 				}
 				break;
 
@@ -171,63 +172,75 @@ namespace BeatCrafter
 				if (stepIndex % 4 == 0 || stepIndex % 8 == 0)
 				{
 					pattern.getTrack(4).getStep(stepIndex).setActive(true);
-					pattern.getTrack(4).getStep(stepIndex).setVelocity(0.6f + intensity * 0.4f);
-					pattern.getTrack(4).getStep(stepIndex).setProbability(0.6f);
+					pattern.getTrack(4).getStep(stepIndex).setVelocity(0.5f + currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(4).getStep(stepIndex).setProbability(0.4f + currentLiveJamIntensity * 0.4f);
 				}
 				break;
 
 			case 3:
 				pattern.getTrack(3).getStep(stepIndex).setActive(true);
-				pattern.getTrack(3).getStep(stepIndex).setVelocity(0.5f + intensity * 0.3f);
-				pattern.getTrack(3).getStep(stepIndex).setProbability(0.8f);
+				pattern.getTrack(3).getStep(stepIndex).setVelocity(0.3f + currentLiveJamIntensity * 0.4f);
+				pattern.getTrack(3).getStep(stepIndex).setProbability(0.6f + currentLiveJamIntensity * 0.3f);
 				break;
 
 			case 4:
-				if (intensity > 0.6f && stepIndex % 4 == 0)
+				if (currentLiveJamIntensity > 0.4f && stepIndex % 4 == 0)
 				{
 					pattern.getTrack(10).getStep(stepIndex).setActive(true);
-					pattern.getTrack(10).getStep(stepIndex).setVelocity(0.7f + intensity * 0.3f);
-					pattern.getTrack(10).getStep(stepIndex).setProbability(0.5f);
+					pattern.getTrack(10).getStep(stepIndex).setVelocity(0.5f + currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(10).getStep(stepIndex).setProbability(0.3f + currentLiveJamIntensity * 0.5f);
 				}
 				break;
 
 			case 5:
-				if (intensity > 0.5f)
+				if (currentLiveJamIntensity > 0.3f)
 				{
 					pattern.getTrack(5).getStep(stepIndex).setActive(true);
-					pattern.getTrack(5).getStep(stepIndex).setVelocity(0.5f + intensity * 0.4f);
-					pattern.getTrack(5).getStep(stepIndex).setProbability(0.7f);
+					pattern.getTrack(5).getStep(stepIndex).setVelocity(0.3f + currentLiveJamIntensity * 0.5f);
+					pattern.getTrack(5).getStep(stepIndex).setProbability(0.5f + currentLiveJamIntensity * 0.4f);
 				}
 				break;
 			}
 		}
 
-		if (stepIndex >= 14 && intensity > 0.7f && liveJamRandom.nextFloat() < intensity * 0.3f)
+		if (stepIndex >= 14 && currentLiveJamIntensity > 0.5f &&
+			liveJamRandom.nextFloat() < currentLiveJamIntensity * 0.4f)
 		{
 			int tomTrack = liveJamRandom.nextBool() ? 6 : 7;
 			pattern.getTrack(tomTrack).getStep(stepIndex).setActive(true);
-			pattern.getTrack(tomTrack).getStep(stepIndex).setVelocity(0.6f + liveJamRandom.nextFloat() * 0.3f);
-			pattern.getTrack(tomTrack).getStep(stepIndex).setProbability(0.8f);
+			pattern.getTrack(tomTrack).getStep(stepIndex).setVelocity(0.4f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.5f);
+			pattern.getTrack(tomTrack).getStep(stepIndex).setProbability(0.6f + currentLiveJamIntensity * 0.3f);
+		}
+
+		if (currentLiveJamIntensity > 0.7f && liveJamRandom.nextFloat() < currentLiveJamIntensity * 0.2f)
+		{
+			if (!pattern.getTrack(2).getStep(stepIndex).isActive())
+			{
+				pattern.getTrack(2).getStep(stepIndex).setActive(true);
+				pattern.getTrack(2).getStep(stepIndex).setVelocity(0.2f + currentLiveJamIntensity * 0.3f);
+				pattern.getTrack(2).getStep(stepIndex).setProbability(0.7f + currentLiveJamIntensity * 0.2f);
+			}
 		}
 	}
 
-	void PatternEngine::generateMidiForStep(juce::MidiBuffer &midiMessages,
-											int samplePosition,
-											const Pattern &pattern,
-											int stepIndex)
+	void PatternEngine::generateMidiForStep(juce::MidiBuffer& midiMessages,
+		int samplePosition,
+		const Pattern& pattern,
+		int stepIndex)
 	{
 
 		Pattern intensifiedPattern = applyIntensity(pattern, currentIntensity);
 
-		if (liveJamMode && currentIntensity > 0.3f)
+		if (liveJamMode && currentLiveJamIntensity > 0.1f)
 		{
 			addLiveJamElements(intensifiedPattern, stepIndex, currentIntensity);
 		}
 
+
 		for (int trackIdx = 0; trackIdx < intensifiedPattern.getNumTracks(); ++trackIdx)
 		{
-			const auto &track = intensifiedPattern.getTrack(trackIdx);
-			const auto &step = track.getStep(stepIndex);
+			const auto& track = intensifiedPattern.getTrack(trackIdx);
+			const auto& step = track.getStep(stepIndex);
 
 			if (step.isActive())
 			{
@@ -249,13 +262,13 @@ namespace BeatCrafter
 					int noteLength = static_cast<int>(0.1 * 44100);
 					auto noteOff = juce::MidiMessage::noteOff(10, midiNote);
 					midiMessages.addEvent(noteOff, juce::jmin(finalSamplePos + noteLength,
-															  samplePosition + samplesPerStep - 1));
+						samplePosition + samplesPerStep - 1));
 				}
 			}
 		}
 	}
 
-	Pattern PatternEngine::applyIntensity(const Pattern &basePattern, float intensity) const
+	Pattern PatternEngine::applyIntensity(const Pattern& basePattern, float intensity) const
 	{
 		StyleType currentStyle = getSlotStyle(activeSlot);
 		uint32_t currentSeed = slotRandomSeeds[activeSlot];
@@ -269,7 +282,7 @@ namespace BeatCrafter
 			slots[activeSlot] = std::make_unique<Pattern>("Generated");
 		}
 
-		auto &pattern = *slots[activeSlot];
+		auto& pattern = *slots[activeSlot];
 		pattern.setName("Generated " + juce::String((int)style));
 		StyleManager::generateBasicPattern(pattern, style);
 

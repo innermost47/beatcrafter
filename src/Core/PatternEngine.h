@@ -87,6 +87,8 @@ namespace BeatCrafter
 		}
 
 		void generateNewPatternForSlot(int slot, StyleType style, float complexity = 0.5f);
+		void setLiveJamIntensity(float intensity) { currentLiveJamIntensity = intensity; }
+		float getLiveJamIntensity() const { return currentLiveJamIntensity; }
 
 		StyleType getSlotStyle(int slot) const
 		{
@@ -133,6 +135,7 @@ namespace BeatCrafter
 		std::array<std::unique_ptr<Pattern>, 8> slots;
 		int activeSlot = 0;
 		int queuedSlot = -1;
+		float currentLiveJamIntensity = 0.5f;
 
 		std::array<StyleType, 8> slotStyles;
 		std::array<uint32_t, 8> slotRandomSeeds;

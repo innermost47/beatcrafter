@@ -11,7 +11,8 @@ namespace BeatCrafter
 
 		addParameter(intensityParam = new juce::AudioParameterFloat(
 			"intensity", "Intensity", 0.0f, 1.0f, 0.5f));
-
+		addParameter(liveJamIntensityParam = new juce::AudioParameterFloat(
+			"liveJamIntensity", "Live Jam Intensity", 0.0f, 1.0f, 0.5f));
 		addParameter(styleParam = new juce::AudioParameterChoice(
 			"style", "Style",
 			juce::StringArray{ "Rock", "Metal", "Jazz", "Funk", "Electronic", "HipHop", "Latin", "Punk" },
@@ -72,6 +73,7 @@ namespace BeatCrafter
 			return;
 
 		patternEngine.setIntensity(intensityParam->get());
+		patternEngine.setLiveJamIntensity(liveJamIntensityParam->get());
 
 		bool hostIsPlaying = posInfo->getIsPlaying();
 
@@ -308,6 +310,7 @@ namespace BeatCrafter
 		state.setProperty("style", styleParam->getIndex(), nullptr);
 		state.setProperty("activeSlot", getPatternEngine().getActiveSlot(), nullptr);
 		state.setProperty("liveJamMode", liveJamModeState, nullptr);
+		state.setProperty("liveJamIntensity", liveJamIntensityParam->get(), nullptr);
 
 		for (int i = 0; i < 8; ++i)
 		{
@@ -402,6 +405,7 @@ namespace BeatCrafter
 			styleParam->setValueNotifyingHost(normalizedStyle);
 			liveJamModeState = tree.getProperty("liveJamMode", false);
 			patternEngine.setLiveJamMode(liveJamModeState);
+			liveJamIntensityParam->setValueNotifyingHost(tree.getProperty("liveJamIntensity", 0.5f));
 
 			for (int i = 0; i < 8; ++i)
 			{

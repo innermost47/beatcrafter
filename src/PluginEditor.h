@@ -54,6 +54,11 @@ namespace BeatCrafter
 		std::array<juce::TextButton, 8> slotMidiLearnButtons;
 		std::array<juce::Label, 8> slotMidiLabels;
 
+		juce::Slider liveJamIntensitySlider;
+		juce::Label liveJamIntensityLabel;
+		juce::TextButton liveJamIntensityMidiLearnButton{ "LEARN" };
+		juce::Label liveJamIntensityMidiLabel;
+
 		void updateMidiLearnButtons();
 		void onIntensityMidiLearnClicked();
 		void onSlotMidiLearnClicked(int slot);
@@ -65,6 +70,7 @@ namespace BeatCrafter
 		void updateStyleComboForCurrentSlot();
 		void onResetMidiMappingsClicked();
 		void onLiveJamToggled();
+		void onLiveJamIntensityMidiLearnClicked();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};

@@ -120,6 +120,28 @@ namespace BeatCrafter
 		liveJamButton.setTooltip("Enables Live Jam mode: Automatically adds random elements "
 			" during playback (kicks, snares, crashes, etc.) based on the intensity");
 		addAndMakeVisible(liveJamButton);
+
+		liveJamIntensitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
+		liveJamIntensitySlider.setRange(0.0, 1.0, 0.01);
+		liveJamIntensitySlider.setValue(processor.liveJamIntensityParam->get(), juce::dontSendNotification);
+		liveJamIntensitySlider.onValueChange = [this]()
+			{
+				processor.liveJamIntensityParam->setValueNotifyingHost(liveJamIntensitySlider.getValue());
+			};
+		addAndMakeVisible(liveJamIntensitySlider);
+
+		liveJamIntensityLabel.setText("Live Jam Intensity", juce::dontSendNotification);
+		liveJamIntensityLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textColour);
+		addAndMakeVisible(liveJamIntensityLabel);
+
+		liveJamIntensityMidiLearnButton.onClick = [this]()
+			{ onLiveJamIntensityMidiLearnClicked(); };
+		addAndMakeVisible(liveJamIntensityMidiLearnButton);
+
+		liveJamIntensityMidiLabel.setText("Not mapped", juce::dontSendNotification);
+		liveJamIntensityMidiLabel.setFont(juce::Font(10.0f));
+		liveJamIntensityMidiLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
+		addAndMakeVisible(liveJamIntensityMidiLabel);
 	}
 
 	void BeatCrafterEditor::updateStyleComboForCurrentSlot()
@@ -196,16 +218,43 @@ namespace BeatCrafter
 			slotMidiLabels[i].setBounds(slotBounds);
 		}
 
-		auto bottomAreaWithMidi = bounds.removeFromBottom(80);
 
-		auto intensityArea = bottomAreaWithMidi.removeFromTop(50);
+		auto intensityAreaTotal = bounds.removeFromBottom(120);
+
+		auto intensityArea = intensityAreaTotal.removeFromTop(50);
 		intensityLabel.setBounds(intensityArea.removeFromLeft(80).reduced(20, 0));
 		intensityMidiLearnButton.setBounds(intensityArea.removeFromRight(60).reduced(5, 5));
 		intensitySlider.setBounds(intensityArea.reduced(20, 15));
 
-		auto intensityMidiArea = bottomAreaWithMidi.removeFromTop(20);
+		auto intensityMidiArea = intensityAreaTotal.removeFromTop(20);
 		intensityMidiLabel.setBounds(intensityMidiArea.removeFromLeft(200).reduced(100, 0));
+
+		auto liveJamIntensityArea = intensityAreaTotal.removeFromTop(50);
+		liveJamIntensityLabel.setBounds(liveJamIntensityArea.removeFromLeft(80).reduced(20, 0));
+		liveJamIntensityMidiLearnButton.setBounds(liveJamIntensityArea.removeFromRight(60).reduced(5, 5));
+		liveJamIntensitySlider.setBounds(liveJamIntensityArea.reduced(20, 15));
+
+		auto liveJamIntensityMidiArea = intensityAreaTotal.removeFromTop(20);
+		liveJamIntensityMidiLabel.setBounds(liveJamIntensityMidiArea.removeFromLeft(200).reduced(100, 0));
+
 		patternGrid->setBounds(bounds.reduced(20, 10));
+	}
+
+	void BeatCrafterEditor::onLiveJamIntensityMidiLearnClicked()
+	{
+		if (processor.isMidiLearning())
+		{
+			processor.stopMidiLearn();
+		}
+		else if (processor.hasMidiMapping(2, -1))
+		{
+			processor.clearMidiMapping(2, -1);
+		}
+		else
+		{
+			processor.startMidiLearn(2, -1);
+		}
+		updateMidiLearnButtons();
 	}
 
 	void BeatCrafterEditor::onLiveJamToggled()
@@ -290,6 +339,19 @@ namespace BeatCrafter
 			juce::String mappingText = processor.getMidiMappingDescription(1, i);
 			slotMidiLabels[i].setText(mappingText == "Not mapped" ? "--" : mappingText, juce::dontSendNotification);
 		}
+
+		if (processor.isMidiLearning() && processor.getMidiLearnTarget() == 2)
+		{
+			liveJamIntensityMidiLearnButton.setButtonText("LISTENING...");
+			liveJamIntensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+		}
+		else
+		{
+			liveJamIntensityMidiLearnButton.setButtonText("LEARN");
+			liveJamIntensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, modernLookAndFeel.backgroundMid);
+		}
+
+		liveJamIntensityMidiLabel.setText(processor.getMidiMappingDescription(2, -1), juce::dontSendNotification);
 	}
 
 	void BeatCrafterEditor::onIntensityMidiLearnClicked()

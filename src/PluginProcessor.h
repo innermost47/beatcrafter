@@ -45,6 +45,7 @@ namespace BeatCrafter
 		juce::AudioParameterFloat* intensityParam;
 		juce::AudioParameterChoice* styleParam;
 		std::array<juce::AudioParameterChoice*, 8> slotStyleParams;
+		juce::AudioParameterFloat* liveJamIntensityParam = nullptr;
 
 		void startMidiLearn(int targetType, int targetSlot = -1);
 		void stopMidiLearn();
