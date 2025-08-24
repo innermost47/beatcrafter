@@ -1,4 +1,4 @@
-#include "PluginProcessor.h"
+﻿#include "PluginProcessor.h"
 #include "PluginEditor.h"
 
 namespace BeatCrafter
@@ -465,6 +465,13 @@ namespace BeatCrafter
 			state.setProperty("intensityMidiIsNote", intensityMapping.isNote, nullptr);
 		}
 
+		if (liveJamIntensityMapping.isValid())
+		{
+			state.setProperty("liveJamIntensityMidiCC", liveJamIntensityMapping.ccNumber, nullptr);
+			state.setProperty("liveJamIntensityMidiChannel", liveJamIntensityMapping.channel, nullptr);
+			state.setProperty("liveJamIntensityMidiIsNote", liveJamIntensityMapping.isNote, nullptr);
+		}
+
 		for (int i = 0; i < 8; ++i)
 		{
 			if (slotMappings[i].isValid())
@@ -575,6 +582,14 @@ namespace BeatCrafter
 				hasSavedMidiMappings = true;
 			}
 
+			if (tree.hasProperty("liveJamIntensityMidiCC"))
+			{
+				liveJamIntensityMapping.ccNumber = tree.getProperty("liveJamIntensityMidiCC", -1);
+				liveJamIntensityMapping.channel = tree.getProperty("liveJamIntensityMidiChannel", -1);
+				liveJamIntensityMapping.isNote = tree.getProperty("liveJamIntensityMidiIsNote", false);
+				hasSavedMidiMappings = true;
+			}
+
 			for (int i = 0; i < 8; ++i)
 			{
 				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
@@ -630,6 +645,10 @@ namespace BeatCrafter
 		{
 			slotMappings[targetSlot] = MidiMapping{};
 		}
+		else if (targetType == 2)
+		{
+			liveJamIntensityMapping = MidiMapping{};
+		}
 	}
 
 	bool BeatCrafterProcessor::hasMidiMapping(int targetType, int targetSlot) const
@@ -641,6 +660,10 @@ namespace BeatCrafter
 		else if (targetType >= 1 && targetType <= 8 && targetSlot >= 0 && targetSlot < 8)
 		{
 			return slotMappings[targetSlot].isValid();
+		}
+		else if (targetType == 2)
+		{
+			return liveJamIntensityMapping.isValid();
 		}
 		return false;
 	}
@@ -655,6 +678,10 @@ namespace BeatCrafter
 		else if (targetType >= 1 && targetType <= 8 && targetSlot >= 0 && targetSlot < 8)
 		{
 			mapping = slotMappings[targetSlot];
+		}
+		else if (targetType == 2)
+		{
+			mapping = liveJamIntensityMapping;
 		}
 
 		if (mapping.isValid())

@@ -1,4 +1,4 @@
-#include "PluginEditor.h"
+﻿#include "PluginEditor.h"
 
 namespace BeatCrafter
 {
@@ -222,7 +222,7 @@ namespace BeatCrafter
 		auto intensityAreaTotal = bounds.removeFromBottom(120);
 
 		auto intensityArea = intensityAreaTotal.removeFromTop(50);
-		intensityLabel.setBounds(intensityArea.removeFromLeft(80).reduced(20, 0));
+		intensityLabel.setBounds(intensityArea.removeFromLeft(120).reduced(20, 0));
 		intensityMidiLearnButton.setBounds(intensityArea.removeFromRight(60).reduced(5, 5));
 		intensitySlider.setBounds(intensityArea.reduced(20, 15));
 
@@ -230,7 +230,7 @@ namespace BeatCrafter
 		intensityMidiLabel.setBounds(intensityMidiArea.removeFromLeft(200).reduced(100, 0));
 
 		auto liveJamIntensityArea = intensityAreaTotal.removeFromTop(50);
-		liveJamIntensityLabel.setBounds(liveJamIntensityArea.removeFromLeft(80).reduced(20, 0));
+		liveJamIntensityLabel.setBounds(liveJamIntensityArea.removeFromLeft(120).reduced(20, 0));
 		liveJamIntensityMidiLearnButton.setBounds(liveJamIntensityArea.removeFromRight(60).reduced(5, 5));
 		liveJamIntensitySlider.setBounds(liveJamIntensityArea.reduced(20, 15));
 
@@ -315,6 +315,11 @@ namespace BeatCrafter
 			intensityMidiLearnButton.setButtonText("LISTENING...");
 			intensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
 		}
+		else if (processor.hasMidiMapping(0, -1))
+		{
+			intensityMidiLearnButton.setButtonText("UNLEARN");
+			intensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+		}
 		else
 		{
 			intensityMidiLearnButton.setButtonText("LEARN");
@@ -330,9 +335,14 @@ namespace BeatCrafter
 				slotMidiLearnButtons[i].setButtonText("!");
 				slotMidiLearnButtons[i].setColour(juce::TextButton::buttonColourId, juce::Colours::red);
 			}
+			else if (processor.hasMidiMapping(1, i))
+			{
+				slotMidiLearnButtons[i].setButtonText("UNLEARN");
+				slotMidiLearnButtons[i].setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+			}
 			else
 			{
-				slotMidiLearnButtons[i].setButtonText("Learn");
+				slotMidiLearnButtons[i].setButtonText("LEARN");
 				slotMidiLearnButtons[i].setColour(juce::TextButton::buttonColourId, modernLookAndFeel.backgroundMid);
 			}
 
@@ -344,6 +354,11 @@ namespace BeatCrafter
 		{
 			liveJamIntensityMidiLearnButton.setButtonText("LISTENING...");
 			liveJamIntensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+		}
+		else if (processor.hasMidiMapping(2, -1))
+		{
+			liveJamIntensityMidiLearnButton.setButtonText("UNLEARN");
+			liveJamIntensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
 		}
 		else
 		{
