@@ -23,6 +23,7 @@ namespace BeatCrafter
 		void updateIntensitySlider(float newIntensity);
 		void updateSlotButtons(int activeSlot);
 		void updateFromProcessorState();
+		void updateLiveJamIntensitySlider(float newIntensity);
 
 	private:
 		BeatCrafterProcessor& processor;

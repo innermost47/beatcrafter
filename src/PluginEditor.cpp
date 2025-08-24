@@ -417,6 +417,12 @@ namespace BeatCrafter
 		updatePatternDisplay();
 	}
 
+	void BeatCrafterEditor::updateLiveJamIntensitySlider(float newIntensity)
+	{
+		liveJamIntensitySlider.setValue(newIntensity, juce::dontSendNotification);
+		updatePatternDisplay();
+	}
+
 	void BeatCrafterEditor::updateSlotButtons(int activeSlot)
 	{
 		slotManager->updateSlotStates();

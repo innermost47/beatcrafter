@@ -21,6 +21,18 @@ namespace BeatCrafter
 
 		void processMidi(juce::MidiBuffer& midiMessages);
 
+		void processPC(int programNumber, int channel);
+
+		void processMidiNoteOn(int noteNumber, int channel, int velocity);
+
+		void learnForNoteOn(int noteNumber, int channel);
+
+		void learnForPC(int programNumber, int channel);
+
+		void processForCC(int ccNumber, int channel, int value);
+
+		void learnByType(int ccNumber, int channel);
+
 		juce::AudioProcessorEditor* createEditor() override;
 		bool hasEditor() const override { return true; }
 
@@ -78,6 +90,7 @@ namespace BeatCrafter
 		};
 
 		MidiMapping intensityMapping;
+		MidiMapping liveJamIntensityMapping;
 		std::array<MidiMapping, 8> slotMappings;
 
 		bool liveJamMode = false;
