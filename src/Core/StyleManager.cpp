@@ -134,26 +134,31 @@ namespace BeatCrafter {
 
 		applyBaseIntensityScaling(result, intensity);
 
-		if (intensity > 0.1f) {
-			addSubtleVariations(result, intensity, style);
-		}
-		if (intensity > 0.3f) {
-			changeSnarePattern(result, intensity, style);
-		}
-		if (intensity > 0.4f) {
-			addHiHatRideVariations(result, intensity, style);
-		}
-		if (intensity > 0.5f) {
-			addGhostNotes(result, 1, intensity * 0.7f);
-		}
-		if (intensity > 0.7f) {
-			addRandomFills(result, intensity);
-		}
-		if (intensity > 0.9f) {
+		bool isBreakMode = intensity > 0.9f;
+
+		if (isBreakMode) {
 			addBreakMode(result, intensity, style);
+		}
+		else {
+			if (intensity > 0.1f) {
+				addSubtleVariations(result, intensity, style);
+			}
+			if (intensity > 0.3f) {
+				changeSnarePattern(result, intensity, style);
+			}
+			if (intensity > 0.4f) {
+				addHiHatRideVariations(result, intensity, style);
+			}
+			if (intensity > 0.5f) {
+				addGhostNotes(result, 1, intensity * 0.7f);
+			}
+			if (intensity > 0.7f) {
+				addRandomFills(result, intensity);
+			}
 		}
 
 		return result;
+
 	}
 
 	void StyleManager::addSoftIntro(Pattern& pattern, float intensity, StyleType style) {
@@ -1008,6 +1013,7 @@ namespace BeatCrafter {
 	void StyleManager::addHiHatRideVariations(Pattern& pattern, float intensity, StyleType style) {
 		auto& hihatTrack = pattern.getTrack(2);
 		auto& openHihatTrack = pattern.getTrack(3);
+		auto& crashTrack = pattern.getTrack(4);
 		auto& rideTrack = pattern.getTrack(5);
 		auto& rideBellTrack = pattern.getTrack(8);
 		auto& hihatPedalTrack = pattern.getTrack(9);
@@ -1293,23 +1299,23 @@ namespace BeatCrafter {
 				}
 			}
 			else {
-				for (int i = 0; i < 16; ++i) {
-					if (i == 12 && randomChance(0.5f)) {
-						chinaTrack.getStep(i).setActive(true);
-						chinaTrack.getStep(i).setVelocity(randomFloat(0.8f, 1.0f));
-					}
-					else if (i == 0 || i == 8) {
-						splashTrack.getStep(i).setActive(true);
-						splashTrack.getStep(i).setVelocity(randomFloat(0.7f, 0.9f));
-					}
-					else if (i == 2 || i == 10) {
+				if (randomChance(0.6f)) {
+					for (int i = 0; i < 16; i += 2) {
 						openHihatTrack.getStep(i).setActive(true);
-						openHihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
+						openHihatTrack.getStep(i).setVelocity(randomFloat(0.7f, 0.9f));
 					}
-					else {
-						hihatTrack.getStep(i).setActive(true);
-						hihatTrack.getStep(i).setVelocity(0.3f + (i % 4 == 0 ? 0.2f : 0.0f));
+				}
+				else {
+					for (int i = 0; i < 16; i += 2) {
+						crashTrack.getStep(i).setActive(true);
+						crashTrack.getStep(i).setVelocity(randomFloat(0.8f, 1.0f));
 					}
+				}
+				if (randomChance(0.4f)) {
+					splashTrack.getStep(4).setActive(true);
+					splashTrack.getStep(4).setVelocity(randomFloat(0.8f, 0.95f));
+					splashTrack.getStep(12).setActive(true);
+					splashTrack.getStep(12).setVelocity(randomFloat(0.8f, 0.95f));
 				}
 			}
 			break;
@@ -1447,13 +1453,13 @@ namespace BeatCrafter {
 			break;
 
 		case StyleType::Punk:
-			if (intensity <= 0.5f) {
+			if (intensity <= 0.4f) {
 				for (int i = 0; i < 16; i += 2) {
 					hihatTrack.getStep(i).setActive(true);
 					hihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
 				}
 			}
-			else if (intensity <= 0.7f) {
+			else if (intensity <= 0.5f) {
 				for (int i = 0; i < 16; ++i) {
 					hihatTrack.getStep(i).setActive(true);
 					hihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.7f));
@@ -1463,37 +1469,47 @@ namespace BeatCrafter {
 				openHihatTrack.getStep(14).setActive(true);
 				openHihatTrack.getStep(14).setVelocity(randomFloat(0.6f, 0.8f));
 			}
-			else if (intensity <= 0.9f) {
-				openHihatTrack.getStep(0).setActive(true);
-				openHihatTrack.getStep(0).setVelocity(randomFloat(0.7f, 0.9f));
-				openHihatTrack.getStep(4).setActive(true);
-				openHihatTrack.getStep(4).setVelocity(randomFloat(0.7f, 0.9f));
-				openHihatTrack.getStep(8).setActive(true);
-				openHihatTrack.getStep(8).setVelocity(randomFloat(0.7f, 0.9f));
-				openHihatTrack.getStep(12).setActive(true);
-				openHihatTrack.getStep(12).setVelocity(randomFloat(0.7f, 0.9f));
-			}
-			else {
-				openHihatTrack.getStep(0).setActive(true);
-				openHihatTrack.getStep(0).setVelocity(randomFloat(0.8f, 1.0f));
-				openHihatTrack.getStep(4).setActive(true);
-				openHihatTrack.getStep(4).setVelocity(randomFloat(0.8f, 1.0f));
-				openHihatTrack.getStep(8).setActive(true);
-				openHihatTrack.getStep(8).setVelocity(randomFloat(0.8f, 1.0f));
-				openHihatTrack.getStep(12).setActive(true);
-				openHihatTrack.getStep(12).setVelocity(randomFloat(0.8f, 1.0f));
-
-				splashTrack.getStep(0).setActive(true);
-				splashTrack.getStep(0).setVelocity(randomFloat(0.8f, 1.0f));
-				splashTrack.getStep(8).setActive(true);
-				splashTrack.getStep(8).setVelocity(randomFloat(0.8f, 1.0f));
-
-				if (randomChance(0.6f)) {
-					chinaTrack.getStep(4).setActive(true);
-					chinaTrack.getStep(4).setVelocity(randomFloat(0.8f, 1.0f));
+			else if (intensity <= 0.6f) {
+				for (int i = 0; i < 16; i += 1) {
+					openHihatTrack.getStep(i).setActive(true);
+					openHihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.8f));
 				}
 			}
-			break;
+			else if (intensity <= 0.7f) {
+				for (int i = 0; i < 16; i += 1) {
+					openHihatTrack.getStep(i).setActive(true);
+					openHihatTrack.getStep(i).setVelocity(randomFloat(0.5f, 0.8f));
+				}
+				splashTrack.getStep(2).setActive(true);
+				splashTrack.getStep(2).setVelocity(randomFloat(0.85f, 0.95f));
+				splashTrack.getStep(6).setActive(true);
+				splashTrack.getStep(6).setVelocity(randomFloat(0.85f, 0.95f));
+				splashTrack.getStep(10).setActive(true);
+				splashTrack.getStep(10).setVelocity(randomFloat(0.85f, 0.95f));
+				splashTrack.getStep(14).setActive(true);
+				splashTrack.getStep(14).setVelocity(randomFloat(0.85f, 0.95f));
+
+			}
+			else {
+				crashTrack.getStep(0).setActive(true);
+				crashTrack.getStep(0).setVelocity(randomFloat(0.85f, 0.95f));
+				crashTrack.getStep(4).setActive(true);
+				crashTrack.getStep(4).setVelocity(randomFloat(0.85f, 0.95f));
+				crashTrack.getStep(8).setActive(true);
+				crashTrack.getStep(8).setVelocity(randomFloat(0.85f, 0.95f));
+				crashTrack.getStep(12).setActive(true);
+				crashTrack.getStep(12).setVelocity(randomFloat(0.85f, 0.95f));
+
+				splashTrack.getStep(2).setActive(true);
+				splashTrack.getStep(2).setVelocity(randomFloat(0.85f, 0.95f));
+				splashTrack.getStep(6).setActive(true);
+				splashTrack.getStep(6).setVelocity(randomFloat(0.85f, 0.95f));
+				splashTrack.getStep(10).setActive(true);
+				splashTrack.getStep(10).setVelocity(randomFloat(0.85f, 0.95f));
+				splashTrack.getStep(14).setActive(true);
+				splashTrack.getStep(14).setVelocity(randomFloat(0.85f, 0.95f));
+
+			}
 			break;
 		}
 	}
@@ -1658,10 +1674,12 @@ namespace BeatCrafter {
 				snareTrack.getStep(12).setVelocity(0.8f);
 			}
 			else {
-				std::vector<int> breakPattern = { 4, 6, 10, 12, 14 };
-				for (int step : breakPattern) {
-					snareTrack.getStep(step).setActive(true);
-					snareTrack.getStep(step).setVelocity(randomFloat(0.7f, 0.9f));
+				auto& kickTrack = pattern.getTrack(0);
+				for (int i = 0; i < 16; i += 2) {
+					snareTrack.getStep(i).setActive(true);
+					snareTrack.getStep(i).setVelocity(randomFloat(0.85f, 0.95f));
+					kickTrack.getStep(i).setActive(true);
+					kickTrack.getStep(i).setVelocity(randomFloat(0.9f, 1.0f));
 				}
 			}
 			break;
