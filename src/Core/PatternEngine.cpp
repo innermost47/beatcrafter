@@ -55,11 +55,9 @@ namespace BeatCrafter
 
 		auto newPattern = std::make_unique<Pattern>("Generated " + juce::String(slot + 1));
 		StyleManager::generateBasicPattern(*newPattern, style);
-
-		if (complexity > 0.5f)
-		{
-			StyleManager::applyComplexityToPattern(*newPattern, style, complexity);
-		}
+		StyleManager::applyComplexityToPattern(*newPattern, style,
+			juce::jmax(0.1f, complexity),
+			slotRandomSeeds[slot]);
 
 		loadPatternToSlot(std::move(newPattern), slot);
 	}
@@ -72,19 +70,29 @@ namespace BeatCrafter
 		}
 	}
 
-	void PatternEngine::switchToSlot(int slot, bool immediate)
+	void PatternEngine::switchToSlot(int slot, bool immediate, float intensity)
 	{
-		if (slot >= 0 && slot < 8 && slots[slot])
+		if (slot < 0 || slot >= 8 || !slots[slot])
+			return;
+
+		if (intensity >= 0.0f)
+			currentIntensity = intensity;
+
+		intensityCacheValid = false;
+
+		if (immediate)
 		{
-			if (immediate)
+			if (isPlaying)
+				pendingImmediateSlot.store(slot);
+			else
 			{
 				activeSlot = slot;
 				queuedSlot = -1;
 			}
-			else
-			{
-				queuedSlot = slot;
-			}
+		}
+		else
+		{
+			queuedSlot = slot;
 		}
 	}
 
@@ -93,47 +101,60 @@ namespace BeatCrafter
 		double sampleRate,
 		const juce::AudioPlayHead::PositionInfo& posInfo)
 	{
-
 		midiMessages.clear();
-
 		if (!isPlaying || !slots[activeSlot])
 			return;
-
 		double bpm = posInfo.getBpm().orFallback(120.0);
 		double ppqPosition = posInfo.getPpqPosition().orFallback(0.0);
 		bool isPlayingDAW = posInfo.getIsPlaying();
-
 		if (!isPlayingDAW)
-		{
 			return;
-		}
-
 		double beatsPerSecond = bpm / 60.0;
 		double sixteenthsPerSecond = beatsPerSecond * 4.0;
 		samplesPerStep = static_cast<int>(sampleRate / sixteenthsPerSecond);
-
 		auto& pattern = *slots[activeSlot];
 		int patternLength = pattern.getLength();
-
 		double ppqPerStep = 0.25;
 		int currentStepFromPPQ = static_cast<int>(ppqPosition / ppqPerStep) % patternLength;
-
 		if (currentStepFromPPQ != pattern.getCurrentStep() ||
 			(currentStepFromPPQ == 0 && ppqPosition < 0.1))
 		{
-
 			pattern.setCurrentStep(currentStepFromPPQ);
-
-			if (queuedSlot >= 0 && currentStepFromPPQ == 0)
+			int pending = pendingImmediateSlot.exchange(-1);
+			if (pending >= 0)
 			{
+				sendAllNotesOff(midiMessages);
+				activeSlot = pending;
+				queuedSlot = -1;
+				intensityCacheValid = false;
+			}
+			else if (queuedSlot >= 0 && currentStepFromPPQ == 0)
+			{
+				sendAllNotesOff(midiMessages);
 				activeSlot = queuedSlot;
 				queuedSlot = -1;
+				intensityCacheValid = false;
 			}
-
-			generateMidiForStep(midiMessages, 0, pattern, currentStepFromPPQ);
+			generateMidiForStep(midiMessages, 0, *slots[activeSlot], currentStepFromPPQ);
 		}
-
 		lastPpqPosition = ppqPosition;
+		int displaySlot = pendingImmediateSlot.load() >= 0
+			? pendingImmediateSlot.load()
+			: activeSlot;
+		if (!intensityCacheValid && slots[displaySlot])
+		{
+			intensifiedPatternCache = applyIntensity(*slots[displaySlot], currentIntensity);
+			intensityCacheValid = true;
+		}
+	}
+
+	void PatternEngine::sendAllNotesOff(juce::MidiBuffer& midiMessages)
+	{
+		for (int ch = 1; ch <= 16; ++ch)
+		{
+			midiMessages.addEvent(juce::MidiMessage::allNotesOff(ch), 0);
+			midiMessages.addEvent(juce::MidiMessage::allSoundOff(ch), 0);
+		}
 	}
 
 	void PatternEngine::addLiveJamElements(Pattern& pattern, int stepIndex, float intensity)
@@ -228,42 +249,38 @@ namespace BeatCrafter
 		const Pattern& pattern,
 		int stepIndex)
 	{
-
-		Pattern intensifiedPattern = applyIntensity(pattern, currentIntensity);
-
-		if (liveJamMode && currentLiveJamIntensity > 0.1f)
+		if (currentIntensity != lastCachedIntensity || activeSlot != lastCachedSlot)
 		{
-			addLiveJamElements(intensifiedPattern, stepIndex, currentIntensity);
+			cachedIntensifiedPattern = applyIntensity(pattern, currentIntensity);
+			lastCachedIntensity = currentIntensity;
+			lastCachedSlot = activeSlot;
 		}
 
+		if (liveJamMode && currentLiveJamIntensity > 0.1f)
+			addLiveJamElements(cachedIntensifiedPattern, stepIndex, currentIntensity);
 
-		for (int trackIdx = 0; trackIdx < intensifiedPattern.getNumTracks(); ++trackIdx)
+		static std::mt19937 gen(std::random_device{}());
+		static std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+
+		for (int trackIdx = 0; trackIdx < cachedIntensifiedPattern.getNumTracks(); ++trackIdx)
 		{
-			const auto& track = intensifiedPattern.getTrack(trackIdx);
+			const auto& track = cachedIntensifiedPattern.getTrack(trackIdx);
 			const auto& step = track.getStep(stepIndex);
 
-			if (step.isActive())
+			if (step.isActive() && dis(gen) <= step.getProbability())
 			{
-				std::random_device rd;
-				std::mt19937 gen(rd());
-				std::uniform_real_distribution<> dis(0.0, 1.0);
+				int midiNote = track.getMidiNote();
+				int velocity = static_cast<int>(step.getVelocity() * 127.0f);
+				int timingOffset = static_cast<int>(step.getMicroTiming() * samplesPerStep * 0.1f);
+				int finalSamplePos = juce::jmax(0, samplePosition + timingOffset);
 
-				if (dis(gen) <= step.getProbability())
-				{
-					int midiNote = track.getMidiNote();
-					int velocity = static_cast<int>(step.getVelocity() * 127.0f);
-
-					int timingOffset = static_cast<int>(step.getMicroTiming() * samplesPerStep * 0.1f);
-					int finalSamplePos = juce::jmax(0, samplePosition + timingOffset);
-
-					auto noteOn = juce::MidiMessage::noteOn(10, midiNote, (juce::uint8)velocity);
-					midiMessages.addEvent(noteOn, finalSamplePos);
-
-					int noteLength = static_cast<int>(0.1 * 44100);
-					auto noteOff = juce::MidiMessage::noteOff(10, midiNote);
-					midiMessages.addEvent(noteOff, juce::jmin(finalSamplePos + noteLength,
+				midiMessages.addEvent(
+					juce::MidiMessage::noteOn(10, midiNote, (juce::uint8)velocity),
+					finalSamplePos);
+				midiMessages.addEvent(
+					juce::MidiMessage::noteOff(10, midiNote),
+					juce::jmin(finalSamplePos + (int)(0.1 * 44100),
 						samplePosition + samplesPerStep - 1));
-				}
 			}
 		}
 	}
@@ -278,17 +295,15 @@ namespace BeatCrafter
 	void PatternEngine::generateNewPattern(StyleType style, float complexity)
 	{
 		if (!slots[activeSlot])
-		{
 			slots[activeSlot] = std::make_unique<Pattern>("Generated");
-		}
 
 		auto& pattern = *slots[activeSlot];
-		pattern.setName("Generated " + juce::String((int)style));
 		StyleManager::generateBasicPattern(pattern, style);
 
-		if (complexity > 0.5f)
-		{
-			StyleManager::applyComplexityToPattern(pattern, style, complexity);
-		}
+		StyleManager::applyComplexityToPattern(pattern, style,
+			juce::jmax(0.1f, complexity),
+			slotRandomSeeds[activeSlot]);
+
+		intensityCacheValid = false;
 	}
 }

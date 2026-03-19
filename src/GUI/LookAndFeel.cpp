@@ -256,9 +256,17 @@ namespace BeatCrafter {
 		if (icon != nullptr) {
 			icon->drawWithin(g, iconArea.toFloat(), juce::RectanglePlacement::centred | juce::RectanglePlacement::onlyReduceInSize, 1.0f);
 		}
-		else if (isTicked) {
+		else if (isTicked)
+		{
 			g.setColour(isHighlighted ? backgroundDark : accent);
-			g.fillEllipse(iconArea.reduced(6).toFloat());
+			auto dotSize = 6.0f;
+			auto centre = iconArea.toFloat().getCentre();
+			g.fillEllipse(
+				centre.x - dotSize * 0.5f,
+				centre.y - dotSize * 0.5f,
+				dotSize,
+				dotSize
+			);
 		}
 
 		r.removeFromLeft(5);
@@ -270,21 +278,4 @@ namespace BeatCrafter {
 			g.drawText(shortcutKeyText, r, juce::Justification::centredRight, true);
 		}
 	}
-
-	juce::Font ModernLookAndFeel::getPopupMenuFont() {
-		return juce::Font(15.0f);
-	}
-
-	juce::Font ModernLookAndFeel::getComboBoxFont(juce::ComboBox&) {
-		return juce::Font(14.0f);
-	}
-
-	juce::Font ModernLookAndFeel::getLabelFont(juce::Label&) {
-		return juce::Font(14.0f);
-	}
-
-	juce::Font ModernLookAndFeel::getTextButtonFont(juce::TextButton&, int buttonHeight) {
-		return juce::Font(juce::jmin(15.0f, buttonHeight * 0.6f));
-	}
-
 }

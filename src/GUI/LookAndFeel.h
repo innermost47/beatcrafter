@@ -1,5 +1,6 @@
 #pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "BinaryData.h"
 
 namespace BeatCrafter {
 
@@ -7,6 +8,21 @@ namespace BeatCrafter {
 	public:
 		ModernLookAndFeel();
 		~ModernLookAndFeel() override = default;
+
+		static constexpr float fontSizeTitle = 28.0f;
+		static constexpr float fontSizeLabel = 18.0f;
+		static constexpr float fontSizeSmall = 11.0f;
+		static constexpr float fontSizeTiny = 10.0f;
+		static constexpr float fontSizeSlotButton = 18.0f;
+		static constexpr float fontSizeGridLabel = 16.0f;
+		static constexpr float fontSizeStepNumberLarge = 14.0f;
+		static constexpr float fontSizeStepNumberSmall = 12.0f;
+		static constexpr float fontSizeMidiLabel = 12.0f;
+
+		static constexpr int iconSizeMain = 36;
+		static constexpr int iconSizeMidi = 30;
+		static constexpr int iconPadding = 4;
+		static constexpr int iconPaddingHard = 6;
 
 		void drawButtonBackground(juce::Graphics& g,
 			juce::Button& button,
@@ -34,11 +50,6 @@ namespace BeatCrafter {
 			const juce::String& shortcutKeyText,
 			const juce::Drawable* icon, const juce::Colour* textColour) override;
 
-		juce::Font getPopupMenuFont();
-		juce::Font getComboBoxFont(juce::ComboBox&);
-		juce::Font getLabelFont(juce::Label&);
-		juce::Font getTextButtonFont(juce::TextButton&, int buttonHeight);
-
 		juce::Colour backgroundDark = juce::Colour(0xff1a1a1a);
 		juce::Colour backgroundMid = juce::Colour(0xff2d2d2d);
 		juce::Colour backgroundLight = juce::Colour(0xff404040);
@@ -56,6 +67,98 @@ namespace BeatCrafter {
 		juce::Colour slotEmpty = juce::Colour(0xff2d2d2d);
 		juce::Colour slotLoaded = juce::Colour(0xff404040);
 		juce::Colour slotActive = juce::Colour(0xff00bcd4);
-	};
 
+		std::unique_ptr<juce::Drawable> loadSVGWithColour(
+			const char* svgData, int svgSize, juce::Colour colour)
+		{
+			auto svgText = juce::String::fromUTF8(svgData, svgSize);
+
+			auto hexColour = colour.toDisplayString(false);
+			svgText = svgText.replace("stroke=\"currentColor\"",
+				"stroke=\"#" + hexColour + "\"");
+			svgText = svgText.replace("fill=\"currentColor\"",
+				"fill=\"#" + hexColour + "\"");
+
+			auto xml = juce::XmlDocument::parse(svgText);
+			if (xml)
+				return juce::Drawable::createFromSVG(*xml);
+			return nullptr;
+		}
+
+		void drawDrawableButton(juce::Graphics& g, juce::DrawableButton& button,
+			bool shouldDrawButtonAsHighlighted,
+			bool shouldDrawButtonAsDown) override
+		{
+			auto bounds = button.getLocalBounds().toFloat().reduced(0.5f);
+			auto cornerSize = 6.0f;
+
+			juce::Colour bg = backgroundMid;
+			if (button.getToggleState())        bg = accent;
+			else if (shouldDrawButtonAsDown)    bg = accentDark;
+			else if (shouldDrawButtonAsHighlighted) bg = backgroundLight.brighter(0.1f);
+
+			g.setColour(juce::Colours::black.withAlpha(0.2f));
+			g.fillRoundedRectangle(bounds.translated(0, 1), cornerSize);
+
+			g.setColour(bg);
+			g.fillRoundedRectangle(bounds, cornerSize);
+
+			g.setColour(button.getToggleState() ? accentLight : backgroundLight);
+			g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
+		}
+
+		juce::Label* createSliderTextBox(juce::Slider& slider) override
+		{
+			auto* label = juce::LookAndFeel_V4::createSliderTextBox(slider);
+			label->setColour(juce::Label::backgroundColourId, backgroundMid);
+			label->setColour(juce::Label::outlineColourId, backgroundLight);
+			return label;
+		}
+
+		juce::Font getPluginFont(float height = 14.0f)
+		{
+			if (pluginTypeface == nullptr)
+				pluginTypeface = juce::Typeface::createSystemTypefaceFor(
+					BinaryData::Exo2Regular_ttf,
+					BinaryData::Exo2Regular_ttfSize);
+			return juce::Font(pluginTypeface).withHeight(height);
+		}
+
+		juce::Font getBodyFont(float height = 14.0f)
+		{
+			if (bodyTypeface == nullptr)
+				bodyTypeface = juce::Typeface::createSystemTypefaceFor(
+					BinaryData::Exo2Regular_ttf,
+					BinaryData::Exo2Regular_ttfSize);
+			return juce::Font(bodyTypeface).withHeight(height);
+		}
+
+		juce::Font getLabelFont(juce::Label& label) override
+		{
+			auto customHeight = label.getProperties()["customFontHeight"];
+			if (!customHeight.isVoid())
+				return getBodyFont(static_cast<float>(customHeight));
+
+			return getBodyFont(fontSizeLabel);
+		}
+
+		juce::Font getComboBoxFont(juce::ComboBox&) override
+		{
+			return getBodyFont();
+		}
+
+		juce::Font getTextButtonFont(juce::TextButton&, int buttonHeight) override
+		{
+			return getBodyFont().withHeight(juce::jmin(14.0f, buttonHeight * 0.6f));
+		}
+
+		juce::Font getPopupMenuFont() override
+		{
+			return getBodyFont();
+		}
+
+	private:
+		juce::Typeface::Ptr pluginTypeface = nullptr;
+		juce::Typeface::Ptr bodyTypeface = nullptr;
+	};
 }

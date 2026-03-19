@@ -8,7 +8,7 @@ namespace BeatCrafter
 		: AudioProcessor(BusesProperties()
 			.withOutput("Output", juce::AudioChannelSet::stereo(), true))
 	{
-
+		setupDefaultMidiMappings();
 		addParameter(intensityParam = new juce::AudioParameterFloat(
 			"intensity", "Intensity", 0.0f, 1.0f, 0.5f));
 		addParameter(liveJamIntensityParam = new juce::AudioParameterFloat(
@@ -31,11 +31,14 @@ namespace BeatCrafter
 
 		for (int i = 0; i < 8; ++i)
 		{
-			if (slotStyleParams[i] != nullptr) {
+			if (slotStyleParams[i] != nullptr)
+			{
 				StyleType paramStyle = static_cast<StyleType>(slotStyleParams[i]->getIndex());
 				getPatternEngine().setSlotStyle(i, paramStyle);
 			}
 		}
+		patternEngine.setLiveJamMode(true);
+		liveJamModeState = true;
 	}
 
 	BeatCrafterProcessor::~BeatCrafterProcessor()
@@ -128,6 +131,7 @@ namespace BeatCrafter
 	void BeatCrafterProcessor::processMidi(juce::MidiBuffer& midiMessages)
 	{
 		juce::MidiBuffer processedMidi;
+		bool slotJustSwitched = false;
 
 		for (const auto metadata : midiMessages)
 		{
@@ -143,6 +147,11 @@ namespace BeatCrafter
 				}
 				else
 				{
+					if (slotJustSwitched &&
+						intensityMapping.isValid() && !intensityMapping.isNote &&
+						ccNumber == intensityMapping.ccNumber &&
+						channel == intensityMapping.channel)
+						continue;
 					processForCC(ccNumber, channel, value);
 				}
 			}
@@ -150,7 +159,6 @@ namespace BeatCrafter
 			{
 				int programNumber = message.getProgramChangeNumber();
 				int channel = message.getChannel() - 1;
-
 				if (midiLearnMode)
 				{
 					learnForPC(programNumber, channel);
@@ -158,6 +166,7 @@ namespace BeatCrafter
 				else
 				{
 					processPC(programNumber, channel);
+					slotJustSwitched = true;
 				}
 			}
 			else if (message.isNoteOn())
@@ -165,7 +174,6 @@ namespace BeatCrafter
 				int noteNumber = message.getNoteNumber();
 				int channel = message.getChannel() - 1;
 				int velocity = message.getVelocity();
-
 				if (midiLearnMode)
 				{
 					learnForNoteOn(noteNumber, channel);
@@ -173,6 +181,7 @@ namespace BeatCrafter
 				else
 				{
 					processMidiNoteOn(noteNumber, channel, velocity);
+					slotJustSwitched = true;
 				}
 			}
 			else
@@ -180,7 +189,6 @@ namespace BeatCrafter
 				processedMidi.addEvent(message, metadata.samplePosition);
 			}
 		}
-
 		midiMessages.swapWith(processedMidi);
 	}
 
@@ -193,43 +201,47 @@ namespace BeatCrafter
 				programNumber == slotMappings[i].ccNumber &&
 				channel == slotMappings[i].channel)
 			{
-				getPatternEngine().switchToSlot(i, true);
+				if (!getPatternEngine().getSlot(i))
+				{
+					StyleType style = getPatternEngine().getSlotStyle(i);
+					getPatternEngine().generateNewPatternForSlot(
+						i, style, intensityParam->get());
+				}
+
+				getPatternEngine().switchToSlot(i, true, intensityParam->get());
 				juce::MessageManager::callAsync([this, i]()
 					{
-						if (auto* editor = getActiveEditor()) {
-							if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
-								customEditor->updateSlotButtons(i);
-							}
-						} });
-						break;
+						if (auto* editor = getActiveEditor())
+							if (auto* ce = dynamic_cast<BeatCrafterEditor*>(editor))
+								ce->updateSlotButtons(i); });
+				break;
 			}
 		}
 	}
 
 	void BeatCrafterProcessor::processMidiNoteOn(int noteNumber, int channel, int velocity)
 	{
-		if (intensityMapping.isValid() && intensityMapping.isNote &&
-			noteNumber == intensityMapping.ccNumber &&
-			channel == intensityMapping.channel)
-		{
-			float newIntensity = velocity / 127.0f;
-			intensityParam->setValueNotifyingHost(newIntensity);
-		}
 		for (int i = 0; i < 8; ++i)
 		{
 			if (slotMappings[i].isValid() && slotMappings[i].isNote &&
 				noteNumber == slotMappings[i].ccNumber &&
 				channel == slotMappings[i].channel)
 			{
-				getPatternEngine().switchToSlot(i, true);
+				if (!getPatternEngine().getSlot(i))
+				{
+					StyleType style = getPatternEngine().getSlotStyle(i);
+					getPatternEngine().generateNewPatternForSlot(
+						i, style, intensityParam->get());
+				}
+				float dbgIntensity = intensityParam->get();
+				getPatternEngine().setIntensity(dbgIntensity);
+				getPatternEngine().switchToSlot(i, true, dbgIntensity);
 				juce::MessageManager::callAsync([this, i]()
 					{
-						if (auto* editor = getActiveEditor()) {
-							if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
-								customEditor->updateSlotButtons(i);
-							}
-						} });
-						break;
+						if (auto* editor = getActiveEditor())
+							if (auto* ce = dynamic_cast<BeatCrafterEditor*>(editor))
+								ce->updateSlotButtons(i); });
+				break;
 			}
 		}
 	}
@@ -292,6 +304,8 @@ namespace BeatCrafter
 
 	void BeatCrafterProcessor::processForCC(int ccNumber, int channel, int value)
 	{
+		if ((ccNumber == 0 || ccNumber == 32) && value == 0)
+			return;
 		if (intensityMapping.isValid() && !intensityMapping.isNote &&
 			ccNumber == intensityMapping.ccNumber &&
 			channel == intensityMapping.channel)
@@ -318,8 +332,7 @@ namespace BeatCrafter
 						if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
 							customEditor->updateLiveJamIntensitySlider(newLiveJamIntensity);
 						}
-					}
-				});
+					} });
 		}
 		for (int i = 0; i < 8; ++i)
 		{
@@ -329,7 +342,8 @@ namespace BeatCrafter
 			{
 				if (value >= 64)
 				{
-					getPatternEngine().switchToSlot(i, true);
+					getPatternEngine().setIntensity(intensityParam->get());
+					getPatternEngine().switchToSlot(i, true, intensityParam->get());
 					juce::MessageManager::callAsync([this, i]()
 						{
 							if (auto* editor = getActiveEditor()) {
@@ -611,7 +625,7 @@ namespace BeatCrafter
 				setupDefaultMidiMappings();
 			}
 			int activeSlot = tree.getProperty("activeSlot", 0);
-			getPatternEngine().switchToSlot(activeSlot, true);
+			getPatternEngine().switchToSlot(activeSlot, true, intensityParam->get());
 
 			updateEditorFromState();
 		}

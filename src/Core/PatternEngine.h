@@ -31,8 +31,9 @@ namespace BeatCrafter
 		}
 
 		void loadPatternToSlot(std::unique_ptr<Pattern> pattern, int slot);
-		void switchToSlot(int slot, bool immediate = false);
+		void switchToSlot(int slot, bool immediate = false, float intensity = -1.0f);
 		int getActiveSlot() const { return activeSlot; }
+		int getCurrentStep() const { return slots[activeSlot] ? slots[activeSlot]->getCurrentStep() : -1; }
 		void resetToStart();
 		void processBlock(juce::MidiBuffer& midiMessages,
 			int numSamples,
@@ -41,9 +42,13 @@ namespace BeatCrafter
 
 		void setIntensity(float intensity)
 		{
-			currentIntensity = intensity;
-			intensityCacheValid = false;
+			if (std::abs(currentIntensity - intensity) > 0.001f)
+			{
+				currentIntensity = intensity;
+				intensityCacheValid = false;
+			}
 		}
+
 		float getIntensity() const { return currentIntensity; }
 
 		void start();
@@ -54,11 +59,6 @@ namespace BeatCrafter
 
 		const Pattern* getDisplayPattern() const
 		{
-			if (!intensityCacheValid && slots[activeSlot])
-			{
-				intensifiedPatternCache = applyIntensity(*slots[activeSlot], currentIntensity);
-				intensityCacheValid = true;
-			}
 			return &intensifiedPatternCache;
 		}
 
@@ -74,15 +74,6 @@ namespace BeatCrafter
 			if (slot >= 0 && slot < 8)
 			{
 				slotStyles[slot] = style;
-			}
-		}
-
-		void clearCurrentPattern()
-		{
-			if (slots[activeSlot])
-			{
-				slots[activeSlot]->clear();
-				setIntensity(0.0f);
 			}
 		}
 
@@ -130,6 +121,7 @@ namespace BeatCrafter
 			}
 		}
 		void setLiveJamMode(bool enabled) { liveJamMode = enabled; }
+		void invalidateCache() { intensityCacheValid = false; }
 
 	private:
 		std::array<std::unique_ptr<Pattern>, 8> slots;
@@ -144,7 +136,7 @@ namespace BeatCrafter
 		mutable bool intensityCacheValid = false;
 		Pattern dummyPattern{ "Empty" };
 
-		float currentIntensity = 0.5f;
+		float currentIntensity = -1.0f;
 		bool isPlaying = false;
 
 		double lastPpqPosition = 0.0;
@@ -155,11 +147,18 @@ namespace BeatCrafter
 		juce::Random liveJamRandom;
 		int stepsSinceLastJam = 0;
 
+		std::atomic<int> pendingImmediateSlot{ -1 };
+
+		mutable Pattern cachedIntensifiedPattern;
+		mutable float lastCachedIntensity = -1.0f;
+		mutable int lastCachedSlot = -1;
+
 		void generateMidiForStep(juce::MidiBuffer& midiMessages,
 			int samplePosition,
 			const Pattern& pattern,
 			int stepIndex);
 		void applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity);
 		void addLiveJamElements(Pattern& pattern, int stepIndex, float intensity);
+		void sendAllNotesOff(juce::MidiBuffer& midiMessages);
 	};
 }

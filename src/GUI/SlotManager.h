@@ -3,41 +3,47 @@
 #include "../Core/PatternEngine.h"
 #include "LookAndFeel.h"
 
-namespace BeatCrafter {
+namespace BeatCrafter
+{
 
-	class SlotButton : public juce::TextButton {
+	class SlotButton : public juce::TextButton
+	{
 	public:
-		SlotButton(int slotNumber) : slotNumber(slotNumber) {
+		SlotButton(int slotNumber) : slotNumber(slotNumber)
+		{
 			setButtonText(juce::String(slotNumber + 1));
 		}
 
-		void setSlotState(bool hasPattern, bool isActive) {
+		void setSlotState(bool hasPattern, bool isActive)
+		{
 			this->hasPattern = hasPattern;
 			this->isActive = isActive;
 			repaint();
 		}
 
-		void paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted,
-			bool shouldDrawButtonAsDown) override;
+		void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
+						 bool shouldDrawButtonAsDown) override;
 
 	private:
 		int slotNumber;
 		bool hasPattern = false;
 		bool isActive = false;
-		ModernLookAndFeel* lookAndFeel = nullptr;
+		ModernLookAndFeel *lookAndFeel = nullptr;
 	};
 
-	class SlotManager : public juce::Component {
+	class SlotManager : public juce::Component
+	{
 	public:
-		SlotManager(PatternEngine& engine);
+		SlotManager(PatternEngine &engine);
 		~SlotManager() override = default;
 
 		void resized() override;
 		void updateSlotStates();
 		std::function<void(int slot)> onSlotChanged;
+		std::function<float()> getIntensity;
 
 	private:
-		PatternEngine& patternEngine;
+		PatternEngine &patternEngine;
 		std::array<std::unique_ptr<SlotButton>, 8> slotButtons;
 		juce::String styleTypeToString(StyleType style);
 		void onSlotClicked(int slot);

@@ -1,37 +1,46 @@
 #include "SlotManager.h"
 
-namespace BeatCrafter {
+namespace BeatCrafter
+{
 
-	void SlotButton::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted,
-		bool shouldDrawButtonAsDown) {
-		if (!lookAndFeel) {
-			lookAndFeel = dynamic_cast<ModernLookAndFeel*>(&getLookAndFeel());
+	void SlotButton::paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
+								 bool shouldDrawButtonAsDown)
+	{
+		if (!lookAndFeel)
+		{
+			lookAndFeel = dynamic_cast<ModernLookAndFeel *>(&getLookAndFeel());
 		}
 
 		auto bounds = getLocalBounds().toFloat().reduced(2);
 
 		juce::Colour bgColour;
-		if (isActive) {
+		if (isActive)
+		{
 			bgColour = lookAndFeel->slotActive;
 		}
-		else if (hasPattern) {
+		else if (hasPattern)
+		{
 			bgColour = lookAndFeel->slotLoaded;
 		}
-		else {
+		else
+		{
 			bgColour = lookAndFeel->slotEmpty;
 		}
 
-		if (shouldDrawButtonAsDown) {
+		if (shouldDrawButtonAsDown)
+		{
 			bgColour = bgColour.darker(0.3f);
 		}
-		else if (shouldDrawButtonAsHighlighted) {
+		else if (shouldDrawButtonAsHighlighted)
+		{
 			bgColour = bgColour.brighter(0.3f);
 		}
 
 		g.setColour(bgColour);
 		g.fillRoundedRectangle(bounds, 6.0f);
 
-		if (isActive) {
+		if (isActive)
+		{
 			g.setColour(lookAndFeel->accent);
 			g.drawRoundedRectangle(bounds, 6.0f, 3.0f);
 
@@ -39,18 +48,18 @@ namespace BeatCrafter {
 			g.drawRoundedRectangle(bounds.expanded(2), 8.0f, 2.0f);
 		}
 
-		g.setColour(isActive ? juce::Colours::black :
-			hasPattern ? juce::Colours::white :
-			lookAndFeel->textDimmed);
-		g.setFont(16.0f);
+		g.setColour(isActive ? juce::Colours::black : hasPattern ? juce::Colours::white
+																 : lookAndFeel->textDimmed);
+		g.setFont(lookAndFeel->getPluginFont(ModernLookAndFeel::fontSizeSlotButton));
 		g.drawText(getButtonText(), bounds, juce::Justification::centred);
 
 		float ledSize = 10.0f;
 		auto ledBounds = juce::Rectangle<float>(bounds.getRight() - ledSize - 4,
-			bounds.getY() + 4,
-			ledSize, ledSize);
+												bounds.getY() + 4,
+												ledSize, ledSize);
 
-		if (isActive) {
+		if (isActive)
+		{
 			g.setColour(lookAndFeel->accent.withAlpha(0.5f));
 			g.fillEllipse(ledBounds.expanded(3));
 
@@ -60,51 +69,71 @@ namespace BeatCrafter {
 			g.setColour(juce::Colours::white);
 			g.fillEllipse(ledBounds.reduced(3));
 		}
-		else if (hasPattern) {
+		else if (hasPattern)
+		{
 			g.setColour(lookAndFeel->slotLoaded.brighter());
 			g.fillEllipse(ledBounds);
 		}
 	}
 
-	SlotManager::SlotManager(PatternEngine& engine) : patternEngine(engine) {
-		for (int i = 0; i < 8; ++i) {
+	SlotManager::SlotManager(PatternEngine &engine) : patternEngine(engine)
+	{
+		for (int i = 0; i < 8; ++i)
+		{
 			StyleType slotStyle = patternEngine.getSlotStyle(i);
 			slotButtons[i] = std::make_unique<SlotButton>(i);
 			slotButtons[i]->setButtonText(styleTypeToString(slotStyle));
-			slotButtons[i]->onClick = [this, i]() { onSlotClicked(i); };
+			slotButtons[i]->onClick = [this, i]()
+			{ onSlotClicked(i); };
+			slotButtons[i]->setMouseCursor(juce::MouseCursor::PointingHandCursor);
 			addAndMakeVisible(slotButtons[i].get());
 		}
 
 		updateSlotStates();
 	}
 
-	juce::String SlotManager::styleTypeToString(StyleType style) {
-		switch (style) {
-		case StyleType::Rock: return "Rock";
-		case StyleType::Metal: return "Metal";
-		case StyleType::Jazz: return "Jazz";
-		case StyleType::Funk: return "Funk";
-		case StyleType::Electronic: return "Electronic";
-		case StyleType::HipHop: return "Hip Hop";
-		case StyleType::Latin: return "Latin";
-		case StyleType::Punk: return "Punk";
-		default: return "Unknown";
+	juce::String SlotManager::styleTypeToString(StyleType style)
+	{
+		switch (style)
+		{
+		case StyleType::Rock:
+			return "Rock";
+		case StyleType::Metal:
+			return "Metal";
+		case StyleType::Jazz:
+			return "Jazz";
+		case StyleType::Funk:
+			return "Funk";
+		case StyleType::Electronic:
+			return "Electronic";
+		case StyleType::HipHop:
+			return "Hip Hop";
+		case StyleType::Latin:
+			return "Latin";
+		case StyleType::Punk:
+			return "Punk";
+		default:
+			return "Unknown";
 		}
 	}
 
-	void SlotManager::resized() {
+	void SlotManager::resized()
+	{
 		auto bounds = getLocalBounds();
 		int buttonSize = bounds.getWidth() / 8;
 
-		for (int i = 0; i < 8; ++i) {
+		for (int i = 0; i < 8; ++i)
+		{
 			slotButtons[i]->setBounds(i * buttonSize, 0, buttonSize, bounds.getHeight());
 		}
 	}
 
-	void SlotManager::updateSlotStates() {
+	void SlotManager::updateSlotStates()
+	{
 		int activeSlot = patternEngine.getActiveSlot();
 
-		for (int i = 0; i < 8; ++i) {
+		for (int i = 0; i < 8; ++i)
+		{
 			bool hasPattern = patternEngine.getSlot(i) != nullptr;
 			bool isActive = (i == activeSlot);
 			slotButtons[i]->setSlotState(hasPattern, isActive);
@@ -113,18 +142,17 @@ namespace BeatCrafter {
 		}
 	}
 
-	void SlotManager::onSlotClicked(int slot) {
-		if (!patternEngine.getSlot(slot)) {
-			StyleType slotStyle = patternEngine.getSlotStyle(slot);
-			patternEngine.generateNewPatternForSlot(slot, slotStyle, 0.5f);
-		}
+	void SlotManager::onSlotClicked(int slot)
+	{
+		float currentIntensity = getIntensity ? getIntensity() : 0.5f;
+		StyleType slotStyle = patternEngine.getSlotStyle(slot);
 
-		patternEngine.switchToSlot(slot, true);
+		if (!patternEngine.getSlot(slot))
+			patternEngine.generateNewPatternForSlot(slot, slotStyle, currentIntensity);
+
+		patternEngine.switchToSlot(slot, true, getIntensity ? getIntensity() : 0.5f);
 		updateSlotStates();
-
-		if (onSlotChanged) {
+		if (onSlotChanged)
 			onSlotChanged(slot);
-		}
 	}
-
 }

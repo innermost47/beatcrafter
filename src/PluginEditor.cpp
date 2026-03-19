@@ -2,9 +2,15 @@
 
 namespace BeatCrafter
 {
-
-	BeatCrafterEditor::BeatCrafterEditor(BeatCrafterProcessor& p)
-		: AudioProcessorEditor(&p), processor(p)
+	BeatCrafterEditor::BeatCrafterEditor(BeatCrafterProcessor &p)
+		: AudioProcessorEditor(&p),
+		  processor(p),
+		  intensityMidiLearnButton("IntensityMidi",
+								   BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
+								   modernLookAndFeel),
+		  liveJamIntensityMidiLearnButton("LiveJamMidi",
+										  BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
+										  modernLookAndFeel)
 	{
 		tooltipWindow = std::make_unique<juce::TooltipWindow>(this);
 		setLookAndFeel(&modernLookAndFeel);
@@ -22,6 +28,7 @@ namespace BeatCrafter
 
 	void BeatCrafterEditor::setupComponents()
 	{
+		processor.setLiveJamMode(true);
 		patternGrid = std::make_unique<PatternGrid>();
 		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
 		patternGrid->setPatternEngine(&processor.getPatternEngine());
@@ -29,54 +36,37 @@ namespace BeatCrafter
 
 		slotManager = std::make_unique<SlotManager>(processor.getPatternEngine());
 		slotManager->onSlotChanged = [this](int slot)
-			{
-				updateStyleComboForCurrentSlot();
-				patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
-				patternGrid->repaint();
-			};
+		{
+			updateStyleComboForCurrentSlot();
+			patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
+			patternGrid->repaint();
+		};
+		slotManager->getIntensity = [this]()
+		{
+			return processor.intensityParam->get();
+		};
 		addAndMakeVisible(slotManager.get());
 
 		for (int i = 0; i < 8; ++i)
 		{
-			slotMidiLearnButtons[i].setButtonText("LEARN");
-			slotMidiLearnButtons[i].onClick = [this, i]()
-				{ onSlotMidiLearnClicked(i); };
-			addAndMakeVisible(slotMidiLearnButtons[i]);
+			slotMidiLearnButtons[i] = std::make_unique<IconButton>(
+				"SlotMidi" + juce::String(i),
+				BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
+				modernLookAndFeel);
+			slotMidiLearnButtons[i]->onClick = [this, i]()
+			{ onSlotMidiLearnClicked(i); };
+			slotMidiLearnButtons[i]->setTooltip("Assign a MIDI CC to slot " + juce::String(i + 1));
+			addAndMakeVisible(slotMidiLearnButtons[i].get());
 
 			slotMidiLabels[i].setText("--", juce::dontSendNotification);
-			slotMidiLabels[i].setFont(juce::Font(8.0f));
+			slotMidiLabels[i].getProperties().set("customFontHeight",
+												  ModernLookAndFeel::fontSizeMidiLabel);
 			slotMidiLabels[i].setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
+			slotMidiLearnButtons[i]->setMouseCursor(juce::MouseCursor::PointingHandCursor);
+			slotMidiLearnButtons[i]->setIconPadding(ModernLookAndFeel::iconPadding);
 			addAndMakeVisible(slotMidiLabels[i]);
 		}
-
 		updateMidiLearnButtons();
-
-		intensitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
-		intensitySlider.setRange(0.0, 1.0, 0.01);
-		intensitySlider.setValue(processor.intensityParam->get(), juce::dontSendNotification);
-		intensitySlider.onValueChange = [this]()
-			{
-				processor.intensityParam->setValueNotifyingHost(intensitySlider.getValue());
-				updatePatternDisplay();
-			};
-		addAndMakeVisible(intensitySlider);
-
-		intensityLabel.setText("Intensity", juce::dontSendNotification);
-		intensityLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textColour);
-		addAndMakeVisible(intensityLabel);
-
-		intensityLabel.setText("Intensity", juce::dontSendNotification);
-		intensityLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textColour);
-		addAndMakeVisible(intensityLabel);
-
-		intensityMidiLearnButton.onClick = [this]()
-			{ onIntensityMidiLearnClicked(); };
-		addAndMakeVisible(intensityMidiLearnButton);
-
-		intensityMidiLabel.setText("Not mapped", juce::dontSendNotification);
-		intensityMidiLabel.setFont(juce::Font(10.0f));
-		intensityMidiLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
-		addAndMakeVisible(intensityMidiLabel);
 
 		styleCombo.addItem("Rock", 1);
 		styleCombo.addItem("Metal", 2);
@@ -86,123 +76,122 @@ namespace BeatCrafter
 		styleCombo.addItem("HipHop", 6);
 		styleCombo.addItem("Latin", 7);
 		styleCombo.addItem("Punk", 8);
-
 		updateStyleComboForCurrentSlot();
-
 		styleCombo.onChange = [this]()
-			{
-				int selectedStyle = styleCombo.getSelectedId() - 1;
-				int currentSlot = processor.getPatternEngine().getActiveSlot();
-				float normalized = selectedStyle / (float)(processor.slotStyleParams[currentSlot]->choices.size() - 1);
-				processor.slotStyleParams[currentSlot]->setValueNotifyingHost(normalized);
-				processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(selectedStyle));
-				onGenerateClicked();
-			};
+		{
+			int selectedStyle = styleCombo.getSelectedId() - 1;
+			int currentSlot = processor.getPatternEngine().getActiveSlot();
+			float normalized = selectedStyle / (float)(processor.slotStyleParams[currentSlot]->choices.size() - 1);
+			processor.slotStyleParams[currentSlot]->setValueNotifyingHost(normalized);
+			processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(selectedStyle));
+
+			processor.getPatternEngine().generateNewPatternForSlot(
+				currentSlot,
+				static_cast<StyleType>(selectedStyle),
+				processor.intensityParam->get());
+			processor.getPatternEngine().invalidateCache();
+		};
 		addAndMakeVisible(styleCombo);
 
 		styleLabel.setText("Style", juce::dontSendNotification);
 		styleLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textColour);
 		addAndMakeVisible(styleLabel);
 
-		generateButton.onClick = [this]()
-			{ onGenerateClicked(); };
-		addAndMakeVisible(generateButton);
+		intensitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
+		intensitySlider.setRange(0.0, 1.0, 0.01);
+		intensitySlider.setValue(processor.intensityParam->get(), juce::dontSendNotification);
+		intensitySlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+		intensitySlider.onValueChange = [this]()
+		{
+			processor.intensityParam->setValueNotifyingHost(intensitySlider.getValue());
+			updatePatternDisplay();
+		};
+		addAndMakeVisible(intensitySlider);
 
-		clearButton.onClick = [this]()
-			{ onClearClicked(); };
-		addAndMakeVisible(clearButton);
+		intensityLabel.setText("Intensity", juce::dontSendNotification);
+		intensityLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textColour);
+		addAndMakeVisible(intensityLabel);
 
-		resetMidiMappingsButton.onClick = [this]()
-			{ onResetMidiMappingsClicked(); };
-		addAndMakeVisible(resetMidiMappingsButton);
+		intensityMidiLearnButton.onClick = [this]()
+		{ onIntensityMidiLearnClicked(); };
+		intensityMidiLearnButton.setTooltip("Assign a MIDI CC to the intensity");
+		addAndMakeVisible(intensityMidiLearnButton);
 
-		liveJamButton.onClick = [this]() { onLiveJamToggled(); };
-		liveJamButton.setTooltip("Enables Live Jam mode: Automatically adds random elements "
-			" during playback (kicks, snares, crashes, etc.) based on the intensity");
-		addAndMakeVisible(liveJamButton);
+		intensityMidiLabel.setText("Not mapped", juce::dontSendNotification);
+		intensityMidiLabel.setFont(juce::Font(10.0f));
+		intensityMidiLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
+		addAndMakeVisible(intensityMidiLabel);
 
 		liveJamIntensitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
 		liveJamIntensitySlider.setRange(0.0, 1.0, 0.01);
 		liveJamIntensitySlider.setValue(processor.liveJamIntensityParam->get(), juce::dontSendNotification);
+		liveJamIntensitySlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
 		liveJamIntensitySlider.onValueChange = [this]()
-			{
-				processor.liveJamIntensityParam->setValueNotifyingHost(liveJamIntensitySlider.getValue());
-			};
+		{
+			processor.liveJamIntensityParam->setValueNotifyingHost(liveJamIntensitySlider.getValue());
+		};
 		addAndMakeVisible(liveJamIntensitySlider);
 
-		liveJamIntensityLabel.setText("Live Jam Intensity", juce::dontSendNotification);
+		liveJamIntensityLabel.setText("Chaos", juce::dontSendNotification);
 		liveJamIntensityLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textColour);
 		addAndMakeVisible(liveJamIntensityLabel);
 
 		liveJamIntensityMidiLearnButton.onClick = [this]()
-			{ onLiveJamIntensityMidiLearnClicked(); };
+		{ onLiveJamIntensityMidiLearnClicked(); };
+		liveJamIntensityMidiLearnButton.setTooltip("Assign a MIDI CC to Chaos");
 		addAndMakeVisible(liveJamIntensityMidiLearnButton);
 
 		liveJamIntensityMidiLabel.setText("Not mapped", juce::dontSendNotification);
 		liveJamIntensityMidiLabel.setFont(juce::Font(10.0f));
 		liveJamIntensityMidiLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
 		addAndMakeVisible(liveJamIntensityMidiLabel);
+
+		intensitySlider.setMouseCursor(juce::MouseCursor::PointingHandCursor);
+		liveJamIntensitySlider.setMouseCursor(juce::MouseCursor::PointingHandCursor);
+		styleCombo.setMouseCursor(juce::MouseCursor::PointingHandCursor);
 	}
 
-	void BeatCrafterEditor::updateStyleComboForCurrentSlot()
-	{
-		int currentSlot = processor.getPatternEngine().getActiveSlot();
-		int styleFromParam = processor.slotStyleParams[currentSlot]->getIndex();
-		StyleType styleFromEngine = processor.getPatternEngine().getSlotStyle(currentSlot);
-		if (static_cast<int>(styleFromEngine) != styleFromParam)
-		{
-			processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(styleFromParam));
-		}
-		styleCombo.setSelectedId(styleFromParam + 1, juce::dontSendNotification);
-	}
-
-	void BeatCrafterEditor::updatePatternDisplay()
-	{
-		auto& engine = processor.getPatternEngine();
-		float currentIntensity = processor.intensityParam->get();
-		static float lastIntensity = -1.0f;
-		if (currentIntensity != lastIntensity)
-		{
-			engine.regenerateSlotSeed(engine.getActiveSlot());
-			lastIntensity = currentIntensity;
-		}
-
-		engine.setIntensity(currentIntensity);
-		patternGrid->updateWithIntensity(*engine.getDisplayPattern());
-	}
-
-	void BeatCrafterEditor::paint(juce::Graphics& g)
+	void BeatCrafterEditor::paint(juce::Graphics &g)
 	{
 		g.fillAll(modernLookAndFeel.backgroundDark);
+
+		auto typeface = juce::Typeface::createSystemTypefaceFor(
+			BinaryData::AudiowideRegular_ttf,
+			BinaryData::AudiowideRegular_ttfSize);
+		juce::Font titleFont(typeface);
+		titleFont = titleFont.withHeight(31.0f);
+
 		g.setColour(modernLookAndFeel.accent);
-		g.setFont(24.0f);
-		g.drawText("BEATCRAFTER", 20, 10, 200, 30, juce::Justification::left);
+		g.setFont(titleFont);
+		g.drawText("BEATCRAFTER", 20, 8, 250, 35, juce::Justification::left);
+
 		g.setColour(modernLookAndFeel.textDimmed);
-		g.setFont(10.0f);
-		g.drawText("v0.1.0", 220, 20, 50, 20, juce::Justification::left);
+		g.setFont(juce::Font(10.0f));
+		g.drawText("v0.1.1", 240, 18, 50, 20, juce::Justification::left);
 	}
 
 	void BeatCrafterEditor::resized()
 	{
 		auto bounds = getLocalBounds();
 
-		auto topArea = bounds.removeFromTop(100);
+		auto topArea = bounds.removeFromTop(130);
 		topArea.removeFromTop(40);
 
 		auto controlsArea = topArea.reduced(20, 0);
 
-		styleLabel.setBounds(controlsArea.removeFromLeft(40));
-		styleCombo.setBounds(controlsArea.removeFromLeft(120).reduced(0, 10));
-		controlsArea.removeFromLeft(20);
+		auto line1 = controlsArea.removeFromTop(40);
+		styleLabel.setBounds(line1.removeFromLeft(40));
+		styleCombo.setBounds(line1.removeFromLeft(180).reduced(0, 8));
+		line1.removeFromLeft(20);
+		intensityLabel.setBounds(line1.removeFromLeft(80));
+		intensityMidiLearnButton.setBounds(line1.removeFromRight(30).reduced(2, 5));
+		intensitySlider.setBounds(line1.reduced(0, 10));
 
-		generateButton.setBounds(controlsArea.removeFromLeft(80).reduced(0, 10));
-		controlsArea.removeFromLeft(10);
-		clearButton.setBounds(controlsArea.removeFromLeft(80).reduced(0, 10));
-		controlsArea.removeFromLeft(10);
-		liveJamButton.setBounds(controlsArea.removeFromLeft(80).reduced(0, 10));
-
-		auto resetMidiArea = topArea.removeFromRight(120);
-		resetMidiMappingsButton.setBounds(resetMidiArea.reduced(5, 10));
+		auto line2 = controlsArea.removeFromTop(40);
+		line2.removeFromLeft(240);
+		liveJamIntensityLabel.setBounds(line2.removeFromLeft(80));
+		liveJamIntensityMidiLearnButton.setBounds(line2.removeFromRight(30).reduced(2, 5));
+		liveJamIntensitySlider.setBounds(line2.reduced(0, 10));
 
 		auto slotAreaWithMidi = bounds.removeFromTop(100);
 		auto slotArea = slotAreaWithMidi.removeFromTop(60);
@@ -214,62 +203,11 @@ namespace BeatCrafter
 		{
 			auto slotBounds = slotMidiArea.removeFromLeft(slotWidth).reduced(1, 0);
 			auto buttonArea = slotBounds.removeFromTop(20);
-			slotMidiLearnButtons[i].setBounds(buttonArea);
+			slotMidiLearnButtons[i]->setBounds(buttonArea);
 			slotMidiLabels[i].setBounds(slotBounds);
 		}
 
-
-		auto intensityAreaTotal = bounds.removeFromBottom(120);
-
-		auto intensityArea = intensityAreaTotal.removeFromTop(50);
-		intensityLabel.setBounds(intensityArea.removeFromLeft(120).reduced(20, 0));
-		intensityMidiLearnButton.setBounds(intensityArea.removeFromRight(60).reduced(5, 5));
-		intensitySlider.setBounds(intensityArea.reduced(20, 15));
-
-		auto intensityMidiArea = intensityAreaTotal.removeFromTop(20);
-		intensityMidiLabel.setBounds(intensityMidiArea.removeFromLeft(200).reduced(100, 0));
-
-		auto liveJamIntensityArea = intensityAreaTotal.removeFromTop(50);
-		liveJamIntensityLabel.setBounds(liveJamIntensityArea.removeFromLeft(120).reduced(20, 0));
-		liveJamIntensityMidiLearnButton.setBounds(liveJamIntensityArea.removeFromRight(60).reduced(5, 5));
-		liveJamIntensitySlider.setBounds(liveJamIntensityArea.reduced(20, 15));
-
-		auto liveJamIntensityMidiArea = intensityAreaTotal.removeFromTop(20);
-		liveJamIntensityMidiLabel.setBounds(liveJamIntensityMidiArea.removeFromLeft(200).reduced(100, 0));
-
 		patternGrid->setBounds(bounds.reduced(20, 10));
-	}
-
-	void BeatCrafterEditor::onLiveJamIntensityMidiLearnClicked()
-	{
-		if (processor.isMidiLearning())
-		{
-			processor.stopMidiLearn();
-		}
-		else if (processor.hasMidiMapping(2, -1))
-		{
-			processor.clearMidiMapping(2, -1);
-		}
-		else
-		{
-			processor.startMidiLearn(2, -1);
-		}
-		updateMidiLearnButtons();
-	}
-
-	void BeatCrafterEditor::onLiveJamToggled()
-	{
-		isLiveJamActive = liveJamButton.getToggleState();
-		processor.setLiveJamMode(isLiveJamActive);
-
-		if (isLiveJamActive)
-		{
-			liveJamButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::red);
-		}
-		else
-		{
-			liveJamButton.setColour(juce::ToggleButton::tickColourId, modernLookAndFeel.accent);
-		}
 	}
 
 	void BeatCrafterEditor::timerCallback()
@@ -280,146 +218,150 @@ namespace BeatCrafter
 		updateMidiLearnButtons();
 	}
 
-	void BeatCrafterEditor::onResetMidiMappingsClicked()
+	void BeatCrafterEditor::updatePatternDisplay()
 	{
-		if (processor.isMidiLearning())
-		{
-			processor.stopMidiLearn();
-		}
-		processor.setupDefaultMidiMappings();
-		updateMidiLearnButtons();
-		updateIntensitySlider(processor.intensityParam->get());
+		auto &engine = processor.getPatternEngine();
+		engine.setIntensity(processor.intensityParam->get());
+		engine.invalidateCache();
+		patternGrid->setPattern(engine.getDisplayPattern());
+		patternGrid->repaint();
 	}
 
-	void BeatCrafterEditor::onGenerateClicked()
+	void BeatCrafterEditor::updateStyleComboForCurrentSlot()
 	{
 		int currentSlot = processor.getPatternEngine().getActiveSlot();
-		auto style = static_cast<StyleType>(processor.slotStyleParams[currentSlot]->getIndex());
-		float complexity = processor.intensityParam->get();
-		processor.getPatternEngine().generateNewPattern(style, complexity);
-		patternGrid->repaint();
-	}
-
-	void BeatCrafterEditor::onClearClicked()
-	{
-		processor.getPatternEngine().clearCurrentPattern();
-		intensitySlider.setValue(0.0f, juce::dontSendNotification);
-		processor.intensityParam->setValueNotifyingHost(0.0f);
-		patternGrid->repaint();
+		int styleFromParam = processor.slotStyleParams[currentSlot]->getIndex();
+		StyleType styleFromEngine = processor.getPatternEngine().getSlotStyle(currentSlot);
+		if (static_cast<int>(styleFromEngine) != styleFromParam)
+			processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(styleFromParam));
+		styleCombo.setSelectedId(styleFromParam + 1, juce::dontSendNotification);
 	}
 
 	void BeatCrafterEditor::updateMidiLearnButtons()
 	{
 		if (processor.isMidiLearning() && processor.getMidiLearnTarget() == 0)
 		{
-			intensityMidiLearnButton.setButtonText("LISTENING...");
-			intensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+			intensityMidiLearnButton.setIconFromSVG(
+				BinaryData::broadcast_svg, BinaryData::broadcast_svgSize,
+				juce::Colours::white, juce::Colours::red.darker(0.3f));
+			intensityMidiLearnButton.setTooltip("Click to cancel listening");
 		}
 		else if (processor.hasMidiMapping(0, -1))
 		{
-			intensityMidiLearnButton.setButtonText("UNLEARN");
-			intensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+			intensityMidiLearnButton.setIconFromSVG(
+				BinaryData::linksimplebreak_svg, BinaryData::linksimplebreak_svgSize,
+				juce::Colours::white, juce::Colours::green.darker(0.4f));
+			intensityMidiLearnButton.setTooltip(processor.getMidiMappingDescription(0, -1));
 		}
 		else
 		{
-			intensityMidiLearnButton.setButtonText("LEARN");
-			intensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, modernLookAndFeel.backgroundMid);
+			intensityMidiLearnButton.setIconFromSVG(
+				BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
+				modernLookAndFeel.textDimmed, modernLookAndFeel.backgroundMid);
+			intensityMidiLearnButton.setTooltip("Assign a MIDI CC to the intensity");
 		}
-
-		intensityMidiLabel.setText(processor.getMidiMappingDescription(0, -1), juce::dontSendNotification);
+		intensityMidiLabel.setText(
+			processor.getMidiMappingDescription(0, -1), juce::dontSendNotification);
 
 		for (int i = 0; i < 8; ++i)
 		{
+			auto &btn = *slotMidiLearnButtons[i];
 			if (processor.isMidiLearning() && processor.getMidiLearnTarget() >= 1 && processor.getMidiLearnSlot() == i)
 			{
-				slotMidiLearnButtons[i].setButtonText("!");
-				slotMidiLearnButtons[i].setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+				btn.setIconFromSVG(
+					BinaryData::broadcast_svg, BinaryData::broadcast_svgSize,
+					juce::Colours::white, juce::Colours::red.darker(0.3f));
+				btn.setTooltip("Click to cancel listening");
 			}
 			else if (processor.hasMidiMapping(1, i))
 			{
-				slotMidiLearnButtons[i].setButtonText("UNLEARN");
-				slotMidiLearnButtons[i].setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+				btn.setIconFromSVG(
+					BinaryData::linksimplebreak_svg, BinaryData::linksimplebreak_svgSize,
+					juce::Colours::white, juce::Colours::green.darker(0.4f));
+				btn.setTooltip(processor.getMidiMappingDescription(1, i));
 			}
 			else
 			{
-				slotMidiLearnButtons[i].setButtonText("LEARN");
-				slotMidiLearnButtons[i].setColour(juce::TextButton::buttonColourId, modernLookAndFeel.backgroundMid);
+				btn.setIconFromSVG(
+					BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
+					modernLookAndFeel.textDimmed, modernLookAndFeel.backgroundMid);
+				btn.setTooltip("Assign a MIDI CC to slot " + juce::String(i + 1));
 			}
-
-			juce::String mappingText = processor.getMidiMappingDescription(1, i);
-			slotMidiLabels[i].setText(mappingText == "Not mapped" ? "--" : mappingText, juce::dontSendNotification);
+			slotMidiLabels[i].setText(
+				processor.hasMidiMapping(1, i)
+					? processor.getMidiMappingDescription(1, i)
+					: "--",
+				juce::dontSendNotification);
 		}
 
 		if (processor.isMidiLearning() && processor.getMidiLearnTarget() == 2)
 		{
-			liveJamIntensityMidiLearnButton.setButtonText("LISTENING...");
-			liveJamIntensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+			liveJamIntensityMidiLearnButton.setIconFromSVG(
+				BinaryData::broadcast_svg, BinaryData::broadcast_svgSize,
+				juce::Colours::white, juce::Colours::red.darker(0.3f));
+			liveJamIntensityMidiLearnButton.setTooltip("Click to cancel listening");
 		}
 		else if (processor.hasMidiMapping(2, -1))
 		{
-			liveJamIntensityMidiLearnButton.setButtonText("UNLEARN");
-			liveJamIntensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+			liveJamIntensityMidiLearnButton.setIconFromSVG(
+				BinaryData::linksimplebreak_svg, BinaryData::linksimplebreak_svgSize,
+				juce::Colours::white, juce::Colours::green.darker(0.4f));
+			liveJamIntensityMidiLearnButton.setTooltip(
+				processor.getMidiMappingDescription(2, -1));
 		}
 		else
 		{
-			liveJamIntensityMidiLearnButton.setButtonText("LEARN");
-			liveJamIntensityMidiLearnButton.setColour(juce::TextButton::buttonColourId, modernLookAndFeel.backgroundMid);
+			liveJamIntensityMidiLearnButton.setIconFromSVG(
+				BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
+				modernLookAndFeel.textDimmed, modernLookAndFeel.backgroundMid);
+			liveJamIntensityMidiLearnButton.setTooltip(
+				"Assign a MIDI CC to Chaos");
 		}
-
-		liveJamIntensityMidiLabel.setText(processor.getMidiMappingDescription(2, -1), juce::dontSendNotification);
+		liveJamIntensityMidiLabel.setText(
+			processor.getMidiMappingDescription(2, -1), juce::dontSendNotification);
+		intensityMidiLearnButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
+		liveJamIntensityMidiLearnButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
 	}
 
 	void BeatCrafterEditor::onIntensityMidiLearnClicked()
 	{
 		if (processor.isMidiLearning())
-		{
 			processor.stopMidiLearn();
-		}
 		else if (processor.hasMidiMapping(0, -1))
-		{
 			processor.clearMidiMapping(0, -1);
-		}
 		else
-		{
 			processor.startMidiLearn(0, -1);
-		}
 		updateMidiLearnButtons();
 	}
 
 	void BeatCrafterEditor::onSlotMidiLearnClicked(int slot)
 	{
 		if (processor.isMidiLearning())
-		{
 			processor.stopMidiLearn();
-		}
 		else if (processor.hasMidiMapping(1, slot))
-		{
 			processor.clearMidiMapping(1, slot);
-		}
 		else
-		{
 			processor.startMidiLearn(1, slot);
-		}
 		updateMidiLearnButtons();
 	}
 
-	void BeatCrafterEditor::updateFromProcessorState() {
+	void BeatCrafterEditor::onLiveJamIntensityMidiLearnClicked()
+	{
+		if (processor.isMidiLearning())
+			processor.stopMidiLearn();
+		else if (processor.hasMidiMapping(2, -1))
+			processor.clearMidiMapping(2, -1);
+		else
+			processor.startMidiLearn(2, -1);
+		updateMidiLearnButtons();
+	}
+
+	void BeatCrafterEditor::updateFromProcessorState()
+	{
 		intensitySlider.setValue(processor.intensityParam->get(), juce::dontSendNotification);
 		int currentSlot = processor.getPatternEngine().getActiveSlot();
 		int currentStyleIndex = processor.slotStyleParams[currentSlot]->getIndex();
 		styleCombo.setSelectedId(currentStyleIndex + 1, juce::dontSendNotification);
-
-		bool liveJamState = processor.getLiveJamMode();
-		liveJamButton.setToggleState(liveJamState, juce::dontSendNotification);
-		isLiveJamActive = liveJamState;
-
-		if (isLiveJamActive) {
-			liveJamButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::red);
-		}
-		else {
-			liveJamButton.setColour(juce::ToggleButton::tickColourId, modernLookAndFeel.accent);
-		}
-
 		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
 		patternGrid->repaint();
 		slotManager->updateSlotStates();
@@ -435,13 +377,13 @@ namespace BeatCrafter
 	void BeatCrafterEditor::updateLiveJamIntensitySlider(float newIntensity)
 	{
 		liveJamIntensitySlider.setValue(newIntensity, juce::dontSendNotification);
-		updatePatternDisplay();
 	}
 
 	void BeatCrafterEditor::updateSlotButtons(int activeSlot)
 	{
 		slotManager->updateSlotStates();
-		updateStyleComboForCurrentSlot();
+		int styleFromParam = processor.slotStyleParams[activeSlot]->getIndex();
+		styleCombo.setSelectedId(styleFromParam + 1, juce::dontSendNotification);
 		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
 		patternGrid->repaint();
 	}

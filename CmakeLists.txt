@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(BeatCrafter VERSION 0.1.0)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -23,15 +22,12 @@ juce_add_plugin(BeatCrafter
     COMPANY_NAME "Innermost47"
     PLUGIN_MANUFACTURER_CODE BCrf
     PLUGIN_CODE BCr1
-    
     FORMATS VST3 Standalone
-
     IS_SYNTH FALSE
     IS_MIDI_EFFECT TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT TRUE
     PRODUCES_MIDI_OUTPUT TRUE
-
     PRODUCT_NAME "BeatCrafter"
     BUNDLE_ID "com.beatcrafter.beatcrafter"
 )
@@ -48,6 +44,21 @@ target_sources(BeatCrafter
         src/GUI/LookAndFeel.cpp
         src/GUI/SlotManager.cpp
 )
+
+juce_add_binary_data(BeatCrafterData
+    SOURCES
+        resources/fonts/Audiowide-Regular.ttf 
+        resources/fonts/Exo2-Regular.ttf 
+        resources/phosphor/shuffle.svg
+        resources/phosphor/trash.svg
+        resources/phosphor/arrow-counter-clockwise.svg
+        resources/phosphor/broadcast.svg
+        resources/phosphor/link-simple.svg
+        resources/phosphor/ear.svg
+        resources/phosphor/link-simple-break.svg
+)
+
+target_link_libraries(BeatCrafterData PRIVATE juce::juce_core)
 
 target_compile_definitions(BeatCrafter
     PUBLIC
@@ -72,6 +83,7 @@ target_link_libraries(BeatCrafter
         juce::juce_graphics
         juce::juce_gui_basics
         juce::juce_gui_extra
+        BeatCrafterData
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

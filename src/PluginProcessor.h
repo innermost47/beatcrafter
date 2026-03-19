@@ -80,6 +80,9 @@ namespace BeatCrafter
 		int midiLearnTargetType = -1;
 		int midiLearnTargetSlot = -1;
 
+		std::atomic<int> pendingPatternGeneration{ -1 };
+		std::atomic<int> pendingPatternStyle{ -1 };
+
 		struct MidiMapping
 		{
 			int ccNumber = -1;

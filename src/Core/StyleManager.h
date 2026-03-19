@@ -10,7 +10,8 @@ namespace BeatCrafter {
 	public:
 		static void generateBasicPattern(Pattern& pattern, StyleType style);
 		static Pattern applyIntensity(const Pattern& basePattern, float intensity, StyleType style, uint32_t seed);
-		static void applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity);
+		static void applyComplexityToPattern(Pattern& pattern, StyleType style,
+			float complexity, uint32_t seed);
 
 	private:
 		static void generateRockPattern(Pattern& pattern);

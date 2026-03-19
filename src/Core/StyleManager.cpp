@@ -443,7 +443,9 @@ namespace BeatCrafter {
 		pattern.getTrack(1).getStep(8).setVelocity(1.0f);
 	}
 
-	void StyleManager::applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity) {
+	void StyleManager::applyComplexityToPattern(Pattern& pattern, StyleType style,
+		float complexity, uint32_t seed)
+	{
 		switch (style) {
 		case StyleType::Rock:
 			if (complexity > 0.5f) {
@@ -457,7 +459,6 @@ namespace BeatCrafter {
 				pattern.getTrack(1).getStep(4).setVelocity(0.8f);
 			}
 			break;
-
 		case StyleType::Metal:
 			if (complexity > 0.6f) {
 				pattern.getTrack(0).getStep(1).setActive(true);
@@ -470,7 +471,6 @@ namespace BeatCrafter {
 				pattern.getTrack(1).getStep(4).setVelocity(0.9f);
 			}
 			break;
-
 		case StyleType::Jazz:
 			if (complexity > 0.6f) {
 				pattern.getTrack(1).getStep(7).setActive(true);
@@ -479,7 +479,6 @@ namespace BeatCrafter {
 				pattern.getTrack(1).getStep(15).setVelocity(0.3f);
 			}
 			break;
-
 		case StyleType::Electronic:
 			if (complexity > 0.6f) {
 				pattern.getTrack(1).getStep(4).setActive(true);
@@ -490,7 +489,6 @@ namespace BeatCrafter {
 				pattern.getTrack(0).getStep(6).setVelocity(0.7f);
 			}
 			break;
-
 		case StyleType::HipHop:
 			if (complexity > 0.6f) {
 				pattern.getTrack(1).getStep(4).setActive(true);
@@ -501,7 +499,6 @@ namespace BeatCrafter {
 				pattern.getTrack(0).getStep(3).setVelocity(0.8f);
 			}
 			break;
-
 		case StyleType::Funk:
 			if (complexity > 0.6f) {
 				pattern.getTrack(1).getStep(4).setActive(true);
@@ -512,7 +509,6 @@ namespace BeatCrafter {
 				pattern.getTrack(1).getStep(10).setVelocity(0.35f);
 			}
 			break;
-
 		case StyleType::Latin:
 			if (complexity > 0.6f) {
 				pattern.getTrack(1).getStep(4).setActive(true);
@@ -523,7 +519,6 @@ namespace BeatCrafter {
 				pattern.getTrack(0).getStep(13).setVelocity(0.7f);
 			}
 			break;
-
 		case StyleType::Punk:
 			if (complexity > 0.6f) {
 				pattern.getTrack(1).getStep(4).setActive(true);
@@ -536,6 +531,23 @@ namespace BeatCrafter {
 				}
 			}
 			break;
+		}
+
+		std::mt19937 rng(seed);
+		std::uniform_real_distribution<float> velVariation(-0.1f, 0.1f);
+
+		for (int track = 0; track < pattern.getNumTracks(); ++track)
+		{
+			for (int step = 0; step < pattern.getLength(); ++step)
+			{
+				auto& stepObj = pattern.getTrack(track).getStep(step);
+				if (stepObj.isActive())
+				{
+					float newVel = juce::jlimit(0.3f, 1.0f,
+						stepObj.getVelocity() + velVariation(rng));
+					stepObj.setVelocity(newVel);
+				}
+			}
 		}
 	}
 
