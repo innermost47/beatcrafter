@@ -78,8 +78,8 @@ namespace BeatCrafter
 		if (intensity >= 0.0f)
 			currentIntensity = intensity;
 
-		intensityCacheValid = false;
-		intensifiedPatternCache.clear();
+		intensifiedPatternCache = applyIntensity(*slots[slot], currentIntensity);
+		intensityCacheValid = true;
 
 		if (immediate)
 		{
@@ -92,9 +92,7 @@ namespace BeatCrafter
 			}
 		}
 		else
-		{
 			queuedSlot = slot;
-		}
 	}
 
 	void PatternEngine::processBlock(juce::MidiBuffer& midiMessages,
