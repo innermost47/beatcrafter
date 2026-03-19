@@ -89,8 +89,6 @@ namespace BeatCrafter
 				patternEngine.start();
 				patternEngine.resetToStart();
 			}
-			patternEngine.processBlock(midiMessages, buffer.getNumSamples(),
-				currentSampleRate, *posInfo);
 		}
 		else
 		{
@@ -99,6 +97,8 @@ namespace BeatCrafter
 				patternEngine.stop();
 			}
 		}
+		patternEngine.processBlock(midiMessages, buffer.getNumSamples(),
+			currentSampleRate, *posInfo);
 	}
 
 	void BeatCrafterProcessor::setLiveJamMode(bool enabled)

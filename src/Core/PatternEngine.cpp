@@ -79,6 +79,7 @@ namespace BeatCrafter
 			currentIntensity = intensity;
 
 		intensityCacheValid = false;
+		intensifiedPatternCache.clear();
 
 		if (immediate)
 		{
@@ -102,13 +103,10 @@ namespace BeatCrafter
 		const juce::AudioPlayHead::PositionInfo& posInfo)
 	{
 		midiMessages.clear();
-		if (!isPlaying || !slots[activeSlot])
+		if (!slots[activeSlot])
 			return;
 		double bpm = posInfo.getBpm().orFallback(120.0);
 		double ppqPosition = posInfo.getPpqPosition().orFallback(0.0);
-		bool isPlayingDAW = posInfo.getIsPlaying();
-		if (!isPlayingDAW)
-			return;
 		double beatsPerSecond = bpm / 60.0;
 		double sixteenthsPerSecond = beatsPerSecond * 4.0;
 		samplesPerStep = static_cast<int>(sampleRate / sixteenthsPerSecond);
@@ -249,12 +247,7 @@ namespace BeatCrafter
 		const Pattern& pattern,
 		int stepIndex)
 	{
-		if (currentIntensity != lastCachedIntensity || activeSlot != lastCachedSlot)
-		{
-			cachedIntensifiedPattern = applyIntensity(pattern, currentIntensity);
-			lastCachedIntensity = currentIntensity;
-			lastCachedSlot = activeSlot;
-		}
+		cachedIntensifiedPattern = applyIntensity(pattern, currentIntensity);
 
 		if (liveJamMode && currentLiveJamIntensity > 0.1f)
 			addLiveJamElements(cachedIntensifiedPattern, stepIndex, currentIntensity);

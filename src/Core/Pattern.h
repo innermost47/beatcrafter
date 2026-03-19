@@ -24,7 +24,7 @@ namespace BeatCrafter {
 		void setProbability(float p);
 
 	private:
-		bool active;
+		bool active = false;
 		float velocity;
 		float microTiming;
 		float probability;
