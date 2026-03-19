@@ -105,6 +105,7 @@ namespace BeatCrafter
 		midiMessages.clear();
 		if (!slots[activeSlot])
 			return;
+		bool isPlayingDAW = posInfo.getIsPlaying();
 		double bpm = posInfo.getBpm().orFallback(120.0);
 		double ppqPosition = posInfo.getPpqPosition().orFallback(0.0);
 		double beatsPerSecond = bpm / 60.0;
@@ -133,7 +134,8 @@ namespace BeatCrafter
 				queuedSlot = -1;
 				intensityCacheValid = false;
 			}
-			generateMidiForStep(midiMessages, 0, *slots[activeSlot], currentStepFromPPQ);
+			if (isPlayingDAW)
+				generateMidiForStep(midiMessages, 0, *slots[activeSlot], currentStepFromPPQ);
 		}
 		lastPpqPosition = ppqPosition;
 		int displaySlot = pendingImmediateSlot.load() >= 0
