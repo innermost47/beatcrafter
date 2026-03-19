@@ -13,30 +13,7 @@ namespace BeatCrafter
 			"intensity", "Intensity", 0.0f, 1.0f, 0.5f));
 		addParameter(liveJamIntensityParam = new juce::AudioParameterFloat(
 			"liveJamIntensity", "Live Jam Intensity", 0.0f, 1.0f, 0.5f));
-		addParameter(styleParam = new juce::AudioParameterChoice(
-			"style", "Style",
-			juce::StringArray{ "Rock", "Metal", "Jazz", "Funk", "Electronic", "HipHop", "Latin", "Punk" },
-			0));
 
-		for (int i = 0; i < 8; ++i)
-		{
-			juce::String paramId = "slotStyle" + juce::String(i);
-			juce::String paramName = "Slot " + juce::String(i + 1) + " Style";
-			slotStyleParams[i] = new juce::AudioParameterChoice(
-				paramId, paramName,
-				juce::StringArray{ "Rock", "Metal", "Jazz", "Funk", "Electronic", "HipHop", "Latin", "Punk" },
-				0);
-			addParameter(slotStyleParams[i]);
-		}
-
-		for (int i = 0; i < 8; ++i)
-		{
-			if (slotStyleParams[i] != nullptr)
-			{
-				StyleType paramStyle = static_cast<StyleType>(slotStyleParams[i]->getIndex());
-				getPatternEngine().setSlotStyle(i, paramStyle);
-			}
-		}
 		patternEngine.setLiveJamMode(true);
 		liveJamModeState = true;
 	}
@@ -412,7 +389,6 @@ namespace BeatCrafter
 		auto state = juce::ValueTree("BeatCrafterState");
 
 		state.setProperty("intensity", intensityParam->get(), nullptr);
-		state.setProperty("style", styleParam->getIndex(), nullptr);
 		state.setProperty("activeSlot", getPatternEngine().getActiveSlot(), nullptr);
 		state.setProperty("liveJamMode", liveJamModeState, nullptr);
 		state.setProperty("liveJamIntensity", liveJamIntensityParam->get(), nullptr);
@@ -421,8 +397,6 @@ namespace BeatCrafter
 		{
 			juce::String styleProps = "slotStyle" + juce::String(i);
 			juce::String seedProps = "slotSeed" + juce::String(i);
-
-			state.setProperty(styleProps, slotStyleParams[i]->getIndex(), nullptr);
 			state.setProperty(seedProps, (int)getPatternEngine().getSlotSeed(i), nullptr);
 		}
 
@@ -512,27 +486,9 @@ namespace BeatCrafter
 		if (tree.isValid())
 		{
 			intensityParam->setValueNotifyingHost(tree.getProperty("intensity", 0.5f));
-			int styleIndex = tree.getProperty("style", 0);
-			float normalizedStyle = styleIndex / (float)(styleParam->choices.size() - 1);
-			styleParam->setValueNotifyingHost(normalizedStyle);
 			liveJamModeState = tree.getProperty("liveJamMode", false);
 			patternEngine.setLiveJamMode(liveJamModeState);
 			liveJamIntensityParam->setValueNotifyingHost(tree.getProperty("liveJamIntensity", 0.5f));
-
-			for (int i = 0; i < 8; ++i)
-			{
-				juce::String styleProps = "slotStyle" + juce::String(i);
-				juce::String seedProps = "slotSeed" + juce::String(i);
-
-				int styleIndex = tree.getProperty(styleProps, 0);
-				uint32_t seed = static_cast<uint32_t>(static_cast<int>(tree.getProperty(seedProps, 0)));
-
-				float normalizedValue = styleIndex / (float)(slotStyleParams[i]->choices.size() - 1);
-				slotStyleParams[i]->setValueNotifyingHost(normalizedValue);
-
-				getPatternEngine().setSlotStyle(i, static_cast<StyleType>(styleIndex));
-				getPatternEngine().setSlotSeed(i, seed);
-			}
 
 			for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
 			{

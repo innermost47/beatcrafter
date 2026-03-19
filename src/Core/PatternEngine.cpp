@@ -6,15 +6,29 @@ namespace BeatCrafter
 
 	PatternEngine::PatternEngine()
 	{
-		auto pattern = std::make_unique<Pattern>("Rock Basic");
-		StyleManager::generateBasicPattern(*pattern, StyleType::Rock);
-		slots[0] = std::move(pattern);
-
 		std::random_device rd;
+
+		StyleType defaultStyles[8] = {
+			StyleType::Rock,
+			StyleType::Metal,
+			StyleType::Jazz,
+			StyleType::Funk,
+			StyleType::Electronic,
+			StyleType::HipHop,
+			StyleType::Latin,
+			StyleType::Punk
+		};
+
 		for (int i = 0; i < 8; ++i)
 		{
-			slotStyles[i] = StyleType::Rock;
+			slotStyles[i] = defaultStyles[i];
 			slotRandomSeeds[i] = rd();
+
+			auto pattern = std::make_unique<Pattern>("Slot " + juce::String(i + 1));
+			StyleManager::generateBasicPattern(*pattern, defaultStyles[i]);
+			StyleManager::applyComplexityToPattern(*pattern, defaultStyles[i],
+				0.5f, slotRandomSeeds[i]);
+			slots[i] = std::move(pattern);
 		}
 	}
 

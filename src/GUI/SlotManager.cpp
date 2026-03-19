@@ -3,12 +3,12 @@
 namespace BeatCrafter
 {
 
-	void SlotButton::paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
-								 bool shouldDrawButtonAsDown)
+	void SlotButton::paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted,
+		bool shouldDrawButtonAsDown)
 	{
 		if (!lookAndFeel)
 		{
-			lookAndFeel = dynamic_cast<ModernLookAndFeel *>(&getLookAndFeel());
+			lookAndFeel = dynamic_cast<ModernLookAndFeel*>(&getLookAndFeel());
 		}
 
 		auto bounds = getLocalBounds().toFloat().reduced(2);
@@ -49,34 +49,12 @@ namespace BeatCrafter
 		}
 
 		g.setColour(isActive ? juce::Colours::black : hasPattern ? juce::Colours::white
-																 : lookAndFeel->textDimmed);
+			: lookAndFeel->textDimmed);
 		g.setFont(lookAndFeel->getPluginFont(ModernLookAndFeel::fontSizeSlotButton));
 		g.drawText(getButtonText(), bounds, juce::Justification::centred);
-
-		float ledSize = 10.0f;
-		auto ledBounds = juce::Rectangle<float>(bounds.getRight() - ledSize - 4,
-												bounds.getY() + 4,
-												ledSize, ledSize);
-
-		if (isActive)
-		{
-			g.setColour(lookAndFeel->accent.withAlpha(0.5f));
-			g.fillEllipse(ledBounds.expanded(3));
-
-			g.setColour(lookAndFeel->accent);
-			g.fillEllipse(ledBounds);
-
-			g.setColour(juce::Colours::white);
-			g.fillEllipse(ledBounds.reduced(3));
-		}
-		else if (hasPattern)
-		{
-			g.setColour(lookAndFeel->slotLoaded.brighter());
-			g.fillEllipse(ledBounds);
-		}
 	}
 
-	SlotManager::SlotManager(PatternEngine &engine) : patternEngine(engine)
+	SlotManager::SlotManager(PatternEngine& engine) : patternEngine(engine)
 	{
 		for (int i = 0; i < 8; ++i)
 		{
@@ -84,7 +62,7 @@ namespace BeatCrafter
 			slotButtons[i] = std::make_unique<SlotButton>(i);
 			slotButtons[i]->setButtonText(styleTypeToString(slotStyle));
 			slotButtons[i]->onClick = [this, i]()
-			{ onSlotClicked(i); };
+				{ onSlotClicked(i); };
 			slotButtons[i]->setMouseCursor(juce::MouseCursor::PointingHandCursor);
 			addAndMakeVisible(slotButtons[i].get());
 		}
