@@ -56,8 +56,7 @@ namespace BeatCrafter
 		void onIntensityMidiLearnClicked();
 		void onSlotMidiLearnClicked(int slot);
 		void updatePatternDisplay();
-		void updateStyleComboForCurrentSlot();
-		void onLiveJamToggled();
+		void updateStyleComboForCurrentSlot(int slotIndex = -1);
 		void onLiveJamIntensityMidiLearnClicked();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)

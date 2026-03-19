@@ -37,7 +37,8 @@ namespace BeatCrafter
 		slotManager = std::make_unique<SlotManager>(processor.getPatternEngine());
 		slotManager->onSlotChanged = [this](int slot)
 			{
-				updateStyleComboForCurrentSlot();
+				int styleFromParam = processor.slotStyleParams[slot]->getIndex();
+				styleCombo.setSelectedId(styleFromParam + 1, juce::dontSendNotification);
 				patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
 				patternGrid->repaint();
 			};
@@ -227,13 +228,19 @@ namespace BeatCrafter
 		patternGrid->repaint();
 	}
 
-	void BeatCrafterEditor::updateStyleComboForCurrentSlot()
+	void BeatCrafterEditor::updateStyleComboForCurrentSlot(int slotIndex)
 	{
-		int currentSlot = processor.getPatternEngine().getActiveSlot();
+		int currentSlot = slotIndex >= 0
+			? slotIndex
+			: processor.getPatternEngine().getActiveSlot();
+
 		int styleFromParam = processor.slotStyleParams[currentSlot]->getIndex();
 		StyleType styleFromEngine = processor.getPatternEngine().getSlotStyle(currentSlot);
+
 		if (static_cast<int>(styleFromEngine) != styleFromParam)
-			processor.getPatternEngine().setSlotStyle(currentSlot, static_cast<StyleType>(styleFromParam));
+			processor.getPatternEngine().setSlotStyle(
+				currentSlot, static_cast<StyleType>(styleFromParam));
+
 		styleCombo.setSelectedId(styleFromParam + 1, juce::dontSendNotification);
 	}
 
