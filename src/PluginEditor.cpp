@@ -16,6 +16,8 @@ namespace BeatCrafter
 		setLookAndFeel(&modernLookAndFeel);
 		setupComponents();
 		setSize(960, 600);
+		setResizeLimits(960, 600, 1920, 1200);
+		juce::Desktop::getInstance().setGlobalScaleFactor(1.0f);
 		startTimerHz(30);
 	}
 

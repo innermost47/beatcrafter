@@ -1,4 +1,4 @@
-#include "PatternEngine.h"
+﻿#include "PatternEngine.h"
 #include <random>
 
 namespace BeatCrafter
@@ -173,13 +173,15 @@ namespace BeatCrafter
 	{
 		stepsSinceLastJam++;
 
-		float jamChance = currentLiveJamIntensity * 0.15f;
+		float jamChance = currentLiveJamIntensity * currentLiveJamIntensity * 0.4f;
 
 		if (liveJamRandom.nextFloat() < jamChance)
 		{
 			stepsSinceLastJam = 0;
 
-			int elementType = liveJamRandom.nextInt(6);
+			int maxElement = currentLiveJamIntensity > 0.7f ? 10 :
+				currentLiveJamIntensity > 0.4f ? 8 : 6;
+			int elementType = liveJamRandom.nextInt(maxElement);
 
 			switch (elementType)
 			{
@@ -187,8 +189,10 @@ namespace BeatCrafter
 				if (!pattern.getTrack(0).getStep(stepIndex).isActive())
 				{
 					pattern.getTrack(0).getStep(stepIndex).setActive(true);
-					pattern.getTrack(0).getStep(stepIndex).setVelocity(0.4f + currentLiveJamIntensity * 0.5f);
-					pattern.getTrack(0).getStep(stepIndex).setProbability(0.6f + currentLiveJamIntensity * 0.3f);
+					pattern.getTrack(0).getStep(stepIndex).setVelocity(
+						0.4f + currentLiveJamIntensity * 0.5f);
+					pattern.getTrack(0).getStep(stepIndex).setProbability(
+						0.6f + currentLiveJamIntensity * 0.3f);
 				}
 				break;
 
@@ -196,8 +200,10 @@ namespace BeatCrafter
 				if (!pattern.getTrack(1).getStep(stepIndex).isActive())
 				{
 					pattern.getTrack(1).getStep(stepIndex).setActive(true);
-					pattern.getTrack(1).getStep(stepIndex).setVelocity(0.2f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.4f);
-					pattern.getTrack(1).getStep(stepIndex).setProbability(0.5f + currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(1).getStep(stepIndex).setVelocity(
+						0.2f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(1).getStep(stepIndex).setProbability(
+						0.5f + currentLiveJamIntensity * 0.4f);
 				}
 				break;
 
@@ -205,23 +211,29 @@ namespace BeatCrafter
 				if (stepIndex % 4 == 0 || stepIndex % 8 == 0)
 				{
 					pattern.getTrack(4).getStep(stepIndex).setActive(true);
-					pattern.getTrack(4).getStep(stepIndex).setVelocity(0.5f + currentLiveJamIntensity * 0.4f);
-					pattern.getTrack(4).getStep(stepIndex).setProbability(0.4f + currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(4).getStep(stepIndex).setVelocity(
+						0.5f + currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(4).getStep(stepIndex).setProbability(
+						0.4f + currentLiveJamIntensity * 0.4f);
 				}
 				break;
 
 			case 3:
 				pattern.getTrack(3).getStep(stepIndex).setActive(true);
-				pattern.getTrack(3).getStep(stepIndex).setVelocity(0.3f + currentLiveJamIntensity * 0.4f);
-				pattern.getTrack(3).getStep(stepIndex).setProbability(0.6f + currentLiveJamIntensity * 0.3f);
+				pattern.getTrack(3).getStep(stepIndex).setVelocity(
+					0.3f + currentLiveJamIntensity * 0.4f);
+				pattern.getTrack(3).getStep(stepIndex).setProbability(
+					0.6f + currentLiveJamIntensity * 0.3f);
 				break;
 
 			case 4:
 				if (currentLiveJamIntensity > 0.4f && stepIndex % 4 == 0)
 				{
 					pattern.getTrack(10).getStep(stepIndex).setActive(true);
-					pattern.getTrack(10).getStep(stepIndex).setVelocity(0.5f + currentLiveJamIntensity * 0.4f);
-					pattern.getTrack(10).getStep(stepIndex).setProbability(0.3f + currentLiveJamIntensity * 0.5f);
+					pattern.getTrack(10).getStep(stepIndex).setVelocity(
+						0.5f + currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(10).getStep(stepIndex).setProbability(
+						0.3f + currentLiveJamIntensity * 0.5f);
 				}
 				break;
 
@@ -229,29 +241,112 @@ namespace BeatCrafter
 				if (currentLiveJamIntensity > 0.3f)
 				{
 					pattern.getTrack(5).getStep(stepIndex).setActive(true);
-					pattern.getTrack(5).getStep(stepIndex).setVelocity(0.3f + currentLiveJamIntensity * 0.5f);
-					pattern.getTrack(5).getStep(stepIndex).setProbability(0.5f + currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(5).getStep(stepIndex).setVelocity(
+						0.3f + currentLiveJamIntensity * 0.5f);
+					pattern.getTrack(5).getStep(stepIndex).setProbability(
+						0.5f + currentLiveJamIntensity * 0.4f);
+				}
+				break;
+
+			case 6:
+				if (currentLiveJamIntensity > 0.4f && stepIndex % 2 == 0)
+				{
+					pattern.getTrack(0).getStep(stepIndex).setActive(true);
+					pattern.getTrack(0).getStep(stepIndex).setVelocity(
+						0.6f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.3f);
+					pattern.getTrack(0).getStep(stepIndex).setProbability(
+						0.5f + currentLiveJamIntensity * 0.4f);
+				}
+				break;
+
+			case 7:
+				if (currentLiveJamIntensity > 0.4f)
+				{
+					pattern.getTrack(1).getStep(stepIndex).setActive(true);
+					pattern.getTrack(1).getStep(stepIndex).setVelocity(
+						0.3f + liveJamRandom.nextFloat() * 0.4f);
+					pattern.getTrack(1).getStep(stepIndex).setProbability(
+						0.4f + currentLiveJamIntensity * 0.5f);
+					if (stepIndex < 15)
+					{
+						pattern.getTrack(1).getStep(stepIndex + 1).setActive(true);
+						pattern.getTrack(1).getStep(stepIndex + 1).setVelocity(
+							0.15f + liveJamRandom.nextFloat() * 0.2f);
+						pattern.getTrack(1).getStep(stepIndex + 1).setProbability(
+							0.4f + currentLiveJamIntensity * 0.3f);
+					}
+				}
+				break;
+
+			case 8:
+				if (currentLiveJamIntensity > 0.7f)
+				{
+					pattern.getTrack(9).getStep(stepIndex).setActive(true);
+					pattern.getTrack(9).getStep(stepIndex).setVelocity(
+						0.4f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(9).getStep(stepIndex).setProbability(
+						0.6f + currentLiveJamIntensity * 0.3f);
+				}
+				break;
+
+			case 9:
+				if (currentLiveJamIntensity > 0.7f)
+				{
+					pattern.getTrack(11).getStep(stepIndex).setActive(true);
+					pattern.getTrack(11).getStep(stepIndex).setVelocity(
+						0.5f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.4f);
+					pattern.getTrack(11).getStep(stepIndex).setProbability(
+						0.3f + currentLiveJamIntensity * 0.5f);
 				}
 				break;
 			}
 		}
 
-		if (stepIndex >= 14 && currentLiveJamIntensity > 0.5f &&
-			liveJamRandom.nextFloat() < currentLiveJamIntensity * 0.4f)
+		if (stepIndex >= 12 && currentLiveJamIntensity > 0.3f &&
+			liveJamRandom.nextFloat() < currentLiveJamIntensity * 0.5f)
 		{
 			int tomTrack = liveJamRandom.nextBool() ? 6 : 7;
 			pattern.getTrack(tomTrack).getStep(stepIndex).setActive(true);
-			pattern.getTrack(tomTrack).getStep(stepIndex).setVelocity(0.4f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.5f);
-			pattern.getTrack(tomTrack).getStep(stepIndex).setProbability(0.6f + currentLiveJamIntensity * 0.3f);
+			pattern.getTrack(tomTrack).getStep(stepIndex).setVelocity(
+				0.4f + liveJamRandom.nextFloat() * currentLiveJamIntensity * 0.5f);
+			pattern.getTrack(tomTrack).getStep(stepIndex).setProbability(
+				0.6f + currentLiveJamIntensity * 0.3f);
+
+			if (currentLiveJamIntensity > 0.8f && stepIndex < 15)
+			{
+				int otherTom = (tomTrack == 6) ? 7 : 6;
+				pattern.getTrack(otherTom).getStep(stepIndex + 1).setActive(true);
+				pattern.getTrack(otherTom).getStep(stepIndex + 1).setVelocity(
+					0.5f + liveJamRandom.nextFloat() * 0.3f);
+				pattern.getTrack(otherTom).getStep(stepIndex + 1).setProbability(
+					0.7f + currentLiveJamIntensity * 0.2f);
+			}
 		}
 
-		if (currentLiveJamIntensity > 0.7f && liveJamRandom.nextFloat() < currentLiveJamIntensity * 0.2f)
+		if (currentLiveJamIntensity > 0.6f &&
+			liveJamRandom.nextFloat() < currentLiveJamIntensity * 0.25f)
 		{
 			if (!pattern.getTrack(2).getStep(stepIndex).isActive())
 			{
 				pattern.getTrack(2).getStep(stepIndex).setActive(true);
-				pattern.getTrack(2).getStep(stepIndex).setVelocity(0.2f + currentLiveJamIntensity * 0.3f);
-				pattern.getTrack(2).getStep(stepIndex).setProbability(0.7f + currentLiveJamIntensity * 0.2f);
+				pattern.getTrack(2).getStep(stepIndex).setVelocity(
+					0.2f + currentLiveJamIntensity * 0.3f);
+				pattern.getTrack(2).getStep(stepIndex).setProbability(
+					0.7f + currentLiveJamIntensity * 0.2f);
+			}
+		}
+
+		if (currentLiveJamIntensity > 0.9f &&
+			liveJamRandom.nextFloat() < 0.3f)
+		{
+			int randomTrack = liveJamRandom.nextInt(pattern.getNumTracks());
+			if (!pattern.getTrack(randomTrack).getStep(stepIndex).isActive())
+			{
+				pattern.getTrack(randomTrack).getStep(stepIndex).setActive(true);
+				pattern.getTrack(randomTrack).getStep(stepIndex).setVelocity(
+					0.3f + liveJamRandom.nextFloat() * 0.5f);
+				pattern.getTrack(randomTrack).getStep(stepIndex).setProbability(
+					0.5f + liveJamRandom.nextFloat() * 0.4f);
 			}
 		}
 	}

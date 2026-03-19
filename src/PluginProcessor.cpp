@@ -372,7 +372,8 @@ namespace BeatCrafter
 
 	juce::AudioProcessorEditor* BeatCrafterProcessor::createEditor()
 	{
-		return new BeatCrafterEditor(*this);
+		auto* editor = new BeatCrafterEditor(*this);
+		return editor;
 	}
 
 	void BeatCrafterProcessor::updateEditorFromState()
