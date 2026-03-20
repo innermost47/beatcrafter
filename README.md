@@ -6,6 +6,14 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Win%20%7C%20Mac%20%7C%20Linux-lightgrey)
 
+## 🎬 Live Demo
+
+[![BeatCrafter — First Improvisation Session](https://img.youtube.com/vi/pY5Tm4Mji6A/maxresdefault.jpg)](https://www.youtube.com/watch?v=pY5Tm4Mji6A)
+
+_Ibanez Pro Line · Bitwig Studio · Behringer FCB1010 foot controller · EZdrummer · 92 BPM · D minor_
+
+---
+
 ## 🎯 Concept Overview
 
 **BeatCrafter is a proof of concept** for an intelligent MIDI drum pattern generator designed specifically for **live performance with foot controller**. The plugin generates only MIDI data - no audio - making it perfect for triggering your favorite drum VSTs like MT Power Drum Kit, Superior Drummer, or any General MIDI drum sampler.
@@ -15,6 +23,7 @@ The core philosophy: start simple and build complexity musically. Patterns begin
 ![screenshot](./screenshot.png)
 
 ## ✨ Features
+
 - 🎛️ **8 Pattern Slots** - Switch patterns live with foot controller during performance
 - 🎚️ **Dynamic Intensity Control** - Morph patterns from simple to complex (0-100%)
 - 🎸 **8 Music Styles** - Rock, Metal, Jazz, Funk, Electronic, HipHop, Latin, Punk
