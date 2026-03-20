@@ -1,0 +1,137 @@
+name: Build BeatCrafter - Windows & Linux
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  actions: read
+  pull-requests: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Setup MSVC
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Configure CMake
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DGITHUB_BUILD_NUMBER=${{ github.run_number }}
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload Windows VST3
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: BeatCrafter-Windows-VST3
+          path: build/BeatCrafter_artefacts/Release/VST3/
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build \
+            libasound2-dev libx11-dev libxext-dev libxrandr-dev libxcomposite-dev \
+            libxinerama-dev libxcursor-dev libfreetype6-dev libfontconfig1-dev \
+            libgtk-3-dev libwebkit2gtk-4.1-dev libcurl4-openssl-dev
+
+      - name: Configure CMake
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DGITHUB_BUILD_NUMBER=${{ github.run_number }}
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Upload Linux VST3
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: BeatCrafter-Linux-VST3
+          path: build/BeatCrafter_artefacts/Release/VST3/
+
+  create-release:
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4.3.0
+
+      - name: Create release assets
+        run: |
+          if [ -d "BeatCrafter-Windows-VST3" ]; then
+            cd BeatCrafter-Windows-VST3
+            zip -r ../BeatCrafter-Windows-VST3.zip .
+            cd ..
+          fi
+
+          if [ -d "BeatCrafter-Linux-VST3" ]; then
+            cd BeatCrafter-Linux-VST3
+            tar -czf ../BeatCrafter-Linux-VST3.tar.gz .
+            cd ..
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "BeatCrafter v${{ github.run_number }}"
+          body: |
+            # 🥁 BeatCrafter v${{ github.run_number }}
+
+            Free live performance VST drum generator. No AI, no subscription, no nonsense.
+
+            ## 📥 Installation
+
+            ### 🪟 Windows
+            1. Download `BeatCrafter-Windows-VST3.zip`
+            2. Extract to `C:\Program Files\Common Files\VST3\`
+            3. Rescan plugins in your DAW
+
+            ### 🐧 Linux
+            1. Download `BeatCrafter-Linux-VST3.tar.gz`
+            2. Extract to `~/.vst3/`
+            3. Rescan plugins in your DAW
+
+            ### 🍎 macOS
+            macOS build coming soon.
+
+            ---
+
+            ## 🎛️ How it works
+
+            - **8 style slots** — Rock, Metal, Jazz, Funk, Electronic, Hip Hop, Latin, Punk
+            - **Intensity** — shapes groove density in real time, from skeleton to full arrangement
+            - **Chaos** — injects ghost notes, fills and random hits that grow wilder as it climbs
+            - **Full MIDI learn** — map everything to your foot controller or fader
+            - **Works headless** — no GUI needed during performance
+
+            ---
+
+            ## 🔗 Resources
+            - 💬 [Discussions](../../discussions)
+            - 🐛 [Issues](../../issues)
+            - ⭐ Star the repo if BeatCrafter is useful to you!
+
+          files: |
+            BeatCrafter-Windows-VST3.zip
+            BeatCrafter-Linux-VST3.tar.gz
