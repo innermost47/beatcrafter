@@ -1,4 +1,4 @@
-﻿# 🥁 BeatCrafter
+# 🥁 BeatCrafter
 
 **Intelligent MIDI Drum Pattern Generator VST3 - Proof of Concept**
 
@@ -42,9 +42,7 @@ This is a **proof of concept** with ongoing work on:
 # Clone the repo
 git clone https://github.com/innermost47/beatcrafter.git
 cd beatcrafter
-mkdir build
-cd build
-cmake ..
+cmake -B build && cd build
 cmake --build . --config Release
 ```
 
