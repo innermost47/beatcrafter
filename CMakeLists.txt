@@ -57,6 +57,10 @@ juce_add_binary_data(BeatCrafterData
         resources/phosphor/link-simple-break.svg
 )
 
+set_target_properties(BeatCrafterData PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
 target_link_libraries(BeatCrafterData PRIVATE juce::juce_core)
 
 target_compile_definitions(BeatCrafter
