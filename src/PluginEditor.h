@@ -23,6 +23,7 @@ namespace BeatCrafter
 		void updateSlotButtons(int activeSlot);
 		void updateFromProcessorState();
 		void updateLiveJamIntensitySlider(float newIntensity);
+		void updateMidiLearnButtons();
 
 	private:
 		BeatCrafterProcessor &processor;
@@ -54,7 +55,6 @@ namespace BeatCrafter
 		std::array<juce::Label, 8> slotMidiLabels;
 
 		void setupComponents();
-		void updateMidiLearnButtons();
 		void onIntensityMidiLearnClicked();
 		void onSlotMidiLearnClicked(int slot);
 		void updatePatternDisplay();

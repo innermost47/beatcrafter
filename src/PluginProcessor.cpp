@@ -230,11 +230,37 @@ namespace BeatCrafter
 				getPatternEngine().switchToSlot(i, true, dbgIntensity);
 				juce::MessageManager::callAsync([this, i]()
 												{
-						if (auto* editor = getActiveEditor())
-							if (auto* ce = dynamic_cast<BeatCrafterEditor*>(editor))
-								ce->updateSlotButtons(i); });
-				break;
+                if (auto* editor = getActiveEditor())
+                    if (auto* ce = dynamic_cast<BeatCrafterEditor*>(editor))
+                        ce->updateSlotButtons(i); });
+				return;
 			}
+		}
+
+		if (surpriseMeMapping.isValid() && surpriseMeMapping.isNote &&
+			noteNumber == surpriseMeMapping.ccNumber &&
+			channel == surpriseMeMapping.channel)
+		{
+			bool active = !surpriseMeParam->get();
+			surpriseMeParam->setValueNotifyingHost(active ? 1.0f : 0.0f);
+			getPatternEngine().perfParams.surpriseMeEnabled = active;
+			juce::MessageManager::callAsync([this]()
+											{
+            if (auto* editor = dynamic_cast<BeatCrafterEditor*>(getActiveEditor()))
+                editor->updateMidiLearnButtons(); });
+		}
+
+		if (tripletModeMapping.isValid() && tripletModeMapping.isNote &&
+			noteNumber == tripletModeMapping.ccNumber &&
+			channel == tripletModeMapping.channel)
+		{
+			bool active = !tripletModeParam->get();
+			tripletModeParam->setValueNotifyingHost(active ? 1.0f : 0.0f);
+			getPatternEngine().perfParams.tripletMode = active;
+			juce::MessageManager::callAsync([this]()
+											{
+            if (auto* editor = dynamic_cast<BeatCrafterEditor*>(getActiveEditor()))
+                editor->updateMidiLearnButtons(); });
 		}
 	}
 
@@ -270,6 +296,22 @@ namespace BeatCrafter
 			liveJamIntensityMapping.channel = channel;
 			liveJamIntensityMapping.isNote = true;
 			liveJamIntensityMapping.isProgramChange = false;
+			stopMidiLearn();
+		}
+		else if (midiLearnTargetType == 3)
+		{
+			surpriseMeMapping.ccNumber = noteNumber;
+			surpriseMeMapping.channel = channel;
+			surpriseMeMapping.isNote = true;
+			surpriseMeMapping.isProgramChange = false;
+			stopMidiLearn();
+		}
+		else if (midiLearnTargetType == 4)
+		{
+			tripletModeMapping.ccNumber = noteNumber;
+			tripletModeMapping.channel = channel;
+			tripletModeMapping.isNote = true;
+			tripletModeMapping.isProgramChange = false;
 			stopMidiLearn();
 		}
 	}
@@ -397,6 +439,22 @@ namespace BeatCrafter
 			liveJamIntensityMapping.channel = channel;
 			liveJamIntensityMapping.isNote = false;
 			liveJamIntensityMapping.isProgramChange = false;
+			stopMidiLearn();
+		}
+		else if (midiLearnTargetType == 3)
+		{
+			surpriseMeMapping.ccNumber = ccNumber;
+			surpriseMeMapping.channel = channel;
+			surpriseMeMapping.isNote = false;
+			surpriseMeMapping.isProgramChange = false;
+			stopMidiLearn();
+		}
+		else if (midiLearnTargetType == 4)
+		{
+			tripletModeMapping.ccNumber = ccNumber;
+			tripletModeMapping.channel = channel;
+			tripletModeMapping.isNote = false;
+			tripletModeMapping.isProgramChange = false;
 			stopMidiLearn();
 		}
 	}
@@ -715,35 +773,28 @@ namespace BeatCrafter
 	juce::String BeatCrafterProcessor::getMidiMappingDescription(int targetType, int targetSlot) const
 	{
 		MidiMapping mapping;
+
 		if (targetType == 0)
-		{
 			mapping = intensityMapping;
-		}
-		else if (targetType >= 1 && targetType <= 8 && targetSlot >= 0 && targetSlot < 8)
-		{
+		else if (targetType == 1 && targetSlot >= 0 && targetSlot < 8)
 			mapping = slotMappings[targetSlot];
-		}
 		else if (targetType == 2)
-		{
 			mapping = liveJamIntensityMapping;
-		}
+		else if (targetType == 3)
+			mapping = surpriseMeMapping;
 		else if (targetType == 4)
 			mapping = tripletModeMapping;
+
 		if (mapping.isValid())
 		{
 			if (mapping.isProgramChange)
-			{
 				return "CH" + juce::String(mapping.channel + 1) + " PC" + juce::String(mapping.ccNumber);
-			}
 			else if (mapping.isNote)
-			{
 				return "CH" + juce::String(mapping.channel + 1) + " Note" + juce::String(mapping.ccNumber);
-			}
 			else
-			{
 				return "CH" + juce::String(mapping.channel + 1) + " CC" + juce::String(mapping.ccNumber);
-			}
 		}
+
 		return "Not mapped";
 	}
 }
