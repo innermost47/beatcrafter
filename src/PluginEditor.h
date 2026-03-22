@@ -33,17 +33,20 @@ namespace BeatCrafter
 		std::unique_ptr<SlotManager> slotManager;
 
 		juce::Slider intensitySlider;
-		juce::Label  intensityLabel;
-		IconButton   intensityMidiLearnButton;
-		juce::Label  intensityMidiLabel;
+		juce::Label intensityLabel;
+		IconButton intensityMidiLearnButton;
+		juce::Label intensityMidiLabel;
+		IconButton surpriseMeButton;
+		IconButton surpriseMeMidiLearnButton;
+		juce::Label surpriseMeMidiLabel;
 
 		juce::Slider liveJamIntensitySlider;
-		juce::Label  liveJamIntensityLabel;
-		IconButton   liveJamIntensityMidiLearnButton;
-		juce::Label  liveJamIntensityMidiLabel;
+		juce::Label liveJamIntensityLabel;
+		IconButton liveJamIntensityMidiLearnButton;
+		juce::Label liveJamIntensityMidiLabel;
 
 		std::array<std::unique_ptr<IconButton>, 8> slotMidiLearnButtons;
-		std::array<juce::Label, 8>                 slotMidiLabels;
+		std::array<juce::Label, 8> slotMidiLabels;
 
 		void setupComponents();
 		void updateMidiLearnButtons();
@@ -51,6 +54,7 @@ namespace BeatCrafter
 		void onSlotMidiLearnClicked(int slot);
 		void updatePatternDisplay();
 		void onLiveJamIntensityMidiLearnClicked();
+		void onSurpriseMeMidiLearnClicked();
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};

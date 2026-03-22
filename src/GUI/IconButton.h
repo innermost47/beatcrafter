@@ -17,6 +17,10 @@ namespace BeatCrafter
 			setClickingTogglesState(isToggle);
 			setIconFromSVG(svgData, svgSize, laf.textColour);
 			setMouseCursor(juce::MouseCursor::PointingHandCursor);
+			setColour(juce::DrawableButton::backgroundColourId,
+				juce::Colours::transparentBlack);
+			setColour(juce::DrawableButton::backgroundOnColourId,
+				juce::Colours::transparentBlack);
 		}
 
 		void setIconFromSVG(const char* svgData, int svgSize,
@@ -24,15 +28,12 @@ namespace BeatCrafter
 			juce::Colour bgColour = juce::Colours::transparentBlack)
 		{
 			auto normal = laf.loadSVGWithColour(svgData, svgSize, iconColour);
-			auto hover = laf.loadSVGWithColour(svgData, svgSize,
-				iconColour.brighter(0.3f));
-			auto pressed = laf.loadSVGWithColour(svgData, svgSize,
-				laf.accent);
-
+			auto hover = laf.loadSVGWithColour(svgData, svgSize, iconColour.brighter(0.3f));
+			auto pressed = laf.loadSVGWithColour(svgData, svgSize, laf.accent);
 			if (normal && hover && pressed)
 				setImages(normal.get(), hover.get(), pressed.get());
-
 			setColour(juce::DrawableButton::backgroundColourId, bgColour);
+			setColour(juce::DrawableButton::backgroundOnColourId, bgColour);
 			repaint();
 		}
 
@@ -40,17 +41,31 @@ namespace BeatCrafter
 			bool shouldDrawButtonAsHighlighted,
 			bool shouldDrawButtonAsDown) override
 		{
-			getLookAndFeel().drawDrawableButton(g, *this,
-				shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+			auto bounds = getLocalBounds().toFloat().reduced(0.5f, 0.5f);
+			auto cornerSize = 6.0f;
+
+			auto bgColour = laf.backgroundMid;
+			if (shouldDrawButtonAsDown)
+				bgColour = laf.backgroundMid.darker(0.2f);
+			else if (shouldDrawButtonAsHighlighted)
+				bgColour = laf.backgroundMid.brighter(0.1f);
+
+			g.setColour(juce::Colours::black.withAlpha(0.2f));
+			g.fillRoundedRectangle(bounds.translated(0, 1), cornerSize);
+
+			g.setColour(bgColour);
+			g.fillRoundedRectangle(bounds, cornerSize);
+
+			g.setColour(getToggleState() ? laf.accentLight : laf.backgroundLight);
+			g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
 
 			if (auto* drawable = getCurrentImage())
 			{
-				auto bounds = getLocalBounds().toFloat().reduced(iconPadding);
-				drawable->drawWithin(g, bounds,
+				auto iconBounds = getLocalBounds().toFloat().reduced(iconPadding);
+				drawable->drawWithin(g, iconBounds,
 					juce::RectanglePlacement::centred, 1.0f);
 			}
 		}
-
 
 		void setIconPadding(float padding)
 		{

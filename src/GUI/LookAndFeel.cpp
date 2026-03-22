@@ -114,9 +114,9 @@ namespace BeatCrafter {
 
 	void ModernLookAndFeel::drawLinearSlider(juce::Graphics& g,
 		int x, int y, int width, int height,
-		float sliderPos, float minSliderPos, float maxSliderPos,
+		float sliderPos, float /*minSliderPos*/, float /*maxSliderPos*/,
 		const juce::Slider::SliderStyle style,
-		juce::Slider& slider) {
+		juce::Slider& /*slider*/) {
 
 		if (style == juce::Slider::LinearHorizontal || style == juce::Slider::LinearVertical) {
 			auto isHorizontal = style == juce::Slider::LinearHorizontal;
@@ -160,7 +160,7 @@ namespace BeatCrafter {
 
 	void ModernLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
 		float sliderPos, const float rotaryStartAngle, const float rotaryEndAngle,
-		juce::Slider& slider) {
+		juce::Slider& /*slider*/) {
 
 		auto radius = juce::jmin(width / 2, height / 2) - 4.0f;
 		auto centreX = x + width * 0.5f;
@@ -215,9 +215,9 @@ namespace BeatCrafter {
 	void ModernLookAndFeel::drawPopupMenuItem(juce::Graphics& g, const juce::Rectangle<int>& area,
 		const bool isSeparator, const bool isActive,
 		const bool isHighlighted, const bool isTicked,
-		const bool hasSubMenu, const juce::String& text,
+		const bool /*hasSubMenu*/, const juce::String& text,
 		const juce::String& shortcutKeyText,
-		const juce::Drawable* icon, const juce::Colour* textColour) {
+		const juce::Drawable* icon, const juce::Colour* textColourLocal) {
 
 		if (isSeparator) {
 			auto r = area.reduced(5, 0);
@@ -228,8 +228,8 @@ namespace BeatCrafter {
 		}
 
 		juce::Colour textColourToUse;
-		if (textColour != nullptr) {
-			textColourToUse = *textColour;
+		if (textColourLocal != nullptr) {
+			textColourToUse = *textColourLocal;
 		}
 		else if (isHighlighted) {
 			textColourToUse = backgroundDark;

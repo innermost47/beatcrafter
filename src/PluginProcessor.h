@@ -45,9 +45,9 @@ namespace BeatCrafter
 
 		int getNumPrograms() override { return 1; }
 		int getCurrentProgram() override { return 0; }
-		void setCurrentProgram(int index) override {}
-		const juce::String getProgramName(int index) override { return {}; }
-		void changeProgramName(int index, const juce::String& newName) override {}
+		void setCurrentProgram(int /*index*/) override {}
+		const juce::String getProgramName(int /*index*/) override { return {}; }
+		void changeProgramName(int /*index*/, const juce::String& /*newName*/) override {}
 
 		void getStateInformation(juce::MemoryBlock& destData) override;
 		void setStateInformation(const void* data, int sizeInBytes) override;
@@ -56,6 +56,7 @@ namespace BeatCrafter
 
 		juce::AudioParameterFloat* intensityParam;
 		juce::AudioParameterChoice* styleParam;
+		juce::AudioParameterBool* surpriseMeParam = nullptr;
 		std::array<juce::AudioParameterChoice*, 8> slotStyleParams;
 		juce::AudioParameterFloat* liveJamIntensityParam = nullptr;
 
@@ -94,6 +95,7 @@ namespace BeatCrafter
 
 		MidiMapping intensityMapping;
 		MidiMapping liveJamIntensityMapping;
+		MidiMapping surpriseMeMapping;
 		std::array<MidiMapping, 8> slotMappings;
 
 		bool liveJamMode = false;

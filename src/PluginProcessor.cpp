@@ -13,16 +13,26 @@ namespace BeatCrafter
 			"intensity", "Intensity", 0.0f, 1.0f, 0.5f));
 		addParameter(liveJamIntensityParam = new juce::AudioParameterFloat(
 			"liveJamIntensity", "Live Jam Intensity", 0.0f, 1.0f, 0.5f));
+		addParameter(surpriseMeParam = new juce::AudioParameterBool(
+			"surpriseMe", "Surprise Me", false));
 
 		patternEngine.setLiveJamMode(true);
 		liveJamModeState = true;
+		patternEngine.onIntensityChanged = [this](float newIntensity)
+			{
+				intensityParam->setValueNotifyingHost(newIntensity);
+				juce::MessageManager::callAsync([this, newIntensity]()
+					{
+						if (auto* editor = dynamic_cast<BeatCrafterEditor*>(getActiveEditor()))
+							editor->updateIntensitySlider(newIntensity); });
+			};
 	}
 
 	BeatCrafterProcessor::~BeatCrafterProcessor()
 	{
 	}
 
-	void BeatCrafterProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+	void BeatCrafterProcessor::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
 	{
 		currentSampleRate = sampleRate;
 	}
@@ -46,16 +56,18 @@ namespace BeatCrafter
 
 		processMidi(midiMessages);
 
-		auto playHead = getPlayHead();
-		if (playHead == nullptr)
+		auto playHeadLocal = getPlayHead();
+		if (playHeadLocal == nullptr)
 			return;
 
-		auto posInfo = playHead->getPosition();
+		auto posInfo = playHeadLocal->getPosition();
 		if (!posInfo.hasValue())
 			return;
 
 		patternEngine.setIntensity(intensityParam->get());
 		patternEngine.setLiveJamIntensity(liveJamIntensityParam->get());
+		patternEngine.perfParams.surpriseMeEnabled =
+			surpriseMeParam->get();
 
 		bool hostIsPlaying = posInfo->getIsPlaying();
 
@@ -196,7 +208,7 @@ namespace BeatCrafter
 		}
 	}
 
-	void BeatCrafterProcessor::processMidiNoteOn(int noteNumber, int channel, int velocity)
+	void BeatCrafterProcessor::processMidiNoteOn(int noteNumber, int channel, int /*velocity*/)
 	{
 		for (int i = 0; i < 8; ++i)
 		{
@@ -310,6 +322,14 @@ namespace BeatCrafter
 							customEditor->updateLiveJamIntensitySlider(newLiveJamIntensity);
 						}
 					} });
+		}
+		if (surpriseMeMapping.isValid() && !surpriseMeMapping.isNote &&
+			ccNumber == surpriseMeMapping.ccNumber &&
+			channel == surpriseMeMapping.channel)
+		{
+			bool active = value >= 64;
+			surpriseMeParam->setValueNotifyingHost(active ? 1.0f : 0.0f);
+			getPatternEngine().perfParams.surpriseMeEnabled = active;
 		}
 		for (int i = 0; i < 8; ++i)
 		{
@@ -460,6 +480,12 @@ namespace BeatCrafter
 			state.setProperty("liveJamIntensityMidiChannel", liveJamIntensityMapping.channel, nullptr);
 			state.setProperty("liveJamIntensityMidiIsNote", liveJamIntensityMapping.isNote, nullptr);
 		}
+		if (surpriseMeMapping.isValid())
+		{
+			state.setProperty("surpriseMeMidiCC", surpriseMeMapping.ccNumber, nullptr);
+			state.setProperty("surpriseMeMidiChannel", surpriseMeMapping.channel, nullptr);
+			state.setProperty("surpriseMeMidiIsNote", surpriseMeMapping.isNote, nullptr);
+		}
 
 		for (int i = 0; i < 8; ++i)
 		{
@@ -561,6 +587,13 @@ namespace BeatCrafter
 				hasSavedMidiMappings = true;
 			}
 
+			if (tree.hasProperty("surpriseMeMidiCC"))
+			{
+				surpriseMeMapping.ccNumber = tree.getProperty("surpriseMeMidiCC", -1);
+				surpriseMeMapping.channel = tree.getProperty("surpriseMeMidiChannel", -1);
+				surpriseMeMapping.isNote = tree.getProperty("surpriseMeMidiIsNote", false);
+			}
+
 			for (int i = 0; i < 8; ++i)
 			{
 				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
@@ -636,6 +669,8 @@ namespace BeatCrafter
 		{
 			return liveJamIntensityMapping.isValid();
 		}
+		else if (targetType == 3)
+			return surpriseMeMapping.isValid();
 		return false;
 	}
 

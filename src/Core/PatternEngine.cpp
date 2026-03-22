@@ -16,8 +16,7 @@ namespace BeatCrafter
 			StyleType::Electronic,
 			StyleType::HipHop,
 			StyleType::Latin,
-			StyleType::Punk
-		};
+			StyleType::Punk };
 
 		for (int i = 0; i < 8; ++i)
 		{
@@ -110,7 +109,7 @@ namespace BeatCrafter
 	}
 
 	void PatternEngine::processBlock(juce::MidiBuffer& midiMessages,
-		int numSamples,
+		int /*numSamples*/,
 		double sampleRate,
 		const juce::AudioPlayHead::PositionInfo& posInfo)
 	{
@@ -120,6 +119,7 @@ namespace BeatCrafter
 		bool isPlayingDAW = posInfo.getIsPlaying();
 		double bpm = posInfo.getBpm().orFallback(120.0);
 		double ppqPosition = posInfo.getPpqPosition().orFallback(0.0);
+		int currentMeasure = static_cast<int>(ppqPosition / 4.0);
 		double beatsPerSecond = bpm / 60.0;
 		double sixteenthsPerSecond = beatsPerSecond * 4.0;
 		samplesPerStep = static_cast<int>(sampleRate / sixteenthsPerSecond);
@@ -127,6 +127,7 @@ namespace BeatCrafter
 		int patternLength = pattern.getLength();
 		double ppqPerStep = 0.25;
 		int currentStepFromPPQ = static_cast<int>(ppqPosition / ppqPerStep) % patternLength;
+		updateSurpriseMe(currentMeasure, ppqPosition);
 		if (currentStepFromPPQ != pattern.getCurrentStep() ||
 			(currentStepFromPPQ == 0 && ppqPosition < 0.1))
 		{
@@ -160,6 +161,53 @@ namespace BeatCrafter
 		}
 	}
 
+	void PatternEngine::applyHumanization(Pattern& pattern, int stepIndex)
+	{
+		static std::mt19937 rng(std::random_device{}());
+		std::uniform_real_distribution<float> velDist(
+			-perfParams.humanizeAmount, perfParams.humanizeAmount);
+		std::uniform_real_distribution<float> chanceDist(0.0f, 1.0f);
+
+		for (int trackIdx = 0; trackIdx < pattern.getNumTracks(); ++trackIdx)
+		{
+			auto& step = pattern.getTrack(trackIdx).getStep(stepIndex);
+			if (!step.isActive())
+				continue;
+
+			float newVel = juce::jlimit(0.15f, 1.0f,
+				step.getVelocity() + velDist(rng));
+			step.setVelocity(newVel);
+
+			float omitProb = perfParams.omitChance;
+
+			if (trackIdx == 0)
+			{
+				if (stepIndex == 0 || stepIndex == 8)
+					omitProb *= 0.1f;
+				else
+					omitProb *= 0.5f;
+			}
+			else if (trackIdx == 1)
+			{
+				if (stepIndex == 4 || stepIndex == 12)
+					omitProb *= 0.15f;
+				else
+					omitProb *= 0.6f;
+			}
+			else if (trackIdx == 2)
+			{
+				omitProb *= 1.5f;
+			}
+			else
+			{
+				omitProb *= 2.5f;
+			}
+
+			if (chanceDist(rng) < omitProb)
+				step.setActive(false);
+		}
+	}
+
 	void PatternEngine::sendAllNotesOff(juce::MidiBuffer& midiMessages)
 	{
 		for (int ch = 1; ch <= 16; ++ch)
@@ -169,7 +217,7 @@ namespace BeatCrafter
 		}
 	}
 
-	void PatternEngine::addLiveJamElements(Pattern& pattern, int stepIndex, float intensity)
+	void PatternEngine::addLiveJamElements(Pattern& pattern, int stepIndex, float /*intensity*/)
 	{
 		stepsSinceLastJam++;
 
@@ -179,8 +227,8 @@ namespace BeatCrafter
 		{
 			stepsSinceLastJam = 0;
 
-			int maxElement = currentLiveJamIntensity > 0.7f ? 10 :
-				currentLiveJamIntensity > 0.4f ? 8 : 6;
+			int maxElement = currentLiveJamIntensity > 0.7f ? 10 : currentLiveJamIntensity > 0.4f ? 8
+				: 6;
 			int elementType = liveJamRandom.nextInt(maxElement);
 
 			switch (elementType)
@@ -270,10 +318,8 @@ namespace BeatCrafter
 					if (stepIndex < 15)
 					{
 						pattern.getTrack(1).getStep(stepIndex + 1).setActive(true);
-						pattern.getTrack(1).getStep(stepIndex + 1).setVelocity(
-							0.15f + liveJamRandom.nextFloat() * 0.2f);
-						pattern.getTrack(1).getStep(stepIndex + 1).setProbability(
-							0.4f + currentLiveJamIntensity * 0.3f);
+						pattern.getTrack(1).getStep(stepIndex + 1).setVelocity(0.15f + liveJamRandom.nextFloat() * 0.2f);
+						pattern.getTrack(1).getStep(stepIndex + 1).setProbability(0.4f + currentLiveJamIntensity * 0.3f);
 					}
 				}
 				break;
@@ -316,10 +362,8 @@ namespace BeatCrafter
 			{
 				int otherTom = (tomTrack == 6) ? 7 : 6;
 				pattern.getTrack(otherTom).getStep(stepIndex + 1).setActive(true);
-				pattern.getTrack(otherTom).getStep(stepIndex + 1).setVelocity(
-					0.5f + liveJamRandom.nextFloat() * 0.3f);
-				pattern.getTrack(otherTom).getStep(stepIndex + 1).setProbability(
-					0.7f + currentLiveJamIntensity * 0.2f);
+				pattern.getTrack(otherTom).getStep(stepIndex + 1).setVelocity(0.5f + liveJamRandom.nextFloat() * 0.3f);
+				pattern.getTrack(otherTom).getStep(stepIndex + 1).setProbability(0.7f + currentLiveJamIntensity * 0.2f);
 			}
 		}
 
@@ -343,10 +387,8 @@ namespace BeatCrafter
 			if (!pattern.getTrack(randomTrack).getStep(stepIndex).isActive())
 			{
 				pattern.getTrack(randomTrack).getStep(stepIndex).setActive(true);
-				pattern.getTrack(randomTrack).getStep(stepIndex).setVelocity(
-					0.3f + liveJamRandom.nextFloat() * 0.5f);
-				pattern.getTrack(randomTrack).getStep(stepIndex).setProbability(
-					0.5f + liveJamRandom.nextFloat() * 0.4f);
+				pattern.getTrack(randomTrack).getStep(stepIndex).setVelocity(0.3f + liveJamRandom.nextFloat() * 0.5f);
+				pattern.getTrack(randomTrack).getStep(stepIndex).setProbability(0.5f + liveJamRandom.nextFloat() * 0.4f);
 			}
 		}
 	}
@@ -360,6 +402,9 @@ namespace BeatCrafter
 
 		if (liveJamMode && currentLiveJamIntensity > 0.1f)
 			addLiveJamElements(cachedIntensifiedPattern, stepIndex, currentIntensity);
+
+		if (perfParams.humanizeEnabled)
+			applyHumanization(cachedIntensifiedPattern, stepIndex);
 
 		static std::mt19937 gen(std::random_device{}());
 		static std::uniform_real_distribution<float> dis(0.0f, 1.0f);
@@ -407,5 +452,52 @@ namespace BeatCrafter
 			slotRandomSeeds[activeSlot]);
 
 		intensityCacheValid = false;
+	}
+
+	void PatternEngine::updateSurpriseMe(int currentMeasure, double ppqPosition)
+	{
+		if (!perfParams.surpriseMeEnabled)
+			return;
+
+		if (std::abs(currentIntensity - surpriseMeCenter) > 0.2f)
+			surpriseMeCenter = currentIntensity;
+
+		if (currentMeasure != lastSurpriseMeMeasure)
+		{
+			lastSurpriseMeMeasure = currentMeasure;
+
+			if (currentMeasure % 8 == 0)
+			{
+				static std::mt19937 rng(std::random_device{}());
+				std::uniform_real_distribution<float> freqDist(0.4f, 1.2f);
+				std::uniform_real_distribution<float> ampDist(0.03f, 0.10f);
+
+				surpriseMeTargetFreq = freqDist(rng);
+				surpriseMeTargetAmplitude = ampDist(rng);
+
+				if (surpriseMeCenter < 0.2f)
+					surpriseMeCenter += 0.1f;
+				else if (surpriseMeCenter > 0.8f)
+					surpriseMeCenter -= 0.1f;
+			}
+		}
+
+		surpriseMeFreq += (surpriseMeTargetFreq - surpriseMeFreq) * 0.15f;
+		surpriseMeAmplitude += (surpriseMeTargetAmplitude - surpriseMeAmplitude) * 0.15f;
+
+		float phaseIncrement = (surpriseMeFreq * juce::MathConstants<float>::twoPi) / 4.0f;
+		surpriseMePhase = std::fmod(
+			(float)ppqPosition * phaseIncrement,
+			juce::MathConstants<float>::twoPi);
+
+		float lfo = std::sin(surpriseMePhase) + 0.5f * std::sin(surpriseMePhase * 1.7f + 1.3f) + 0.3f * std::sin(surpriseMePhase * 3.1f + 0.5f);
+		lfo /= 1.8f;
+
+		float newIntensity = juce::jlimit(0.05f, 0.95f,
+			surpriseMeCenter + lfo * surpriseMeAmplitude);
+
+		setIntensity(newIntensity);
+		if (onIntensityChanged)
+			onIntensityChanged(newIntensity);
 	}
 }

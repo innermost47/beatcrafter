@@ -63,6 +63,7 @@ juce_add_binary_data(BeatCrafterData
         resources/phosphor/link-simple.svg
         resources/phosphor/ear.svg
         resources/phosphor/link-simple-break.svg
+        resources/phosphor/wave-sine.svg
 )
 
 set_target_properties(BeatCrafterData PROPERTIES
