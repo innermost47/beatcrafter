@@ -6,28 +6,28 @@ namespace BeatCrafter
 
 	BeatCrafterProcessor::BeatCrafterProcessor()
 		: AudioProcessor(BusesProperties()
-			.withOutput("Output", juce::AudioChannelSet::stereo(), true))
+							 .withOutput("Output", juce::AudioChannelSet::stereo(), true))
 	{
 		setupDefaultMidiMappings();
 		addParameter(intensityParam = new juce::AudioParameterFloat(
-			"intensity", "Intensity", 0.0f, 1.0f, 0.5f));
+						 "intensity", "Intensity", 0.0f, 1.0f, 0.5f));
 		addParameter(liveJamIntensityParam = new juce::AudioParameterFloat(
-			"liveJamIntensity", "Live Jam Intensity", 0.0f, 1.0f, 0.5f));
+						 "liveJamIntensity", "Live Jam Intensity", 0.0f, 1.0f, 0.5f));
 		addParameter(surpriseMeParam = new juce::AudioParameterBool(
-			"surpriseMe", "Surprise Me", false));
+						 "surpriseMe", "Surprise Me", false));
 		addParameter(tripletModeParam = new juce::AudioParameterBool(
-			"tripletMode", "Triplet Mode", false));
+						 "tripletMode", "Triplet Mode", false));
 
 		patternEngine.setLiveJamMode(true);
 		liveJamModeState = true;
 		patternEngine.onIntensityChanged = [this](float newIntensity)
-			{
-				intensityParam->setValueNotifyingHost(newIntensity);
-				juce::MessageManager::callAsync([this, newIntensity]()
-					{
+		{
+			intensityParam->setValueNotifyingHost(newIntensity);
+			juce::MessageManager::callAsync([this, newIntensity]()
+											{
 						if (auto* editor = dynamic_cast<BeatCrafterEditor*>(getActiveEditor()))
 							editor->updateIntensitySlider(newIntensity); });
-			};
+		};
 	}
 
 	BeatCrafterProcessor::~BeatCrafterProcessor()
@@ -43,7 +43,7 @@ namespace BeatCrafter
 	{
 	}
 
-	bool BeatCrafterProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+	bool BeatCrafterProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const
 	{
 		if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
 			return false;
@@ -51,8 +51,8 @@ namespace BeatCrafter
 		return true;
 	}
 
-	void BeatCrafterProcessor::processBlock(juce::AudioBuffer<float>& buffer,
-		juce::MidiBuffer& midiMessages)
+	void BeatCrafterProcessor::processBlock(juce::AudioBuffer<float> &buffer,
+											juce::MidiBuffer &midiMessages)
 	{
 		buffer.clear();
 
@@ -90,7 +90,7 @@ namespace BeatCrafter
 			}
 		}
 		patternEngine.processBlock(midiMessages, buffer.getNumSamples(),
-			currentSampleRate, *posInfo);
+								   currentSampleRate, *posInfo);
 	}
 
 	void BeatCrafterProcessor::setLiveJamMode(bool enabled)
@@ -120,7 +120,7 @@ namespace BeatCrafter
 		}
 	}
 
-	void BeatCrafterProcessor::processMidi(juce::MidiBuffer& midiMessages)
+	void BeatCrafterProcessor::processMidi(juce::MidiBuffer &midiMessages)
 	{
 		juce::MidiBuffer processedMidi;
 		bool slotJustSwitched = false;
@@ -202,7 +202,7 @@ namespace BeatCrafter
 
 				getPatternEngine().switchToSlot(i, true, intensityParam->get());
 				juce::MessageManager::callAsync([this, i]()
-					{
+												{
 						if (auto* editor = getActiveEditor())
 							if (auto* ce = dynamic_cast<BeatCrafterEditor*>(editor))
 								ce->updateSlotButtons(i); });
@@ -229,7 +229,7 @@ namespace BeatCrafter
 				getPatternEngine().setIntensity(dbgIntensity);
 				getPatternEngine().switchToSlot(i, true, dbgIntensity);
 				juce::MessageManager::callAsync([this, i]()
-					{
+												{
 						if (auto* editor = getActiveEditor())
 							if (auto* ce = dynamic_cast<BeatCrafterEditor*>(editor))
 								ce->updateSlotButtons(i); });
@@ -305,7 +305,7 @@ namespace BeatCrafter
 			float newIntensity = value / 127.0f;
 			intensityParam->setValueNotifyingHost(newIntensity);
 			juce::MessageManager::callAsync([this, newIntensity]()
-				{
+											{
 					if (auto* editor = getActiveEditor()) {
 						if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
 							customEditor->updateIntensitySlider(newIntensity);
@@ -319,7 +319,7 @@ namespace BeatCrafter
 			float newLiveJamIntensity = value / 127.0f;
 			liveJamIntensityParam->setValueNotifyingHost(newLiveJamIntensity);
 			juce::MessageManager::callAsync([this, newLiveJamIntensity]()
-				{
+											{
 					if (auto* editor = getActiveEditor()) {
 						if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
 							customEditor->updateLiveJamIntensitySlider(newLiveJamIntensity);
@@ -353,7 +353,7 @@ namespace BeatCrafter
 					getPatternEngine().setIntensity(intensityParam->get());
 					getPatternEngine().switchToSlot(i, true, intensityParam->get());
 					juce::MessageManager::callAsync([this, i]()
-						{
+													{
 							if (auto* editor = getActiveEditor()) {
 								if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
 									customEditor->updateSlotButtons(i);
@@ -401,22 +401,22 @@ namespace BeatCrafter
 		}
 	}
 
-	juce::AudioProcessorEditor* BeatCrafterProcessor::createEditor()
+	juce::AudioProcessorEditor *BeatCrafterProcessor::createEditor()
 	{
-		auto* editor = new BeatCrafterEditor(*this);
+		auto *editor = new BeatCrafterEditor(*this);
 		return editor;
 	}
 
 	void BeatCrafterProcessor::updateEditorFromState()
 	{
 		juce::Timer::callAfterDelay(100, [this]()
-			{
+									{
 				if (auto* editor = dynamic_cast<BeatCrafterEditor*>(getActiveEditor())) {
 					editor->updateFromProcessorState();
 				} });
 	}
 
-	void BeatCrafterProcessor::getStateInformation(juce::MemoryBlock& destData)
+	void BeatCrafterProcessor::getStateInformation(juce::MemoryBlock &destData)
 	{
 		auto state = juce::ValueTree("BeatCrafterState");
 
@@ -436,7 +436,7 @@ namespace BeatCrafter
 
 		for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
 		{
-			Pattern* pattern = getPatternEngine().getSlot(slotIndex);
+			Pattern *pattern = getPatternEngine().getSlot(slotIndex);
 			if (pattern)
 			{
 				auto slotNode = juce::ValueTree("Slot" + juce::String(slotIndex));
@@ -452,14 +452,14 @@ namespace BeatCrafter
 				for (int trackIndex = 0; trackIndex < pattern->getNumTracks(); ++trackIndex)
 				{
 					auto trackNode = juce::ValueTree("Track" + juce::String(trackIndex));
-					const auto& track = pattern->getTrack(trackIndex);
+					const auto &track = pattern->getTrack(trackIndex);
 
 					trackNode.setProperty("name", track.getName(), nullptr);
 					trackNode.setProperty("midiNote", track.getMidiNote(), nullptr);
 
 					for (int stepIndex = 0; stepIndex < track.getLength(); ++stepIndex)
 					{
-						const auto& step = track.getStep(stepIndex);
+						const auto &step = track.getStep(stepIndex);
 
 						if (step.isActive())
 						{
@@ -526,7 +526,7 @@ namespace BeatCrafter
 		state.writeToStream(stream);
 	}
 
-	void BeatCrafterProcessor::setStateInformation(const void* data, int sizeInBytes)
+	void BeatCrafterProcessor::setStateInformation(const void *data, int sizeInBytes)
 	{
 		auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
 		if (tree.isValid())
@@ -564,7 +564,7 @@ namespace BeatCrafter
 						auto trackNode = slotNode.getChildWithName("Track" + juce::String(trackIndex));
 						if (trackNode.isValid())
 						{
-							auto& track = restoredPattern->getTrack(trackIndex);
+							auto &track = restoredPattern->getTrack(trackIndex);
 
 							track.setName(trackNode.getProperty("name", track.getName()));
 							track.setMidiNote(trackNode.getProperty("midiNote", track.getMidiNote()));
@@ -581,7 +581,7 @@ namespace BeatCrafter
 									int stepIndex = stepName.substring(4).getIntValue();
 									if (stepIndex >= 0 && stepIndex < track.getLength())
 									{
-										auto& step = track.getStep(stepIndex);
+										auto &step = track.getStep(stepIndex);
 
 										step.setActive(stepNode.getProperty("active", false));
 										step.setVelocity(stepNode.getProperty("velocity", 0.8f));
@@ -685,8 +685,10 @@ namespace BeatCrafter
 		{
 			liveJamIntensityMapping = MidiMapping{};
 		}
-		else if (targetType == 3) surpriseMeMapping = {};
-		else if (targetType == 4) tripletModeMapping = {};
+		else if (targetType == 3)
+			surpriseMeMapping = {};
+		else if (targetType == 4)
+			tripletModeMapping = {};
 	}
 
 	bool BeatCrafterProcessor::hasMidiMapping(int targetType, int targetSlot) const
@@ -705,7 +707,8 @@ namespace BeatCrafter
 		}
 		else if (targetType == 3)
 			return surpriseMeMapping.isValid();
-		else if (targetType == 4) return tripletModeMapping.isValid();
+		else if (targetType == 4)
+			return tripletModeMapping.isValid();
 		return false;
 	}
 
@@ -724,7 +727,8 @@ namespace BeatCrafter
 		{
 			mapping = liveJamIntensityMapping;
 		}
-		else if (targetType == 4) mapping = tripletModeMapping;
+		else if (targetType == 4)
+			mapping = tripletModeMapping;
 		if (mapping.isValid())
 		{
 			if (mapping.isProgramChange)
@@ -744,7 +748,7 @@ namespace BeatCrafter
 	}
 }
 
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
 {
 	return new BeatCrafter::BeatCrafterProcessor();
 }

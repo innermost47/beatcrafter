@@ -22,29 +22,29 @@ namespace BeatCrafter
 			repaint();
 		}
 
-		void paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted,
-			bool shouldDrawButtonAsDown) override;
+		void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
+						 bool shouldDrawButtonAsDown) override;
 
 	private:
 		int slotNumber;
 		bool hasPattern = false;
 		bool isActive = false;
-		ModernLookAndFeel* lookAndFeel = nullptr;
+		ModernLookAndFeel *lookAndFeel = nullptr;
 	};
 
 	class SlotManager : public juce::Component
 	{
 	public:
-		SlotManager(PatternEngine& engine);
+		SlotManager(PatternEngine &engine);
 		~SlotManager() override = default;
 
 		void resized() override;
-		void updateSlotStates();
+		void updateSlotStates(int forceActiveSlot = -1);
 		std::function<void(int slot)> onSlotChanged;
 		std::function<float()> getIntensity;
 
 	private:
-		PatternEngine& patternEngine;
+		PatternEngine &patternEngine;
 		std::array<std::unique_ptr<SlotButton>, 8> slotButtons;
 		juce::String styleTypeToString(StyleType style);
 		void onSlotClicked(int slot);
