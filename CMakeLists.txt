@@ -42,6 +42,14 @@ target_sources(BeatCrafter
         src/GUI/PatternGrid.cpp
         src/GUI/LookAndFeel.cpp
         src/GUI/SlotManager.cpp
+        src/Core/Styles/RockStyle.cpp
+        src/Core/Styles/MetalStyle.cpp
+        src/Core/Styles/JazzStyle.cpp
+        src/Core/Styles/FunkStyle.cpp
+        src/Core/Styles/ElectronicStyle.cpp
+        src/Core/Styles/HipHopStyle.cpp
+        src/Core/Styles/LatinStyle.cpp
+        src/Core/Styles/PunkStyle.cpp
 )
 
 juce_add_binary_data(BeatCrafterData
