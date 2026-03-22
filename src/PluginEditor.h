@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
@@ -39,6 +39,9 @@ namespace BeatCrafter
 		IconButton surpriseMeButton;
 		IconButton surpriseMeMidiLearnButton;
 		juce::Label surpriseMeMidiLabel;
+		IconButton tripletModeButton;
+		IconButton tripletModeMidiLearnButton;
+		juce::Label tripletModeMidiLabel;
 
 		float lastRepaintIntensity = -1.0f;
 
@@ -57,6 +60,34 @@ namespace BeatCrafter
 		void updatePatternDisplay();
 		void onLiveJamIntensityMidiLearnClicked();
 		void onSurpriseMeMidiLearnClicked();
+		void onTripletModeMidiLearnClicked();
+		void layoutToggleBlock(juce::Rectangle<int> zone,
+			juce::Component& toggleButton,
+			juce::Component& midiLearnButton,
+			juce::Label& midiLabel,
+			int buttonSize = 32);
+		void layoutSliderBlock(juce::Rectangle<int> zone,
+			juce::Label& label,
+			juce::Slider& slider,
+			juce::Component& midiLearnButton,
+			juce::Label& midiLabel,
+			int sliderWidth,
+			int gridBottom,
+			int midiAreaHeight);
+		void applyToggleButtonState(IconButton& btn,
+			const char* svgData, int svgSize,
+			bool isActive);
+		void applyMidiLearnButtonState(IconButton& btn,
+			bool isLearning,
+			bool hasMappingResult,
+			const juce::String& mappingDescription,
+			const juce::String& defaultTooltip);
+		void updateMidiLearnPair(IconButton& btn,
+			juce::Label& label,
+			bool isLearning,
+			bool hasMapping,
+			const juce::String& mappingDescription,
+			const juce::String& defaultTooltip);
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};

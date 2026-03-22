@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(BeatCrafter VERSION 0.1.0)
+project(BeatCrafter VERSION 0.1.1)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -29,7 +29,7 @@ juce_add_plugin(BeatCrafter
     NEEDS_MIDI_OUTPUT TRUE
     PRODUCES_MIDI_OUTPUT TRUE
     PRODUCT_NAME "BeatCrafter"
-    BUNDLE_ID "com.beatcrafter.beatcrafter"
+    BUNDLE_ID "com.innermost47.beatcrafter"
 )
 
 target_sources(BeatCrafter
@@ -64,6 +64,7 @@ juce_add_binary_data(BeatCrafterData
         resources/phosphor/ear.svg
         resources/phosphor/link-simple-break.svg
         resources/phosphor/wave-sine.svg
+        resources/phosphor/number-three.svg
 )
 
 set_target_properties(BeatCrafterData PROPERTIES

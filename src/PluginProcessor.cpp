@@ -15,6 +15,8 @@ namespace BeatCrafter
 			"liveJamIntensity", "Live Jam Intensity", 0.0f, 1.0f, 0.5f));
 		addParameter(surpriseMeParam = new juce::AudioParameterBool(
 			"surpriseMe", "Surprise Me", false));
+		addParameter(tripletModeParam = new juce::AudioParameterBool(
+			"tripletMode", "Triplet Mode", false));
 
 		patternEngine.setLiveJamMode(true);
 		liveJamModeState = true;
@@ -68,6 +70,7 @@ namespace BeatCrafter
 		patternEngine.setLiveJamIntensity(liveJamIntensityParam->get());
 		patternEngine.perfParams.surpriseMeEnabled =
 			surpriseMeParam->get();
+		patternEngine.perfParams.tripletMode = tripletModeParam->get();
 
 		bool hostIsPlaying = posInfo->getIsPlaying();
 
@@ -331,6 +334,14 @@ namespace BeatCrafter
 			surpriseMeParam->setValueNotifyingHost(active ? 1.0f : 0.0f);
 			getPatternEngine().perfParams.surpriseMeEnabled = active;
 		}
+		if (tripletModeMapping.isValid() && !tripletModeMapping.isNote &&
+			ccNumber == tripletModeMapping.ccNumber &&
+			channel == tripletModeMapping.channel)
+		{
+			bool active = value >= 64;
+			tripletModeParam->setValueNotifyingHost(active ? 1.0f : 0.0f);
+			getPatternEngine().perfParams.tripletMode = active;
+		}
 		for (int i = 0; i < 8; ++i)
 		{
 			if (slotMappings[i].isValid() && !slotMappings[i].isNote &&
@@ -414,6 +425,7 @@ namespace BeatCrafter
 		state.setProperty("liveJamMode", liveJamModeState, nullptr);
 		state.setProperty("liveJamIntensity", liveJamIntensityParam->get(), nullptr);
 		state.setProperty("surpriseMe", surpriseMeParam->get(), nullptr);
+		state.setProperty("tripletMode", tripletModeParam->get(), nullptr);
 
 		for (int i = 0; i < 8; ++i)
 		{
@@ -487,6 +499,12 @@ namespace BeatCrafter
 			state.setProperty("surpriseMeMidiChannel", surpriseMeMapping.channel, nullptr);
 			state.setProperty("surpriseMeMidiIsNote", surpriseMeMapping.isNote, nullptr);
 		}
+		if (tripletModeMapping.isValid())
+		{
+			state.setProperty("tripletModeMidiCC", tripletModeMapping.ccNumber, nullptr);
+			state.setProperty("tripletModeMidiChannel", tripletModeMapping.channel, nullptr);
+			state.setProperty("tripletModeMidiIsNote", tripletModeMapping.isNote, nullptr);
+		}
 
 		for (int i = 0; i < 8; ++i)
 		{
@@ -520,6 +538,9 @@ namespace BeatCrafter
 			bool surpriseMeActive = tree.getProperty("surpriseMe", false);
 			surpriseMeParam->setValueNotifyingHost(surpriseMeActive ? 1.0f : 0.0f);
 			patternEngine.perfParams.surpriseMeEnabled = surpriseMeActive;
+			bool tripletActive = tree.getProperty("tripletMode", false);
+			tripletModeParam->setValueNotifyingHost(tripletActive ? 1.0f : 0.0f);
+			patternEngine.perfParams.tripletMode = tripletActive;
 
 			for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
 			{
@@ -598,6 +619,13 @@ namespace BeatCrafter
 				surpriseMeMapping.isNote = tree.getProperty("surpriseMeMidiIsNote", false);
 			}
 
+			if (tree.hasProperty("tripletModeMidiCC"))
+			{
+				tripletModeMapping.ccNumber = tree.getProperty("tripletModeMidiCC", -1);
+				tripletModeMapping.channel = tree.getProperty("tripletModeMidiChannel", -1);
+				tripletModeMapping.isNote = tree.getProperty("tripletModeMidiIsNote", false);
+			}
+
 			for (int i = 0; i < 8; ++i)
 			{
 				juce::String ccProp = "slot" + juce::String(i) + "MidiCC";
@@ -657,6 +685,8 @@ namespace BeatCrafter
 		{
 			liveJamIntensityMapping = MidiMapping{};
 		}
+		else if (targetType == 3) surpriseMeMapping = {};
+		else if (targetType == 4) tripletModeMapping = {};
 	}
 
 	bool BeatCrafterProcessor::hasMidiMapping(int targetType, int targetSlot) const
@@ -675,6 +705,7 @@ namespace BeatCrafter
 		}
 		else if (targetType == 3)
 			return surpriseMeMapping.isValid();
+		else if (targetType == 4) return tripletModeMapping.isValid();
 		return false;
 	}
 
@@ -693,7 +724,7 @@ namespace BeatCrafter
 		{
 			mapping = liveJamIntensityMapping;
 		}
-
+		else if (targetType == 4) mapping = tripletModeMapping;
 		if (mapping.isValid())
 		{
 			if (mapping.isProgramChange)

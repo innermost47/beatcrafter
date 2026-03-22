@@ -6,40 +6,44 @@
 
 namespace BeatCrafter {
 
-    class PatternGrid : public juce::Component,
-        public juce::Timer
-    {
-    public:
-        PatternGrid();
-        ~PatternGrid() override;
+	class PatternGrid : public juce::Component,
+		public juce::Timer
+	{
+	public:
+		PatternGrid();
+		~PatternGrid() override;
 
-        void setPattern(const Pattern* pattern);
-        void setPatternEngine(PatternEngine* engine);
+		void setPattern(const Pattern* pattern);
+		void setPatternEngine(PatternEngine* engine);
 
-        void paint(juce::Graphics&) override;
-        void resized() override;
-        void timerCallback() override;
+		void paint(juce::Graphics&) override;
+		void resized() override;
+		void timerCallback() override;
+		void markDirty();
 
-    private:
-        const Pattern* currentPattern = nullptr;
-        PatternEngine* patternEngine = nullptr;
-        ModernLookAndFeel* lookAndFeel = nullptr;
+	private:
+		const Pattern* currentPattern = nullptr;
+		PatternEngine* patternEngine = nullptr;
+		ModernLookAndFeel* lookAndFeel = nullptr;
 
-        float cellWidth = 0.0f;
-        float cellHeight = 0.0f;
-        int   headerWidth = 80;
-        int   headerHeight = 20;
-        int   playheadPosition = -1;
+		float cellWidth = 0.0f;
+		float cellHeight = 0.0f;
+		int   headerWidth = 80;
+		int   headerHeight = 20;
+		int   playheadPosition = -1;
 
-        juce::Rectangle<float> getStepBounds(int track, int step) const;
+		juce::Image offscreenBuffer;
+		bool bufferDirty = true;
 
-        void drawBackground(juce::Graphics&);
-        void drawGrid(juce::Graphics&);
-        void drawSteps(juce::Graphics&);
-        void drawPlayhead(juce::Graphics&);
-        void drawTrackLabels(juce::Graphics&);
-        void drawStepNumbers(juce::Graphics&);
+		juce::Rectangle<float> getStepBounds(int track, int step) const;
 
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatternGrid)
-    };
+		void drawBackground(juce::Graphics&);
+		void drawGrid(juce::Graphics&);
+		void drawSteps(juce::Graphics&);
+		void drawPlayhead(juce::Graphics&);
+		void drawTrackLabels(juce::Graphics&);
+		void drawStepNumbers(juce::Graphics&);
+
+		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PatternGrid)
+	};
 }

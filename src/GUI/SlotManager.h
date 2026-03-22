@@ -11,13 +11,14 @@ namespace BeatCrafter
 	public:
 		SlotButton(int slotNumber) : slotNumber(slotNumber)
 		{
+			setClickingTogglesState(false);
 			setButtonText(juce::String(slotNumber + 1));
 		}
 
-		void setSlotState(bool hasLocalPattern, bool isLocalActive)
+		void setSlotState(bool hasPattern, bool isActive)
 		{
-			this->hasPattern = hasLocalPattern;
-			this->isActive = isLocalActive;
+			this->hasPattern = hasPattern;
+			this->isActive = isActive;
 			repaint();
 		}
 

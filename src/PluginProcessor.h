@@ -57,6 +57,7 @@ namespace BeatCrafter
 		juce::AudioParameterFloat* intensityParam;
 		juce::AudioParameterChoice* styleParam;
 		juce::AudioParameterBool* surpriseMeParam = nullptr;
+		juce::AudioParameterBool* tripletModeParam = nullptr;
 		std::array<juce::AudioParameterChoice*, 8> slotStyleParams;
 		juce::AudioParameterFloat* liveJamIntensityParam = nullptr;
 
@@ -96,6 +97,7 @@ namespace BeatCrafter
 		MidiMapping intensityMapping;
 		MidiMapping liveJamIntensityMapping;
 		MidiMapping surpriseMeMapping;
+		MidiMapping tripletModeMapping;
 		std::array<MidiMapping, 8> slotMappings;
 
 		bool liveJamMode = false;

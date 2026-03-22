@@ -17,7 +17,7 @@ namespace BeatCrafter
 			bool humanizeEnabled = true;
 			float humanizeAmount = 0.08f;
 			float omitChance = 0.05f;
-
+			bool  tripletMode = false;
 			bool surpriseMeEnabled = false;
 			float surpriseMeRange = 0.15f;
 		};
@@ -25,18 +25,18 @@ namespace BeatCrafter
 		PatternEngine();
 		~PatternEngine() = default;
 
-		Pattern &getCurrentPattern() { return slots[activeSlot] ? *slots[activeSlot] : dummyPattern; }
-		const Pattern &getCurrentPattern() const { return *slots[activeSlot]; }
-		const Pattern *getDisplayPattern() const { return &intensifiedPatternCache; }
-		Pattern *getCurrentBasePattern() { return slots[activeSlot].get(); }
-		Pattern *getSlot(int index) { return (index >= 0 && index < 8 && slots[index]) ? slots[index].get() : nullptr; }
+		Pattern& getCurrentPattern() { return slots[activeSlot] ? *slots[activeSlot] : dummyPattern; }
+		const Pattern& getCurrentPattern() const { return *slots[activeSlot]; }
+		const Pattern* getDisplayPattern() const { return &intensifiedPatternCache; }
+		Pattern* getCurrentBasePattern() { return slots[activeSlot].get(); }
+		Pattern* getSlot(int index) { return (index >= 0 && index < 8 && slots[index]) ? slots[index].get() : nullptr; }
 
 		PerformanceParams perfParams;
 
 		void loadPatternToSlot(std::unique_ptr<Pattern> pattern, int slot);
 		void generateNewPattern(StyleType style, float complexity = 0.5f);
 		void generateNewPatternForSlot(int slot, StyleType style, float complexity = 0.5f);
-		Pattern applyIntensity(const Pattern &basePattern, float intensity) const;
+		Pattern applyIntensity(const Pattern& basePattern, float intensity) const;
 
 		void switchToSlot(int slot, bool immediate = false, float intensity = -1.0f);
 		int getActiveSlot() const { return activeSlot; }
@@ -87,10 +87,10 @@ namespace BeatCrafter
 		void resetToStart();
 		bool getIsPlaying() const { return isPlaying; }
 
-		void processBlock(juce::MidiBuffer &midiMessages,
-						  int numSamples,
-						  double sampleRate,
-						  const juce::AudioPlayHead::PositionInfo &posInfo);
+		void processBlock(juce::MidiBuffer& midiMessages,
+			int numSamples,
+			double sampleRate,
+			const juce::AudioPlayHead::PositionInfo& posInfo);
 
 	private:
 		std::array<std::unique_ptr<Pattern>, 8> slots;
@@ -104,7 +104,7 @@ namespace BeatCrafter
 		mutable bool intensityCacheValid = false;
 		mutable float lastCachedIntensity = -1.0f;
 		mutable int lastCachedSlot = -1;
-		Pattern dummyPattern{"Empty"};
+		Pattern dummyPattern{ "Empty" };
 
 		float currentIntensity = -1.0f;
 		float currentLiveJamIntensity = 0.5f;
@@ -126,16 +126,16 @@ namespace BeatCrafter
 		juce::Random liveJamRandom;
 		int stepsSinceLastJam = 0;
 
-		std::atomic<int> pendingImmediateSlot{-1};
+		std::atomic<int> pendingImmediateSlot{ -1 };
 
-		void generateMidiForStep(juce::MidiBuffer &midiMessages,
-								 int samplePosition,
-								 const Pattern &pattern,
-								 int stepIndex);
-		void applyComplexityToPattern(Pattern &pattern, StyleType style, float complexity);
-		void addLiveJamElements(Pattern &pattern, int stepIndex, float intensity);
-		void sendAllNotesOff(juce::MidiBuffer &midiMessages);
-		void applyHumanization(Pattern &pattern, int stepIndex);
+		void generateMidiForStep(juce::MidiBuffer& midiMessages,
+			int samplePosition,
+			const Pattern& pattern,
+			int stepIndex);
+		void applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity);
+		void addLiveJamElements(Pattern& pattern, int stepIndex, float intensity);
+		void sendAllNotesOff(juce::MidiBuffer& midiMessages);
+		void applyHumanization(Pattern& pattern, int stepIndex);
 		void updateSurpriseMe(int currentMeasure, double ppqPosition);
 	};
 }

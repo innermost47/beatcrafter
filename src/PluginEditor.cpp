@@ -16,6 +16,12 @@ namespace BeatCrafter
 			modernLookAndFeel, true),
 		surpriseMeMidiLearnButton("SurpriseMeMidi",
 			BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
+			modernLookAndFeel),
+		tripletModeButton("TripletMode",
+			BinaryData::numberthree_svg, BinaryData::numberthree_svgSize,
+			modernLookAndFeel, true),
+		tripletModeMidiLearnButton("TripletModeMidi",
+			BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
 			modernLookAndFeel)
 	{
 		tooltipWindow = std::make_unique<juce::TooltipWindow>(this);
@@ -33,6 +39,8 @@ namespace BeatCrafter
 					juce::dontSendNotification);
 				processor.getPatternEngine().perfParams.surpriseMeEnabled =
 					processor.surpriseMeParam->get();
+				processor.getPatternEngine().perfParams.tripletMode =
+					processor.tripletModeParam->get();
 				updateMidiLearnButtons();
 			});
 	}
@@ -49,6 +57,7 @@ namespace BeatCrafter
 		processor.setLiveJamMode(true);
 
 		patternGrid = std::make_unique<PatternGrid>();
+		patternGrid->markDirty();
 		patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
 		patternGrid->setPatternEngine(&processor.getPatternEngine());
 		addAndMakeVisible(patternGrid.get());
@@ -58,8 +67,8 @@ namespace BeatCrafter
 			{
 				processor.getPatternEngine().setIntensity(processor.intensityParam->get());
 				processor.getPatternEngine().invalidateCache();
+				patternGrid->markDirty();
 				patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
-				patternGrid->repaint();
 			};
 		slotManager->getIntensity = [this]()
 			{
@@ -114,6 +123,29 @@ namespace BeatCrafter
 		surpriseMeMidiLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
 		surpriseMeMidiLabel.setJustificationType(juce::Justification::centred);
 		addAndMakeVisible(surpriseMeMidiLabel);
+
+		tripletModeButton.onClick = [this]()
+			{
+				if (processor.isMidiLearning() && processor.getMidiLearnTarget() == 4)
+					processor.stopMidiLearn();
+				else {
+					bool active = !processor.tripletModeParam->get();
+					processor.tripletModeParam->setValueNotifyingHost(active ? 1.0f : 0.0f);
+					processor.getPatternEngine().perfParams.tripletMode = active;
+				}
+				updateMidiLearnButtons();
+			};
+		addAndMakeVisible(tripletModeButton);
+
+		tripletModeMidiLearnButton.onClick = [this]() { onTripletModeMidiLearnClicked(); };
+		tripletModeMidiLearnButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
+		addAndMakeVisible(tripletModeMidiLearnButton);
+
+		tripletModeMidiLabel.setText("--", juce::dontSendNotification);
+		tripletModeMidiLabel.getProperties().set("customFontHeight", ModernLookAndFeel::fontSizeMidiLabel);
+		tripletModeMidiLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
+		tripletModeMidiLabel.setJustificationType(juce::Justification::centred);
+		addAndMakeVisible(tripletModeMidiLabel);
 
 		updateMidiLearnButtons();
 
@@ -187,6 +219,17 @@ namespace BeatCrafter
 		addAndMakeVisible(liveJamIntensityMidiLabel);
 	}
 
+	void BeatCrafterEditor::onTripletModeMidiLearnClicked()
+	{
+		if (processor.isMidiLearning())
+			processor.stopMidiLearn();
+		else if (processor.hasMidiMapping(4, -1))
+			processor.clearMidiMapping(4, -1);
+		else
+			processor.startMidiLearn(4, -1);
+		updateMidiLearnButtons();
+	}
+
 	void BeatCrafterEditor::onSurpriseMeMidiLearnClicked()
 	{
 		if (processor.isMidiLearning())
@@ -223,19 +266,24 @@ namespace BeatCrafter
 		bounds.removeFromTop(50);
 
 		auto slotAreaWithMidi = bounds.removeFromTop(100);
-		auto slotArea = slotAreaWithMidi.removeFromTop(60);
-		slotManager->setBounds(slotArea.reduced(20, 10));
-		auto slotMidiArea = slotAreaWithMidi.removeFromTop(40).reduced(20, 0);
-		int slotWidth = slotMidiArea.getWidth() / 8;
+		auto slotRow = slotAreaWithMidi.removeFromTop(60).reduced(20, 10);
+		slotManager->setBounds(slotRow.reduced(2));
+
+		auto slotMidiArea = slotAreaWithMidi.removeFromTop(40);
+		int slotWidth = slotRow.getWidth() / 8;
 		for (int i = 0; i < 8; ++i)
 		{
-			auto slotBounds = slotMidiArea.removeFromLeft(slotWidth).reduced(1, 0);
+			auto slotBounds = juce::Rectangle<int>(
+				slotRow.getX() + i * slotWidth,
+				slotMidiArea.getY(),
+				slotWidth,
+				slotMidiArea.getHeight()).reduced(2, 0);
 			slotMidiLearnButtons[i]->setBounds(slotBounds.removeFromTop(20));
 			slotMidiLabels[i].setBounds(slotBounds);
 		}
 
 		auto contentArea = bounds.reduced(20, 10);
-		auto rightColumn = contentArea.removeFromRight(180);
+		auto rightColumn = contentArea.removeFromRight(240);
 		contentArea.removeFromRight(10);
 
 		int gridBottom = contentArea.getBottom();
@@ -243,41 +291,60 @@ namespace BeatCrafter
 		int sliderWidth = 20;
 		int colWidth = 60;
 		int buttonSize = 32;
+		int blockHeight = 80;
 
-		auto intensityCol = rightColumn.removeFromLeft(colWidth);
-		intensityLabel.setBounds(intensityCol.removeFromTop(20).reduced(2, 0));
-		auto intensityMidiArea = intensityCol.withTop(gridBottom - midiAreaHeight);
-		intensityMidiLearnButton.setBounds(intensityMidiArea.removeFromTop(24).reduced(4, 2));
-		intensityMidiLabel.setBounds(intensityMidiArea.removeFromTop(16).reduced(2, 0));
-		auto intensitySliderArea = intensityCol.withBottom(gridBottom - midiAreaHeight);
-		intensitySlider.setBounds(
-			intensitySliderArea.getCentreX() - sliderWidth / 2,
-			intensitySliderArea.getY() + 10,
-			sliderWidth,
-			intensitySliderArea.getHeight() - 10);
+		layoutSliderBlock(rightColumn.removeFromLeft(colWidth),
+			intensityLabel, intensitySlider,
+			intensityMidiLearnButton, intensityMidiLabel,
+			sliderWidth, gridBottom, midiAreaHeight);
 
-		auto chaosCol = rightColumn.removeFromLeft(colWidth);
-		liveJamIntensityLabel.setBounds(chaosCol.removeFromTop(20).reduced(2, 0));
-		auto chaosMidiArea = chaosCol.withTop(gridBottom - midiAreaHeight);
-		liveJamIntensityMidiLearnButton.setBounds(chaosMidiArea.removeFromTop(24).reduced(4, 2));
-		liveJamIntensityMidiLabel.setBounds(chaosMidiArea.removeFromTop(16).reduced(2, 0));
-		auto chaosSliderArea = chaosCol.withBottom(gridBottom - midiAreaHeight);
-		liveJamIntensitySlider.setBounds(
-			chaosSliderArea.getCentreX() - sliderWidth / 2,
-			chaosSliderArea.getY() + 10,
-			sliderWidth,
-			chaosSliderArea.getHeight() - 10);
+		layoutSliderBlock(rightColumn.removeFromLeft(colWidth),
+			liveJamIntensityLabel, liveJamIntensitySlider,
+			liveJamIntensityMidiLearnButton, liveJamIntensityMidiLabel,
+			sliderWidth, gridBottom, midiAreaHeight);
 
-		auto surpriseCol = rightColumn;
+		auto toggleArea = rightColumn;
+		int toggleColWidth = toggleArea.getWidth() / 2;
 
-		int blockHeight = 120;
-		auto surpriseBlock = surpriseCol.removeFromBottom(blockHeight);
+		layoutToggleBlock(toggleArea.removeFromLeft(toggleColWidth).removeFromBottom(blockHeight),
+			surpriseMeButton, surpriseMeMidiLearnButton, surpriseMeMidiLabel, buttonSize);
 
-		surpriseMeMidiLabel.setBounds(surpriseBlock.removeFromBottom(16).reduced(2, 0));
-		surpriseMeMidiLearnButton.setBounds(surpriseBlock.removeFromBottom(28).reduced(4, 2));
-		surpriseMeButton.setBounds(surpriseBlock.removeFromBottom(buttonSize + 8).withSizeKeepingCentre(buttonSize, buttonSize));
+		layoutToggleBlock(toggleArea.removeFromBottom(blockHeight),
+			tripletModeButton, tripletModeMidiLearnButton, tripletModeMidiLabel, buttonSize);
 
 		patternGrid->setBounds(contentArea);
+	}
+
+	void BeatCrafterEditor::layoutToggleBlock(juce::Rectangle<int> zone,
+		juce::Component& toggleButton,
+		juce::Component& midiLearnButton,
+		juce::Label& midiLabel,
+		int buttonSize)
+	{
+		midiLabel.setBounds(zone.removeFromBottom(16).reduced(2, 0));
+		midiLearnButton.setBounds(zone.removeFromBottom(24).reduced(4, 2));
+		toggleButton.setBounds(zone.withSizeKeepingCentre(buttonSize, buttonSize));
+	}
+
+	void BeatCrafterEditor::layoutSliderBlock(juce::Rectangle<int> zone,
+		juce::Label& label,
+		juce::Slider& slider,
+		juce::Component& midiLearnButton,
+		juce::Label& midiLabel,
+		int sliderWidth,
+		int gridBottom,
+		int midiAreaHeight)
+	{
+		label.setBounds(zone.removeFromTop(20).reduced(2, 0));
+		auto midiArea = zone.withTop(gridBottom - midiAreaHeight);
+		midiLearnButton.setBounds(midiArea.removeFromTop(24).reduced(4, 2));
+		midiLabel.setBounds(midiArea.removeFromTop(16).reduced(2, 0));
+		auto sliderArea = zone.withBottom(gridBottom - midiAreaHeight);
+		slider.setBounds(
+			sliderArea.getCentreX() - sliderWidth / 2,
+			sliderArea.getY() + 10,
+			sliderWidth,
+			sliderArea.getHeight() - 10);
 	}
 
 	void BeatCrafterEditor::timerCallback()
@@ -293,8 +360,8 @@ namespace BeatCrafter
 		if (std::abs(engineIntensity - lastRepaintIntensity) > 0.02f)
 		{
 			processor.getPatternEngine().setIntensity(engineIntensity);
+			patternGrid->markDirty();
 			patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
-			patternGrid->repaint();
 			lastRepaintIntensity = engineIntensity;
 		}
 
@@ -306,131 +373,112 @@ namespace BeatCrafter
 		auto& engine = processor.getPatternEngine();
 		engine.setIntensity(processor.intensityParam->get());
 		engine.invalidateCache();
+		patternGrid->markDirty();
 		patternGrid->setPattern(engine.getDisplayPattern());
-		patternGrid->repaint();
+	}
+
+	void BeatCrafterEditor::applyToggleButtonState(IconButton& btn,
+		const char* svgData, int svgSize,
+		bool isActive)
+	{
+		btn.setIconFromSVG(svgData, svgSize,
+			isActive ? modernLookAndFeel.accent : modernLookAndFeel.textDimmed,
+			modernLookAndFeel.backgroundMid);
+		btn.setToggleState(isActive, juce::dontSendNotification);
+	}
+
+	void BeatCrafterEditor::applyMidiLearnButtonState(IconButton& btn,
+		bool isLearning,
+		bool hasMapping,
+		const juce::String& mappingDescription,
+		const juce::String& defaultTooltip)
+	{
+		if (isLearning)
+		{
+			btn.setIconFromSVG(BinaryData::broadcast_svg, BinaryData::broadcast_svgSize,
+				juce::Colours::white, juce::Colours::red.darker(0.3f));
+			btn.setTooltip("Click to cancel listening");
+		}
+		else if (hasMapping)
+		{
+			btn.setIconFromSVG(BinaryData::linksimplebreak_svg, BinaryData::linksimplebreak_svgSize,
+				juce::Colours::white, juce::Colours::green.darker(0.4f));
+			btn.setTooltip(mappingDescription);
+		}
+		else
+		{
+			btn.setIconFromSVG(BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
+				modernLookAndFeel.textDimmed, modernLookAndFeel.backgroundMid);
+			btn.setTooltip(defaultTooltip);
+		}
+	}
+
+	void BeatCrafterEditor::updateMidiLearnPair(IconButton& btn,
+		juce::Label& label,
+		bool isLearning,
+		bool hasMapping,
+		const juce::String& mappingDescription,
+		const juce::String& defaultTooltip)
+	{
+		applyMidiLearnButtonState(btn, isLearning, hasMapping, mappingDescription, defaultTooltip);
+		label.setText(hasMapping ? mappingDescription : "--", juce::dontSendNotification);
 	}
 
 	void BeatCrafterEditor::updateMidiLearnButtons()
 	{
-		if (processor.isMidiLearning() && processor.getMidiLearnTarget() == 0)
-		{
-			intensityMidiLearnButton.setIconFromSVG(
-				BinaryData::broadcast_svg, BinaryData::broadcast_svgSize,
-				juce::Colours::white, juce::Colours::red.darker(0.3f));
-			intensityMidiLearnButton.setTooltip("Click to cancel listening");
-		}
-		else if (processor.hasMidiMapping(0, -1))
-		{
-			intensityMidiLearnButton.setIconFromSVG(
-				BinaryData::linksimplebreak_svg, BinaryData::linksimplebreak_svgSize,
-				juce::Colours::white, juce::Colours::green.darker(0.4f));
-			intensityMidiLearnButton.setTooltip(processor.getMidiMappingDescription(0, -1));
-		}
-		else
-		{
-			intensityMidiLearnButton.setIconFromSVG(
-				BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
-				modernLookAndFeel.textDimmed, modernLookAndFeel.backgroundMid);
-			intensityMidiLearnButton.setTooltip("Assign a MIDI CC to the intensity");
-		}
-		intensityMidiLabel.setText(
-			processor.getMidiMappingDescription(0, -1), juce::dontSendNotification);
+		updateMidiLearnPair(
+			intensityMidiLearnButton, intensityMidiLabel,
+			processor.isMidiLearning() && processor.getMidiLearnTarget() == 0,
+			processor.hasMidiMapping(0, -1),
+			processor.getMidiMappingDescription(0, -1),
+			"Assign a MIDI CC to the intensity");
+		intensityMidiLearnButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
 
 		for (int i = 0; i < 8; ++i)
 		{
-			auto& btn = *slotMidiLearnButtons[i];
-			if (processor.isMidiLearning() && processor.getMidiLearnTarget() >= 1 && processor.getMidiLearnSlot() == i)
-			{
-				btn.setIconFromSVG(
-					BinaryData::broadcast_svg, BinaryData::broadcast_svgSize,
-					juce::Colours::white, juce::Colours::red.darker(0.3f));
-				btn.setTooltip("Click to cancel listening");
-			}
-			else if (processor.hasMidiMapping(1, i))
-			{
-				btn.setIconFromSVG(
-					BinaryData::linksimplebreak_svg, BinaryData::linksimplebreak_svgSize,
-					juce::Colours::white, juce::Colours::green.darker(0.4f));
-				btn.setTooltip(processor.getMidiMappingDescription(1, i));
-			}
-			else
-			{
-				btn.setIconFromSVG(
-					BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
-					modernLookAndFeel.textDimmed, modernLookAndFeel.backgroundMid);
-				btn.setTooltip("Assign a MIDI CC to slot " + juce::String(i + 1));
-			}
-			slotMidiLabels[i].setText(
-				processor.hasMidiMapping(1, i)
-				? processor.getMidiMappingDescription(1, i)
-				: "--",
-				juce::dontSendNotification);
+			updateMidiLearnPair(
+				*slotMidiLearnButtons[i], slotMidiLabels[i],
+				processor.isMidiLearning()
+				&& processor.getMidiLearnTarget() >= 1
+				&& processor.getMidiLearnSlot() == i,
+				processor.hasMidiMapping(1, i),
+				processor.getMidiMappingDescription(1, i),
+				"Assign a MIDI CC to slot " + juce::String(i + 1));
 		}
 
-		if (processor.isMidiLearning() && processor.getMidiLearnTarget() == 2)
-		{
-			liveJamIntensityMidiLearnButton.setIconFromSVG(
-				BinaryData::broadcast_svg, BinaryData::broadcast_svgSize,
-				juce::Colours::white, juce::Colours::red.darker(0.3f));
-			liveJamIntensityMidiLearnButton.setTooltip("Click to cancel listening");
-		}
-		else if (processor.hasMidiMapping(2, -1))
-		{
-			liveJamIntensityMidiLearnButton.setIconFromSVG(
-				BinaryData::linksimplebreak_svg, BinaryData::linksimplebreak_svgSize,
-				juce::Colours::white, juce::Colours::green.darker(0.4f));
-			liveJamIntensityMidiLearnButton.setTooltip(
-				processor.getMidiMappingDescription(2, -1));
-		}
-		else
-		{
-			liveJamIntensityMidiLearnButton.setIconFromSVG(
-				BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
-				modernLookAndFeel.textDimmed, modernLookAndFeel.backgroundMid);
-			liveJamIntensityMidiLearnButton.setTooltip(
-				"Assign a MIDI CC to Chaos");
-		}
-		liveJamIntensityMidiLabel.setText(
-			processor.getMidiMappingDescription(2, -1), juce::dontSendNotification);
-		intensityMidiLearnButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
+		updateMidiLearnPair(
+			liveJamIntensityMidiLearnButton, liveJamIntensityMidiLabel,
+			processor.isMidiLearning() && processor.getMidiLearnTarget() == 2,
+			processor.hasMidiMapping(2, -1),
+			processor.getMidiMappingDescription(2, -1),
+			"Assign a MIDI CC to Chaos");
 		liveJamIntensityMidiLearnButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
 
-		if (processor.surpriseMeParam->get())
-			surpriseMeButton.setIconFromSVG(
-				BinaryData::wavesine_svg, BinaryData::wavesine_svgSize,
-				modernLookAndFeel.accent,
-				modernLookAndFeel.backgroundMid);
-		else
-			surpriseMeButton.setIconFromSVG(
-				BinaryData::wavesine_svg, BinaryData::wavesine_svgSize,
-				modernLookAndFeel.textDimmed,
-				modernLookAndFeel.backgroundMid);
+		applyToggleButtonState(surpriseMeButton,
+			BinaryData::wavesine_svg, BinaryData::wavesine_svgSize,
+			processor.surpriseMeParam->get());
 		surpriseMeButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
 
-		if (processor.isMidiLearning() && processor.getMidiLearnTarget() == 3)
-		{
-			surpriseMeMidiLearnButton.setIconFromSVG(
-				BinaryData::broadcast_svg, BinaryData::broadcast_svgSize,
-				juce::Colours::white, juce::Colours::red.darker(0.3f));
-			surpriseMeMidiLearnButton.setTooltip("Click to cancel listening");
-		}
-		else if (processor.hasMidiMapping(3, -1))
-		{
-			surpriseMeMidiLearnButton.setIconFromSVG(
-				BinaryData::linksimplebreak_svg, BinaryData::linksimplebreak_svgSize,
-				juce::Colours::white, juce::Colours::green.darker(0.4f));
-			surpriseMeMidiLearnButton.setTooltip(processor.getMidiMappingDescription(3, -1));
-		}
-		else
-		{
-			surpriseMeMidiLearnButton.setIconFromSVG(
-				BinaryData::linksimple_svg, BinaryData::linksimple_svgSize,
-				modernLookAndFeel.textDimmed, modernLookAndFeel.backgroundMid);
-			surpriseMeMidiLearnButton.setTooltip("Assign a MIDI CC to Surprise Me");
-		}
+		updateMidiLearnPair(
+			surpriseMeMidiLearnButton, surpriseMeMidiLabel,
+			processor.isMidiLearning() && processor.getMidiLearnTarget() == 3,
+			processor.hasMidiMapping(3, -1),
+			processor.getMidiMappingDescription(3, -1),
+			"Assign a MIDI CC to Surprise Me");
 		surpriseMeMidiLearnButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
-		surpriseMeMidiLabel.setText(
-			processor.getMidiMappingDescription(3, -1), juce::dontSendNotification);
+
+		applyToggleButtonState(tripletModeButton,
+			BinaryData::numberthree_svg, BinaryData::numberthree_svgSize,
+			processor.tripletModeParam->get());
+		tripletModeButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
+
+		updateMidiLearnPair(
+			tripletModeMidiLearnButton, tripletModeMidiLabel,
+			processor.isMidiLearning() && processor.getMidiLearnTarget() == 4,
+			processor.hasMidiMapping(4, -1),
+			processor.getMidiMappingDescription(4, -1),
+			"Assign a MIDI CC to Triplet Mode");
+		tripletModeMidiLearnButton.setIconPadding(ModernLookAndFeel::iconPaddingHard);
 	}
 
 	void BeatCrafterEditor::onIntensityMidiLearnClicked()
@@ -469,8 +517,8 @@ namespace BeatCrafter
 	void BeatCrafterEditor::updateFromProcessorState()
 	{
 		intensitySlider.setValue(processor.intensityParam->get(), juce::dontSendNotification);
+		patternGrid->markDirty();
 		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
-		patternGrid->repaint();
 		slotManager->updateSlotStates();
 		updateMidiLearnButtons();
 	}
@@ -489,7 +537,7 @@ namespace BeatCrafter
 	void BeatCrafterEditor::updateSlotButtons(int /*activeSlot*/)
 	{
 		slotManager->updateSlotStates();
+		patternGrid->markDirty();
 		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
-		patternGrid->repaint();
 	}
 }

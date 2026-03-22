@@ -13,6 +13,7 @@ namespace BeatCrafter {
 
 	void PatternGrid::setPattern(const Pattern* pattern) {
 		currentPattern = pattern;
+		bufferDirty = true;
 		repaint();
 	}
 
@@ -20,20 +21,40 @@ namespace BeatCrafter {
 		patternEngine = engine;
 	}
 
-	void PatternGrid::paint(juce::Graphics& g) {
+	void PatternGrid::paint(juce::Graphics& g)
+	{
 		if (!lookAndFeel)
 			lookAndFeel = dynamic_cast<ModernLookAndFeel*>(&getLookAndFeel());
 
-		drawBackground(g);
-		drawGrid(g);
+		if (offscreenBuffer.isNull()
+			|| offscreenBuffer.getWidth() != getWidth()
+			|| offscreenBuffer.getHeight() != getHeight()
+			|| bufferDirty)
+		{
+			offscreenBuffer = juce::Image(
+				juce::Image::ARGB, getWidth(), getHeight(), true);
+			juce::Graphics bg(offscreenBuffer);
 
-		if (currentPattern) {
-			drawSteps(g);
-			drawPlayhead(g);
+			drawBackground(bg);
+			drawGrid(bg);
+			if (currentPattern) {
+				drawSteps(bg);
+				drawPlayhead(bg);
+			}
+			drawTrackLabels(bg);
+			drawStepNumbers(bg);
+
+			bufferDirty = false;
 		}
 
-		drawTrackLabels(g);
-		drawStepNumbers(g);
+		g.drawImageAt(offscreenBuffer, 0, 0);
+	}
+
+	void PatternGrid::markDirty()
+	{
+		bufferDirty = true;
+		if (!isTimerRunning())
+			repaint();
 	}
 
 	void PatternGrid::resized() {
@@ -42,6 +63,7 @@ namespace BeatCrafter {
 		int numTracks = currentPattern ? currentPattern->getNumTracks() : 8;
 		cellWidth = (bounds.getWidth() - headerWidth) / static_cast<float>(numSteps);
 		cellHeight = (bounds.getHeight() - headerHeight) / static_cast<float>(numTracks);
+		bufferDirty = true;
 	}
 
 	void PatternGrid::timerCallback() {
@@ -49,6 +71,7 @@ namespace BeatCrafter {
 			int newPlayhead = patternEngine->getCurrentStep();
 			if (newPlayhead != playheadPosition) {
 				playheadPosition = newPlayhead;
+				bufferDirty = true;
 				repaint();
 			}
 		}

@@ -121,12 +121,14 @@ namespace BeatCrafter
 		double ppqPosition = posInfo.getPpqPosition().orFallback(0.0);
 		int currentMeasure = static_cast<int>(ppqPosition / 4.0);
 		double beatsPerSecond = bpm / 60.0;
-		double sixteenthsPerSecond = beatsPerSecond * 4.0;
-		samplesPerStep = static_cast<int>(sampleRate / sixteenthsPerSecond);
+		double stepsPerBeat = perfParams.tripletMode ? 3.0 : 4.0;
+		double stepsPerSecond = beatsPerSecond * stepsPerBeat;
+		samplesPerStep = static_cast<int>(sampleRate / stepsPerSecond);
 		auto& pattern = *slots[activeSlot];
 		int patternLength = pattern.getLength();
-		double ppqPerStep = 0.25;
-		int currentStepFromPPQ = static_cast<int>(ppqPosition / ppqPerStep) % patternLength;
+		double ppqPerStep = perfParams.tripletMode ? (1.0 / 3.0) : 0.25;
+		int effectiveLength = perfParams.tripletMode ? 12 : patternLength;
+		int currentStepFromPPQ = static_cast<int>(ppqPosition / ppqPerStep) % effectiveLength;
 		updateSurpriseMe(currentMeasure, ppqPosition);
 		if (currentStepFromPPQ != pattern.getCurrentStep() ||
 			(currentStepFromPPQ == 0 && ppqPosition < 0.1))
