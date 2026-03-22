@@ -107,7 +107,6 @@ namespace BeatCrafter
 		else
 			queuedSlot = slot;
 	}
-
 	void PatternEngine::processBlock(juce::MidiBuffer& midiMessages,
 		int /*numSamples*/,
 		double sampleRate,
@@ -120,20 +119,34 @@ namespace BeatCrafter
 		double bpm = posInfo.getBpm().orFallback(120.0);
 		double ppqPosition = posInfo.getPpqPosition().orFallback(0.0);
 		int currentMeasure = static_cast<int>(ppqPosition / 4.0);
+
+		bool requestedTripletMode = perfParams.tripletMode;
+		bool modeChangePending = (requestedTripletMode != activeTripletMode);
+
 		double beatsPerSecond = bpm / 60.0;
-		double stepsPerBeat = perfParams.tripletMode ? 3.0 : 4.0;
+		double stepsPerBeat = activeTripletMode ? 3.0 : 4.0;
 		double stepsPerSecond = beatsPerSecond * stepsPerBeat;
 		samplesPerStep = static_cast<int>(sampleRate / stepsPerSecond);
 		auto& pattern = *slots[activeSlot];
 		int patternLength = pattern.getLength();
-		double ppqPerStep = perfParams.tripletMode ? (1.0 / 3.0) : 0.25;
-		int effectiveLength = perfParams.tripletMode ? 12 : patternLength;
+		double ppqPerStep = activeTripletMode ? (1.0 / 3.0) : 0.25;
+		int effectiveLength = activeTripletMode ? 12 : patternLength;
 		int currentStepFromPPQ = static_cast<int>(ppqPosition / ppqPerStep) % effectiveLength;
 		updateSurpriseMe(currentMeasure, ppqPosition);
 		if (currentStepFromPPQ != pattern.getCurrentStep() ||
 			(currentStepFromPPQ == 0 && ppqPosition < 0.1))
 		{
 			pattern.setCurrentStep(currentStepFromPPQ);
+
+			if (modeChangePending)
+			{
+				activeTripletMode = requestedTripletMode;
+				ppqPerStep = activeTripletMode ? (1.0 / 3.0) : 0.25;
+				effectiveLength = activeTripletMode ? 12 : patternLength;
+				currentStepFromPPQ = static_cast<int>(ppqPosition / ppqPerStep) % effectiveLength;
+				pattern.setCurrentStep(currentStepFromPPQ);
+			}
+
 			int pending = pendingImmediateSlot.exchange(-1);
 			if (pending >= 0)
 			{
@@ -162,7 +175,6 @@ namespace BeatCrafter
 			intensityCacheValid = true;
 		}
 	}
-
 	void PatternEngine::applyHumanization(Pattern& pattern, int stepIndex)
 	{
 		static std::mt19937 rng(std::random_device{}());

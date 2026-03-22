@@ -98,7 +98,7 @@ namespace BeatCrafter
 		std::array<uint32_t, 8> slotRandomSeeds;
 		int activeSlot = 0;
 		int queuedSlot = -1;
-
+		bool activeTripletMode = false;
 		mutable Pattern intensifiedPatternCache;
 		mutable Pattern cachedIntensifiedPattern;
 		mutable bool intensityCacheValid = false;
@@ -132,7 +132,6 @@ namespace BeatCrafter
 			int samplePosition,
 			const Pattern& pattern,
 			int stepIndex);
-		void applyComplexityToPattern(Pattern& pattern, StyleType style, float complexity);
 		void addLiveJamElements(Pattern& pattern, int stepIndex, float intensity);
 		void sendAllNotesOff(juce::MidiBuffer& midiMessages);
 		void applyHumanization(Pattern& pattern, int stepIndex);
