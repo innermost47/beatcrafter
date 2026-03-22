@@ -6,6 +6,7 @@
 #include "GUI/SlotManager.h"
 #include "GUI/LookAndFeel.h"
 #include "GUI/IconButton.h"
+#include "GUI/IntensityIndicator.h"
 #include "BinaryData.h"
 
 namespace BeatCrafter
@@ -29,7 +30,7 @@ namespace BeatCrafter
 		BeatCrafterProcessor &processor;
 		ModernLookAndFeel modernLookAndFeel;
 		std::unique_ptr<juce::TooltipWindow> tooltipWindow;
-
+		std::unique_ptr<IntensityIndicator> intensityIndicator;
 		std::unique_ptr<PatternGrid> patternGrid;
 		std::unique_ptr<SlotManager> slotManager;
 
@@ -73,7 +74,8 @@ namespace BeatCrafter
 							   juce::Label &midiLabel,
 							   int sliderWidth,
 							   int gridBottom,
-							   int midiAreaHeight);
+							   int midiAreaHeight,
+							   IntensityIndicator *indicator = nullptr);
 		void applyToggleButtonState(IconButton &btn,
 									const char *svgData, int svgSize,
 									bool isActive);

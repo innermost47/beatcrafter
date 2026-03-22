@@ -54,7 +54,8 @@ namespace BeatCrafter
 	void BeatCrafterEditor::setupComponents()
 	{
 		processor.setLiveJamMode(true);
-
+		intensityIndicator = std::make_unique<IntensityIndicator>(modernLookAndFeel);
+		addAndMakeVisible(intensityIndicator.get());
 		patternGrid = std::make_unique<PatternGrid>();
 		patternGrid->markDirty();
 		patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
@@ -98,15 +99,13 @@ namespace BeatCrafter
 
 		surpriseMeButton.onClick = [this]()
 		{
-			if (processor.isMidiLearning() && processor.getMidiLearnTarget() == 3)
+			bool active = !processor.surpriseMeParam->get();
+			processor.surpriseMeParam->setValueNotifyingHost(active ? 1.0f : 0.0f);
+			processor.getPatternEngine().perfParams.surpriseMeEnabled = active;
+
+			if (!active)
 			{
-				processor.stopMidiLearn();
-			}
-			else
-			{
-				bool active = !processor.surpriseMeParam->get();
-				processor.surpriseMeParam->setValueNotifyingHost(active ? 1.0f : 0.0f);
-				processor.getPatternEngine().perfParams.surpriseMeEnabled = active;
+				processor.intensityParam->setValueNotifyingHost(intensitySlider.getValue());
 			}
 			updateMidiLearnButtons();
 		};
@@ -166,11 +165,8 @@ namespace BeatCrafter
 		{
 			juce::MessageManager::callAsync([this, newIntensity]()
 											{
-						if (std::abs(intensitySlider.getValue() - newIntensity) > 0.005f)
-						{
-							*processor.intensityParam = newIntensity;
-							intensitySlider.setValue(newIntensity, juce::dontSendNotification);
-						} });
+        intensityIndicator->setValue(newIntensity);
+        intensityIndicator->setSurpriseMeActive(processor.surpriseMeParam->get()); });
 		};
 
 		intensityLabel.setText("Intensity", juce::dontSendNotification);
@@ -297,7 +293,8 @@ namespace BeatCrafter
 		layoutSliderBlock(rightColumn.removeFromLeft(colWidth),
 						  intensityLabel, intensitySlider,
 						  intensityMidiLearnButton, intensityMidiLabel,
-						  sliderWidth, gridBottom, midiAreaHeight);
+						  sliderWidth, gridBottom, midiAreaHeight,
+						  intensityIndicator.get());
 
 		layoutSliderBlock(rightColumn.removeFromLeft(colWidth),
 						  liveJamIntensityLabel, liveJamIntensitySlider,
@@ -334,39 +331,51 @@ namespace BeatCrafter
 											  juce::Label &midiLabel,
 											  int sliderWidth,
 											  int gridBottom,
-											  int midiAreaHeight)
+											  int midiAreaHeight,
+											  IntensityIndicator *indicator)
 	{
 		label.setBounds(zone.removeFromTop(20).reduced(2, 0));
 		auto midiArea = zone.withTop(gridBottom - midiAreaHeight);
 		midiLearnButton.setBounds(midiArea.removeFromTop(24).reduced(4, 2));
 		midiLabel.setBounds(midiArea.removeFromTop(16).reduced(2, 0));
 		auto sliderArea = zone.withBottom(gridBottom - midiAreaHeight);
-		slider.setBounds(
+		auto sliderBounds = juce::Rectangle<int>(
 			sliderArea.getCentreX() - sliderWidth / 2,
 			sliderArea.getY() + 10,
 			sliderWidth,
 			sliderArea.getHeight() - 10);
+		slider.setBounds(sliderBounds);
+
+		if (indicator != nullptr)
+			indicator->setBounds(
+				sliderBounds.getRight() + 4,
+				sliderBounds.getY() + 10,
+				6,
+				sliderBounds.getHeight() - 20);
 	}
 
 	void BeatCrafterEditor::timerCallback()
 	{
-		float engineIntensity = processor.getPatternEngine().getIntensity();
+		bool surpriseActive = processor.surpriseMeParam->get();
+		float lfoIntensity = processor.getPatternEngine().getIntensity();
+		float paramIntensity = processor.intensityParam->get();
 
-		if (std::abs(intensitySlider.getValue() - engineIntensity) > 0.005f)
-			intensitySlider.setValue(engineIntensity, juce::dontSendNotification);
+		intensityIndicator->setValue(surpriseActive ? lfoIntensity : paramIntensity);
+		intensityIndicator->setSurpriseMeActive(surpriseActive);
+
+		if (std::abs(intensitySlider.getValue() - paramIntensity) > 0.005f)
+			intensitySlider.setValue(paramIntensity, juce::dontSendNotification);
 
 		processor.getPatternEngine().setLiveJamIntensity(
 			processor.liveJamIntensityParam->get());
 
-		if (std::abs(engineIntensity - lastRepaintIntensity) > 0.02f)
+		float repaintIntensity = surpriseActive ? lfoIntensity : paramIntensity;
+		if (std::abs(repaintIntensity - lastRepaintIntensity) > 0.02f)
 		{
-			processor.getPatternEngine().setIntensity(engineIntensity);
 			patternGrid->markDirty();
 			patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
-			lastRepaintIntensity = engineIntensity;
+			lastRepaintIntensity = repaintIntensity;
 		}
-
-		updateMidiLearnButtons();
 	}
 
 	void BeatCrafterEditor::updatePatternDisplay()
@@ -525,7 +534,8 @@ namespace BeatCrafter
 	void BeatCrafterEditor::updateIntensitySlider(float newIntensity)
 	{
 		intensitySlider.setValue(newIntensity, juce::dontSendNotification);
-		updatePatternDisplay();
+		intensityIndicator->setValue(newIntensity);
+		intensityIndicator->setSurpriseMeActive(processor.surpriseMeParam->get());
 	}
 
 	void BeatCrafterEditor::updateLiveJamIntensitySlider(float newIntensity)
