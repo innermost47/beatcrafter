@@ -40,6 +40,8 @@ namespace BeatCrafter
 		IconButton surpriseMeMidiLearnButton;
 		juce::Label surpriseMeMidiLabel;
 
+		float lastRepaintIntensity = -1.0f;
+
 		juce::Slider liveJamIntensitySlider;
 		juce::Label liveJamIntensityLabel;
 		IconButton liveJamIntensityMidiLearnButton;

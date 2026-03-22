@@ -413,6 +413,7 @@ namespace BeatCrafter
 		state.setProperty("activeSlot", getPatternEngine().getActiveSlot(), nullptr);
 		state.setProperty("liveJamMode", liveJamModeState, nullptr);
 		state.setProperty("liveJamIntensity", liveJamIntensityParam->get(), nullptr);
+		state.setProperty("surpriseMe", surpriseMeParam->get(), nullptr);
 
 		for (int i = 0; i < 8; ++i)
 		{
@@ -516,6 +517,9 @@ namespace BeatCrafter
 			liveJamModeState = tree.getProperty("liveJamMode", false);
 			patternEngine.setLiveJamMode(liveJamModeState);
 			liveJamIntensityParam->setValueNotifyingHost(tree.getProperty("liveJamIntensity", 0.5f));
+			bool surpriseMeActive = tree.getProperty("surpriseMe", false);
+			surpriseMeParam->setValueNotifyingHost(surpriseMeActive ? 1.0f : 0.0f);
+			patternEngine.perfParams.surpriseMeEnabled = surpriseMeActive;
 
 			for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
 			{

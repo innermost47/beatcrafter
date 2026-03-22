@@ -133,8 +133,11 @@ namespace BeatCrafter
 			{
 				juce::MessageManager::callAsync([this, newIntensity]()
 					{
-						processor.intensityParam->setValueNotifyingHost(newIntensity);
-						intensitySlider.setValue(newIntensity, juce::dontSendNotification);
+						if (std::abs(intensitySlider.getValue() - newIntensity) > 0.005f)
+						{
+							*processor.intensityParam = newIntensity;
+							intensitySlider.setValue(newIntensity, juce::dontSendNotification);
+						}
 					});
 			};
 
@@ -279,9 +282,22 @@ namespace BeatCrafter
 
 	void BeatCrafterEditor::timerCallback()
 	{
-		patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
-		patternGrid->repaint();
-		slotManager->updateSlotStates();
+		float engineIntensity = processor.getPatternEngine().getIntensity();
+
+		if (std::abs(intensitySlider.getValue() - engineIntensity) > 0.005f)
+			intensitySlider.setValue(engineIntensity, juce::dontSendNotification);
+
+		processor.getPatternEngine().setLiveJamIntensity(
+			processor.liveJamIntensityParam->get());
+
+		if (std::abs(engineIntensity - lastRepaintIntensity) > 0.02f)
+		{
+			processor.getPatternEngine().setIntensity(engineIntensity);
+			patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
+			patternGrid->repaint();
+			lastRepaintIntensity = engineIntensity;
+		}
+
 		updateMidiLearnButtons();
 	}
 
