@@ -12,22 +12,22 @@
 namespace BeatCrafter
 {
 	class BeatCrafterEditor : public juce::AudioProcessorEditor,
-							  public juce::Timer
+		public juce::Timer
 	{
 	public:
-		BeatCrafterEditor(BeatCrafterProcessor &);
+		BeatCrafterEditor(BeatCrafterProcessor&);
 		~BeatCrafterEditor() override;
-		void paint(juce::Graphics &) override;
+		void paint(juce::Graphics&) override;
 		void resized() override;
 		void timerCallback() override;
 		void updateIntensitySlider(float newIntensity);
-		void updateSlotButtons(int activeSlot);
 		void updateFromProcessorState();
 		void updateLiveJamIntensitySlider(float newIntensity);
 		void updateMidiLearnButtons();
+		void handleSlotSwitched(int slot);
 
 	private:
-		BeatCrafterProcessor &processor;
+		BeatCrafterProcessor& processor;
 		ModernLookAndFeel modernLookAndFeel;
 		std::unique_ptr<juce::TooltipWindow> tooltipWindow;
 		std::unique_ptr<IntensityIndicator> intensityIndicator;
@@ -63,33 +63,33 @@ namespace BeatCrafter
 		void onSurpriseMeMidiLearnClicked();
 		void onTripletModeMidiLearnClicked();
 		void layoutToggleBlock(juce::Rectangle<int> zone,
-							   juce::Component &toggleButton,
-							   juce::Component &midiLearnButton,
-							   juce::Label &midiLabel,
-							   int buttonSize = 32);
+			juce::Component& toggleButton,
+			juce::Component& midiLearnButton,
+			juce::Label& midiLabel,
+			int buttonSize = 32);
 		void layoutSliderBlock(juce::Rectangle<int> zone,
-							   juce::Label &label,
-							   juce::Slider &slider,
-							   juce::Component &midiLearnButton,
-							   juce::Label &midiLabel,
-							   int sliderWidth,
-							   int gridBottom,
-							   int midiAreaHeight,
-							   IntensityIndicator *indicator = nullptr);
-		void applyToggleButtonState(IconButton &btn,
-									const char *svgData, int svgSize,
-									bool isActive);
-		void applyMidiLearnButtonState(IconButton &btn,
-									   bool isLearning,
-									   bool hasMappingResult,
-									   const juce::String &mappingDescription,
-									   const juce::String &defaultTooltip);
-		void updateMidiLearnPair(IconButton &btn,
-								 juce::Label &label,
-								 bool isLearning,
-								 bool hasMapping,
-								 const juce::String &mappingDescription,
-								 const juce::String &defaultTooltip);
+			juce::Label& label,
+			juce::Slider& slider,
+			juce::Component& midiLearnButton,
+			juce::Label& midiLabel,
+			int sliderWidth,
+			int gridBottom,
+			int midiAreaHeight,
+			IntensityIndicator* indicator = nullptr);
+		void applyToggleButtonState(IconButton& btn,
+			const char* svgData, int svgSize,
+			bool isActive);
+		void applyMidiLearnButtonState(IconButton& btn,
+			bool isLearning,
+			bool hasMappingResult,
+			const juce::String& mappingDescription,
+			const juce::String& defaultTooltip);
+		void updateMidiLearnPair(IconButton& btn,
+			juce::Label& label,
+			bool isLearning,
+			bool hasMapping,
+			const juce::String& mappingDescription,
+			const juce::String& defaultTooltip);
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BeatCrafterEditor)
 	};

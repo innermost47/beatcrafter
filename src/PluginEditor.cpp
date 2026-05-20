@@ -62,12 +62,9 @@ namespace BeatCrafter
 		addAndMakeVisible(patternGrid.get());
 
 		slotManager = std::make_unique<SlotManager>(processor.getPatternEngine());
-		slotManager->onSlotChanged = [this](int /*slot*/)
+		slotManager->onSlotChanged = [this](int slot)
 			{
-				processor.getPatternEngine().setIntensity(processor.intensityParam->get());
-				processor.getPatternEngine().invalidateCache();
-				patternGrid->markDirty();
-				patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
+				handleSlotSwitched(slot);
 			};
 		slotManager->getIntensity = [this]()
 			{
@@ -212,6 +209,23 @@ namespace BeatCrafter
 		liveJamIntensityMidiLabel.setColour(juce::Label::textColourId, modernLookAndFeel.textDimmed);
 		liveJamIntensityMidiLabel.setJustificationType(juce::Justification::centred);
 		addAndMakeVisible(liveJamIntensityMidiLabel);
+	}
+
+	void BeatCrafterEditor::handleSlotSwitched(int slot)
+	{
+		bool surpriseActive = processor.surpriseMeParam->get();
+		float currentIntensity = surpriseActive
+			? processor.getPatternEngine().getIntensity()
+			: processor.intensityParam->get();
+
+		processor.getPatternEngine().setIntensity(currentIntensity);
+		processor.getPatternEngine().invalidateCache();
+
+		slotManager->updateSlotStates(slot);
+		patternGrid->markDirty();
+		patternGrid->setPattern(processor.getPatternEngine().getDisplayPattern());
+
+		lastRepaintIntensity = currentIntensity;
 	}
 
 	void BeatCrafterEditor::onTripletModeMidiLearnClicked()
@@ -366,6 +380,10 @@ namespace BeatCrafter
 
 		if (std::abs(intensitySlider.getValue() - paramIntensity) > 0.005f)
 			intensitySlider.setValue(paramIntensity, juce::dontSendNotification);
+
+		float paramLiveJam = processor.liveJamIntensityParam->get();
+		if (std::abs(liveJamIntensitySlider.getValue() - paramLiveJam) > 0.005f)
+			liveJamIntensitySlider.setValue(paramLiveJam, juce::dontSendNotification);
 
 		processor.getPatternEngine().setLiveJamIntensity(
 			processor.liveJamIntensityParam->get());
@@ -542,12 +560,5 @@ namespace BeatCrafter
 	void BeatCrafterEditor::updateLiveJamIntensitySlider(float newIntensity)
 	{
 		liveJamIntensitySlider.setValue(newIntensity, juce::dontSendNotification);
-	}
-
-	void BeatCrafterEditor::updateSlotButtons(int activeSlot)
-	{
-		slotManager->updateSlotStates(activeSlot);
-		patternGrid->markDirty();
-		patternGrid->setPattern(&processor.getPatternEngine().getCurrentPattern());
 	}
 }

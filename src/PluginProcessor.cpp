@@ -205,7 +205,7 @@ namespace BeatCrafter
 					{
 						if (auto* editor = getActiveEditor())
 							if (auto* ce = dynamic_cast<BeatCrafterEditor*>(editor))
-								ce->updateSlotButtons(i); });
+								ce->handleSlotSwitched(i); });
 				break;
 			}
 		}
@@ -232,7 +232,7 @@ namespace BeatCrafter
 					{
 						if (auto* editor = getActiveEditor())
 							if (auto* ce = dynamic_cast<BeatCrafterEditor*>(editor))
-								ce->updateSlotButtons(i); });
+								ce->handleSlotSwitched(i); });
 				return;
 			}
 		}
@@ -398,7 +398,7 @@ namespace BeatCrafter
 						{
 							if (auto* editor = getActiveEditor()) {
 								if (auto* customEditor = dynamic_cast<BeatCrafterEditor*>(editor)) {
-									customEditor->updateSlotButtons(i);
+									customEditor->handleSlotSwitched(i);
 								}
 							} });
 				}
