@@ -19,7 +19,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(JUCE)
 
 juce_add_plugin(BeatCrafter
-    COMPANY_NAME "Innermost47"
+    COMPANY_NAME "InnerMost47"
     PLUGIN_MANUFACTURER_CODE BCrf
     PLUGIN_CODE BCr1
     FORMATS VST3 Standalone
