@@ -28,7 +28,7 @@ namespace BeatCrafter {
 
 		float cellWidth = 0.0f;
 		float cellHeight = 0.0f;
-		int   headerWidth = 80;
+		int   headerWidth = 60;
 		int   headerHeight = 20;
 		int   playheadPosition = -1;
 
@@ -38,8 +38,7 @@ namespace BeatCrafter {
 		juce::Rectangle<float> getStepBounds(int track, int step) const;
 
 		void drawBackground(juce::Graphics&);
-		void drawGrid(juce::Graphics&);
-		void drawSteps(juce::Graphics&);
+		void drawLEDs(juce::Graphics& g);
 		void drawPlayhead(juce::Graphics&);
 		void drawTrackLabels(juce::Graphics&);
 		void drawStepNumbers(juce::Graphics&);

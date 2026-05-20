@@ -3,15 +3,15 @@
 namespace BeatCrafter
 {
 
-	void SlotButton::paintButton(juce::Graphics &g,
-								 bool shouldDrawButtonAsHighlighted,
-								 bool shouldDrawButtonAsDown)
+	void SlotButton::paintButton(juce::Graphics& g,
+		bool shouldDrawButtonAsHighlighted,
+		bool shouldDrawButtonAsDown)
 	{
 		if (!lookAndFeel)
-			lookAndFeel = dynamic_cast<ModernLookAndFeel *>(&getLookAndFeel());
+			lookAndFeel = dynamic_cast<ModernLookAndFeel*>(&getLookAndFeel());
 
 		auto bounds = getLocalBounds().toFloat().reduced(0.5f, 0.5f);
-		auto cornerSize = 6.0f;
+		auto cornerSize = 1.0f;
 
 		juce::Colour bgColour = lookAndFeel->backgroundMid;
 		if (shouldDrawButtonAsDown)
@@ -35,15 +35,15 @@ namespace BeatCrafter
 			g.setColour(lookAndFeel->backgroundLight);
 			g.drawRoundedRectangle(bounds, cornerSize, 1.0f);
 		}
-		juce::Colour textCol = isActive		? lookAndFeel->accent
-							   : hasPattern ? lookAndFeel->textColour
-											: lookAndFeel->textDimmed;
+		juce::Colour textCol = isActive ? lookAndFeel->accent
+			: hasPattern ? lookAndFeel->textColour
+			: lookAndFeel->textDimmed;
 		g.setColour(textCol);
 		g.setFont(lookAndFeel->getPluginFont(ModernLookAndFeel::fontSizeSlotButton));
 		g.drawText(getButtonText(), bounds, juce::Justification::centred);
 	}
 
-	SlotManager::SlotManager(PatternEngine &engine) : patternEngine(engine)
+	SlotManager::SlotManager(PatternEngine& engine) : patternEngine(engine)
 	{
 		for (int i = 0; i < 8; ++i)
 		{
@@ -51,7 +51,7 @@ namespace BeatCrafter
 			slotButtons[i] = std::make_unique<SlotButton>(i);
 			slotButtons[i]->setButtonText(styleTypeToString(slotStyle));
 			slotButtons[i]->onClick = [this, i]()
-			{ onSlotClicked(i); };
+				{ onSlotClicked(i); };
 			slotButtons[i]->setMouseCursor(juce::MouseCursor::PointingHandCursor);
 			addAndMakeVisible(slotButtons[i].get());
 		}

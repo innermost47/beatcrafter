@@ -42,7 +42,7 @@ namespace BeatCrafter
 			bool shouldDrawButtonAsDown) override
 		{
 			auto bounds = getLocalBounds().toFloat().reduced(0.5f, 0.5f);
-			auto cornerSize = 6.0f;
+			auto cornerSize = 1.0f;
 
 			auto bgColour = laf.backgroundMid;
 			if (shouldDrawButtonAsDown)

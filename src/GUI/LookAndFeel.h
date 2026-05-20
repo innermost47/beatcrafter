@@ -14,9 +14,10 @@ namespace BeatCrafter {
 		static constexpr float fontSizeSmall = 11.0f;
 		static constexpr float fontSizeTiny = 10.0f;
 		static constexpr float fontSizeSlotButton = 18.0f;
-		static constexpr float fontSizeGridLabel = 16.0f;
+		static constexpr float fontSizeGridLabel = 14.0f;
 		static constexpr float fontSizeStepNumberLarge = 14.0f;
 		static constexpr float fontSizeStepNumberSmall = 12.0f;
+		static constexpr float fontSizeGridLabelSmall = 10.0f;
 		static constexpr float fontSizeMidiLabel = 12.0f;
 
 		static constexpr int iconSizeMain = 36;
@@ -50,23 +51,28 @@ namespace BeatCrafter {
 			const juce::String& shortcutKeyText,
 			const juce::Drawable* icon, const juce::Colour* textColour) override;
 
-		juce::Colour backgroundDark = juce::Colour(0xff1a1a1a);
-		juce::Colour backgroundMid = juce::Colour(0xff2d2d2d);
-		juce::Colour backgroundLight = juce::Colour(0xff404040);
-		juce::Colour accent = juce::Colour(0xff00bcd4);
-		juce::Colour accentDark = juce::Colour(0xff0097a7);
-		juce::Colour accentLight = juce::Colour(0xff4dd0e1);
-		juce::Colour textColour = juce::Colour(0xfff0f0f0);
-		juce::Colour textDimmed = juce::Colour(0xff888888);
+		juce::Colour backgroundDark = juce::Colour(0xff05070a);
+		juce::Colour backgroundMid = juce::Colour(0xff0d1117);
+		juce::Colour backgroundLight = juce::Colour(0xff1c2128);
 
-		juce::Colour stepActive = juce::Colour(0xff00bcd4);
-		juce::Colour stepInactive = juce::Colour(0xff404040);
-		juce::Colour stepHover = juce::Colour(0xff4dd0e1);
-		juce::Colour stepPlaying = juce::Colour(0xffff6b35);
+		juce::Colour textColour = juce::Colour(0xffc8d4dc);
+		juce::Colour textDimmed = juce::Colour(0xff5a6470);
 
-		juce::Colour slotEmpty = juce::Colour(0xff2d2d2d);
-		juce::Colour slotLoaded = juce::Colour(0xff404040);
-		juce::Colour slotActive = juce::Colour(0xff00bcd4);
+		juce::Colour stepInactive = juce::Colour(0xff2a323d);
+
+		juce::Colour slotEmpty = juce::Colour(0xff0d1117);
+		juce::Colour slotLoaded = juce::Colour(0xff1c2128);
+
+		juce::Colour accent = juce::Colour(0xff33ebff);
+		juce::Colour accentDark = juce::Colour(0xff00a8c4);
+		juce::Colour accentLight = juce::Colour(0xff80f2ff);
+
+		juce::Colour stepActive = juce::Colour(0xff33ebff);
+		juce::Colour stepHover = juce::Colour(0xff80f2ff);
+		juce::Colour slotActive = juce::Colour(0xff33ebff);
+
+		juce::Colour stepPlaying = juce::Colour(0xffff5577);
+
 
 		std::unique_ptr<juce::Drawable> loadSVGWithColour(
 			const char* svgData, int svgSize, juce::Colour colour)
@@ -90,7 +96,7 @@ namespace BeatCrafter {
 			bool shouldDrawButtonAsDown) override
 		{
 			auto bounds = button.getLocalBounds().toFloat().reduced(0.5f);
-			auto cornerSize = 6.0f;
+			auto cornerSize = 1.0f;
 
 			juce::Colour bg = backgroundMid;
 			if (button.getToggleState())        bg = accent;
