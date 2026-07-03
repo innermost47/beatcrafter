@@ -106,17 +106,12 @@ namespace BeatCrafter
 		intensityMapping.isNote = false;
 		intensityMapping.isProgramChange = false;
 
-		for (int i = 0; i < 4; ++i)
+		for (int i = 0; i < 8; ++i)
 		{
 			slotMappings[i].ccNumber = i;
 			slotMappings[i].channel = 0;
 			slotMappings[i].isNote = false;
 			slotMappings[i].isProgramChange = true;
-		}
-
-		for (int i = 4; i < 8; ++i)
-		{
-			slotMappings[i] = MidiMapping{};
 		}
 	}
 
