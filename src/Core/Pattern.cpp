@@ -52,9 +52,12 @@ namespace BeatCrafter {
 		return steps[index];
 	}
 
-	const Step& Track::getStep(int index) const {
-		jassert(index >= 0 && index < steps.size());
-		return steps[index];
+	const Step* Track::getStep(int index) const
+	{
+		if (index < 0 || index >= steps.size())
+			return nullptr;
+
+		return &steps[index];
 	}
 
 	void Track::setLength(int numSteps) {

@@ -124,18 +124,20 @@ namespace BeatCrafter {
 				auto ledBounds = juce::Rectangle<float>(ledDiameter, ledDiameter)
 					.withCentre({ cx, cy });
 
-				const auto& stepObj = currentPattern->getTrack(track).getStep(step);
+				const auto* stepObj = currentPattern->getTrack(track).getStep(step);
 
-				if (stepObj.isActive()) {
-					float velocity = stepObj.getVelocity();
-					float alpha = 0.7f + velocity * 0.3f;
-					g.setColour(lookAndFeel->stepActive.withAlpha(alpha));
-					g.fillEllipse(ledBounds);
-				}
-				else {
-					bool isDownbeat = (step % 4 == 0);
-					g.setColour(lookAndFeel->stepInactive.withAlpha(isDownbeat ? 0.75f : 0.55f));
-					g.fillEllipse(ledBounds);
+				if (stepObj) {
+					if (stepObj->isActive()) {
+						float velocity = stepObj->getVelocity();
+						float alpha = juce::jlimit(0.f, 1.f, 0.7f + velocity * 0.3f);
+						g.setColour(lookAndFeel->stepActive.withAlpha(alpha));
+						g.fillEllipse(ledBounds);
+					}
+					else {
+						bool isDownbeat = (step % 4 == 0);
+						g.setColour(lookAndFeel->stepInactive.withAlpha(isDownbeat ? 0.75f : 0.55f));
+						g.fillEllipse(ledBounds);
+					}
 				}
 			}
 		}

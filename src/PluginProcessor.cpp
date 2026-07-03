@@ -517,17 +517,19 @@ namespace BeatCrafter
 
 					for (int stepIndex = 0; stepIndex < track.getLength(); ++stepIndex)
 					{
-						const auto& step = track.getStep(stepIndex);
+						const auto* step = track.getStep(stepIndex);
 
-						if (step.isActive())
-						{
-							auto stepNode = juce::ValueTree("Step" + juce::String(stepIndex));
-							stepNode.setProperty("active", step.isActive(), nullptr);
-							stepNode.setProperty("velocity", step.getVelocity(), nullptr);
-							stepNode.setProperty("microTiming", step.getMicroTiming(), nullptr);
-							stepNode.setProperty("probability", step.getProbability(), nullptr);
+						if (step) {
+							if (step->isActive())
+							{
+								auto stepNode = juce::ValueTree("Step" + juce::String(stepIndex));
+								stepNode.setProperty("active", step->isActive(), nullptr);
+								stepNode.setProperty("velocity", step->getVelocity(), nullptr);
+								stepNode.setProperty("microTiming", step->getMicroTiming(), nullptr);
+								stepNode.setProperty("probability", step->getProbability(), nullptr);
 
-							trackNode.addChild(stepNode, -1, nullptr);
+								trackNode.addChild(stepNode, -1, nullptr);
+							}
 						}
 					}
 

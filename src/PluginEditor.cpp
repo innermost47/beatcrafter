@@ -100,9 +100,7 @@ namespace BeatCrafter
 				processor.getPatternEngine().perfParams.surpriseMeEnabled = active;
 
 				if (!active)
-				{
-					processor.intensityParam->setValueNotifyingHost(intensitySlider.getValue());
-				}
+					processor.intensityParam->setValueNotifyingHost((float)intensitySlider.getValue());
 				updateMidiLearnButtons();
 			};
 		addAndMakeVisible(surpriseMeButton);
@@ -149,20 +147,28 @@ namespace BeatCrafter
 		intensitySlider.setRange(0.0, 1.0, 0.01);
 		intensitySlider.setValue(processor.intensityParam->get(), juce::dontSendNotification);
 		intensitySlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+
+
 		intensitySlider.onValueChange = [this]()
 			{
-				processor.intensityParam->setValueNotifyingHost(intensitySlider.getValue());
+				processor.intensityParam->setValueNotifyingHost((float)intensitySlider.getValue());
 				updatePatternDisplay();
 			};
 		intensitySlider.setMouseCursor(juce::MouseCursor::PointingHandCursor);
 		addAndMakeVisible(intensitySlider);
 
-		processor.getPatternEngine().onIntensityChanged = [this](float newIntensity)
+		juce::Component::SafePointer<BeatCrafterEditor> safeThis(this);
+
+		processor.getPatternEngine().onIntensityChanged = [safeThis](float newIntensity)
 			{
-				juce::MessageManager::callAsync([this, newIntensity]()
+				juce::MessageManager::callAsync([safeThis, newIntensity]()
 					{
-						intensityIndicator->setValue(newIntensity);
-						intensityIndicator->setSurpriseMeActive(processor.surpriseMeParam->get()); });
+						if (auto* editor = safeThis.getComponent())
+						{
+							editor->intensityIndicator->setValue(newIntensity);
+							editor->intensityIndicator->setSurpriseMeActive(editor->processor.surpriseMeParam->get());
+						}
+					});
 			};
 
 		intensityLabel.setText("Intensity", juce::dontSendNotification);
@@ -188,7 +194,7 @@ namespace BeatCrafter
 		liveJamIntensitySlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
 		liveJamIntensitySlider.onValueChange = [this]()
 			{
-				processor.liveJamIntensityParam->setValueNotifyingHost(liveJamIntensitySlider.getValue());
+				processor.liveJamIntensityParam->setValueNotifyingHost((float)liveJamIntensitySlider.getValue());
 			};
 		liveJamIntensitySlider.setMouseCursor(juce::MouseCursor::PointingHandCursor);
 		addAndMakeVisible(liveJamIntensitySlider);

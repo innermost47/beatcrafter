@@ -15,27 +15,27 @@ namespace BeatCrafter
 			setButtonText(juce::String(slotNumber + 1));
 		}
 
-		void setSlotState(bool hasPattern, bool isActive)
+		void setSlotState(bool pattern, bool active)
 		{
-			this->hasPattern = hasPattern;
-			this->isActive = isActive;
+			this->hasPattern = pattern;
+			this->isActive = active;
 			repaint();
 		}
 
-		void paintButton(juce::Graphics &g, bool shouldDrawButtonAsHighlighted,
-						 bool shouldDrawButtonAsDown) override;
+		void paintButton(juce::Graphics& g, bool shouldDrawButtonAsHighlighted,
+			bool shouldDrawButtonAsDown) override;
 
 	private:
 		int slotNumber;
 		bool hasPattern = false;
 		bool isActive = false;
-		ModernLookAndFeel *lookAndFeel = nullptr;
+		ModernLookAndFeel* lookAndFeel = nullptr;
 	};
 
 	class SlotManager : public juce::Component
 	{
 	public:
-		SlotManager(PatternEngine &engine);
+		SlotManager(PatternEngine& engine);
 		~SlotManager() override = default;
 
 		void resized() override;
@@ -44,7 +44,7 @@ namespace BeatCrafter
 		std::function<float()> getIntensity;
 
 	private:
-		PatternEngine &patternEngine;
+		PatternEngine& patternEngine;
 		std::array<std::unique_ptr<SlotButton>, 8> slotButtons;
 		juce::String styleTypeToString(StyleType style);
 		void onSlotClicked(int slot);

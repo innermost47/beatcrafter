@@ -426,22 +426,24 @@ namespace BeatCrafter
 		for (int trackIdx = 0; trackIdx < cachedIntensifiedPattern.getNumTracks(); ++trackIdx)
 		{
 			const auto& track = cachedIntensifiedPattern.getTrack(trackIdx);
-			const auto& step = track.getStep(stepIndex);
+			const auto* step = track.getStep(stepIndex);
 
-			if (step.isActive() && dis(gen) <= step.getProbability())
-			{
-				int midiNote = track.getMidiNote();
-				int velocity = static_cast<int>(step.getVelocity() * 127.0f);
-				int timingOffset = static_cast<int>(step.getMicroTiming() * samplesPerStep * 0.1f);
-				int finalSamplePos = juce::jmax(0, samplePosition + timingOffset);
+			if (step) {
+				if (step->isActive() && dis(gen) <= step->getProbability())
+				{
+					int midiNote = track.getMidiNote();
+					int velocity = static_cast<int>(step->getVelocity() * 127.0f);
+					int timingOffset = static_cast<int>(step->getMicroTiming() * samplesPerStep * 0.1f);
+					int finalSamplePos = juce::jmax(0, samplePosition + timingOffset);
 
-				midiMessages.addEvent(
-					juce::MidiMessage::noteOn(10, midiNote, (juce::uint8)velocity),
-					finalSamplePos);
-				midiMessages.addEvent(
-					juce::MidiMessage::noteOff(10, midiNote),
-					juce::jmin(finalSamplePos + (int)(0.1 * 44100),
-						samplePosition + samplesPerStep - 1));
+					midiMessages.addEvent(
+						juce::MidiMessage::noteOn(10, midiNote, (juce::uint8)velocity),
+						finalSamplePos);
+					midiMessages.addEvent(
+						juce::MidiMessage::noteOff(10, midiNote),
+						juce::jmin(finalSamplePos + (int)(0.1 * 44100),
+							samplePosition + samplesPerStep - 1));
+				}
 			}
 		}
 	}

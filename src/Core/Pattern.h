@@ -35,7 +35,7 @@ namespace BeatCrafter {
 		Track(const juce::String& name, int midiNote);
 		Step& getStep(int index);
 
-		const Step& getStep(int index) const;
+		const Step* getStep(int index) const;
 		void setLength(int numSteps);
 
 		int getLength() const;
