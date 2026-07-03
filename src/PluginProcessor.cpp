@@ -108,10 +108,10 @@ namespace BeatCrafter
 
 		for (int i = 0; i < 8; ++i)
 		{
-			slotMappings[i].ccNumber = i;
+			slotMappings[i].ccNumber = 36 + i;
 			slotMappings[i].channel = 0;
-			slotMappings[i].isNote = false;
-			slotMappings[i].isProgramChange = true;
+			slotMappings[i].isNote = true;
+			slotMappings[i].isProgramChange = false;
 		}
 	}
 
