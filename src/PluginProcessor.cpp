@@ -101,10 +101,15 @@ namespace BeatCrafter
 
 	void BeatCrafterProcessor::setupDefaultMidiMappings()
 	{
-		intensityMapping.ccNumber = 7;
+		intensityMapping.ccNumber = 16;
 		intensityMapping.channel = 0;
 		intensityMapping.isNote = false;
 		intensityMapping.isProgramChange = false;
+
+		liveJamIntensityMapping.ccNumber = 17;
+		liveJamIntensityMapping.channel = 0;
+		liveJamIntensityMapping.isNote = false;
+		liveJamIntensityMapping.isProgramChange = false;
 
 		for (int i = 0; i < 8; ++i)
 		{
